@@ -19,6 +19,14 @@ from pathlib import Path
 import streamlit as st
 
 PROJECT_ROOT = Path(__file__).resolve().parent
+PROMPTS_DIR = PROJECT_ROOT / "prompts"
+
+
+def _load_prompt(name: str) -> str:
+    """Load an LLM prompt template from prompts/<name>.md (editable without touching code)."""
+    return (PROMPTS_DIR / f"{name}.md").read_text(encoding="utf-8")
+
+
 USER_STORY_PATH = PROJECT_ROOT / "user_story.txt"
 # Optional sidecar: a JSON file the user can upload alongside the story.
 # Story may contain <placeholder> tokens that get filled from this JSON.
@@ -37,7 +45,12 @@ REPORTS_DIR = PROJECT_ROOT / "reports"
 ALLURE_RESULTS = REPORTS_DIR / "allure-results"
 HTML_REPORT = REPORTS_DIR / "report.html"
 SCREENSHOT_DIR = REPORTS_DIR / "screenshots"
-PROJECTS_DIR = PROJECT_ROOT / "projects"
+# The cross-app knowledge base (POMs/step_defs/locators/run history) is kept
+# OUTSIDE the shippable engine package by default — a sibling `workspace/`
+# directory — so `core/` stays pure code with zero client-specific data.
+# Override with QA_WORKSPACE_DIR to point it anywhere (e.g. a per-client path).
+WORKSPACE_DIR = Path(os.environ.get("QA_WORKSPACE_DIR", PROJECT_ROOT.parent / "workspace"))
+PROJECTS_DIR = WORKSPACE_DIR / "projects"
 JRE_HOME = Path(os.environ.get("USERPROFILE", "")) / "tools" / "jdk-21.0.10+7-jre"
 
 ARTIFACT_DIRS = ("features", "pages", "step_defs", "tests", "mcp-selectors", "reports")
@@ -48,973 +61,26 @@ USER_STORY_PLACEHOLDER = (
 )
 
 
-GHERKIN_PROMPT = """\
-You are operating inside the QE automation framework rooted at the current working directory. \
-Read user_story.txt and convert each user story it contains into a Gherkin .feature file under \
-/features.
+GHERKIN_PROMPT = _load_prompt("gherkin_prompt")
 
-═══════════════════════════════════════════════════════════════════
-FIDELITY TO USER STORY — NON-NEGOTIABLE
-═══════════════════════════════════════════════════════════════════
-1. EVERY meaningful line of user_story.txt becomes AT LEAST ONE Gherkin step. \
-No line is silently dropped. No story step is merged with another.
-2. Do NOT invent steps that aren't in the story. No extra "best-practice" \
-checks the user didn't ask for.
-3. Preserve the ORDER from the story. If the story says A then B then C, the \
-scenario does A then B then C — never reordered for "convenience".
-4. Every line that contains words like "Verify", "Check", "Validate", "should \
-be", "should display", "is shown", "is displayed", "matches" → translate into \
-ONE explicit `Then` step. Don't bundle multiple verifications into one step.
-5. Negative cases (invalid creds, "user already exists", "out of stock") must \
-appear as their own step sequence; never skipped or replaced by the happy path.
-6. Inline data tables (Field: Value blocks, address blocks, etc.) become \
-Gherkin doc-strings or data tables — every key/value preserved.
-═══════════════════════════════════════════════════════════════════
+FRAMEWORK_PROMPT = _load_prompt("framework_prompt")
 
-ALSO read user_data.json if it exists in the cwd. It is an OPTIONAL sidecar that drives \
-parameterisation:
+SCOUT_SITEMAP_PROMPT = _load_prompt("scout_sitemap_prompt")
 
-  - SHAPE A — JSON object (one dict at the top level):
-      user_data.json contains key/value pairs the story references via <placeholder> tokens.
-      Generate ONE Scenario per story. Substitute concrete values in scenario steps directly. \
-      If the story has assertion intent (e.g. "Total should be 61.94"), emit explicit Then \
-      steps that reference the data values — `Then the Subtotal is "<Subtotal>"` etc. so the \
-      generated tests can verify exact values from user_data.json at runtime.
+SCOUT_INVENTORY_PROMPT = _load_prompt("scout_inventory_prompt")
 
-  - SHAPE B — JSON array (list of dicts):
-      Each dict is one Example row. Generate a Scenario Outline whose Examples: table has one \
-      column per key, **with one Examples row for EVERY dict in the array**. If the array has \
-      100 dicts, the Examples table MUST have 100 rows. NEVER truncate to a sample, NEVER cap \
-      at 25 / 50 / "first few", NEVER drop "similar-looking" rows. Each row must execute as its \
-      own test invocation. Rows may be POSITIVE or NEGATIVE — if a row contains \
-      `expected_message`, `should_succeed: false`, `expected_error`, or similar, it is a \
-      NEGATIVE row. The Outline MUST include a Then step that asserts the expected outcome \
-      explicitly (success path OR exact error). Do NOT soft-pass on "any error".
 
-  - SHAPE C — JSON array used as a REFERENCE TABLE (not parameterisation):
-      If the story says things like "verify the downloaded CSV", "compare with the data file", \
-      "every row matches", the array is the ground truth the test must check against the \
-      live data. In that case, generate ONE Scenario whose Then steps iterate the array at \
-      runtime (the step def loads test_data and loops), comparing **every row** the story \
-      scopes — full table if the story says "entire CSV / all rows / every value", or only \
-      the columns the story names if it scopes them. Either way: NEVER skip rows, NEVER stop \
-      at a sample. The number of `cap.assert_match` calls the test ends up emitting must \
-      equal (rows the story scopes) × (columns the story scopes).
+FRAMEWORK_DELTA_PROMPT = _load_prompt("framework_delta_prompt")
 
-  - NO user_data.json:
-      Generate as before — one Scenario per story, no parameters.
 
-NEGATIVE STEPS INLINE IN THE STORY (no JSON needed)
+SCOUT_FLOW_PROMPT = _load_prompt("scout_flow_prompt")
 
-The user may write negative-path steps directly in user_story.txt, e.g.:
-  "enter the below invalid login details"
-  "User should not be logged in"
-  "Invalid email or password validation message should be displayed"
-  "Clear the fields and enter the below valid login details"
+SCOUT_EDGE_PROMPT = _load_prompt("scout_edge_prompt")
 
-Detect these inline negative attempts by these signals:
-  - Words like "invalid", "wrong", "incorrect", "bad", "expired" preceding credentials/values
-  - Negative assertions like "should not be", "should fail", "should be rejected"
-  - Validation/error messages: "validation message should be displayed", \
-    "error message should appear", "should show invalid", "should show error"
+AUDITOR_PROMPT = _load_prompt("auditor_prompt")
 
-When present, the .feature MUST include the negative attempt as its OWN explicit step \
-sequence BEFORE the positive one:
-  Examples (literal, illustrative):
-    When the user enters email "invalid@myyahoo.com" and password "wrongpass"
-    Then the "Invalid email or password" validation message is displayed
-    And the user is not logged in
-    When the user clears the email and password fields
-    And the user enters email "qauto@myyahoo.com" and password "passw0rd"
 
-Both halves (negative attempt + positive recovery) MUST end up in the same Scenario. \
-Preserve the order from the story. Do not skip the negative attempt — it is a first-class \
-test case. The validation message text in the assertion must be the EXACT phrase from \
-the story (or as close as the story allows).
-
-MISSING-DATA INTENT (when the story expects items but some may not exist live):
-
-Some stories list multiple independent targets — "search ice cream AND chocolate, \
-add each to cart" or "delete employees X AND Y". When that happens, Gherkin MUST \
-reflect that each target is its own iteration:
-
-  · Prefer a Scenario Outline whose Examples table lists each target on its own row. \
-    pytest-bdd then runs one test per row. Missing items affect ONLY that row's \
-    verdict, not the others.
-  · OR an explicit per-item And-chain so each Then is independently assertable:
-        When the user searches for "ice cream"
-        Then the result for "ice cream" is recorded (found or not found)
-        When the user searches for "chocolate"
-        Then the result for "chocolate" is recorded (found or not found)
-        And the cart contains every product that WAS found
-
-When the story has a BLOCKING prerequisite (e.g. "log in as manager 503 then …"), \
-the very first Then after the login MUST explicitly check it succeeded:
-        When the manager submits credentials
-        Then the manager is logged in   ← this becomes assert_prerequisite at step-def time
-
-Never collapse a "search A and search B" story into one step "search the catalog". \
-Each named target needs its own step so missing items can be individually reported.
-
-Hard rules:
-- EXACTLY ONE .feature file per distinct user story. If user_story.txt has N stories, write \
-  EXACTLY N .feature files — no more, no fewer.
-- Stories are separated by blank lines or numbered headings ("1.", "2.", "Story 1:"). If a single \
-  continuous flow has no separator, treat it as ONE story.
-- Before writing, delete any existing .feature files in /features that don't correspond to the \
-  current stories — the final state of /features must contain only the files for the current run.
-- Filenames: features/story_<n>_<short_slug>.feature.
-- Use clear Given/When/Then phrasing. Include URL/credentials as scenario context if specified.
-- For Scenario Outlines, every row in Examples must end up with an assertable expected outcome. \
-  Negative rows must assert the EXACT error message string from user_data.json — never just \
-  "some error happens".
-- After writing, list every file you created with one-line summaries.
-
-Do not generate page objects, step definitions, or tests in this pass. Only Gherkin.
-"""
-
-FRAMEWORK_PROMPT = """\
-You are operating inside the QE automation framework rooted at the current working directory. \
-The /features folder already contains Gherkin files generated for the current run. Your job is \
-to deliver runnable pytest-bdd code WITHOUT showing a visible browser.
-
-═══════════════════════════════════════════════════════════════════
-FIDELITY TO STORY + FRAMEWORK — NON-NEGOTIABLE
-═══════════════════════════════════════════════════════════════════
-1. EVERY Given/When/Then/And line in the .feature MUST have a matching \
-implemented step-def function. NO step is allowed to be unimplemented. If \
-you don't know how to implement one, write the step def with a clear \
-`pytest.fail(f"Step <name> not implemented: <reason>")` so the test fails \
-loudly — never silently skip.
-2. EVERY "Verify"/"Check"/"Validate"/"should be"/"is displayed"/"matches" \
-step MUST call EXACTLY ONE captured_values method (`assert_match`, \
-`assert_sum`, `assert_avg`, `assert_min`, `assert_max`, `assert_count`, \
-`assert_percentage`, `assert_difference`, `assert_ratio`, `assert_in_range`, \
-or generic `assert_aggregate`). Don't bundle multiple verifications into one \
-call. Don't replace an explicit assertion with a `try/except Exception: pass`.
-3. EVERY value the test extracts that the story refers to later (a price, a \
-name, a count, a total) MUST be recorded via `cap.add(...)` or \
-`cap.add_component(..., group=...)` at the moment it is read.
-4. Test order MUST match the story order. Do NOT reorder steps for what looks \
-like efficiency — the story's order is the contract.
-5. If a step references a UI element the test can't find, raise `AssertionError` \
-with a descriptive message including the locator attempted. Don't fall through \
-silently to the next step.
-6. NEVER hardcode values from user_data.json into Python — read them at \
-runtime via the `test_data` fixture (also declared in conftest.py).
-═══════════════════════════════════════════════════════════════════
-
-Pipeline (per .feature file in /features):
-1. Use Playwright MCP (configured headless) to discover the live site for that feature. Walk every \
-   action the feature requires.
-2. Capture real selectors into mcp-selectors/locators.json. Never guess.
-3. Generate Page Objects under /pages/page_<slug>.py, inheriting BasePage. All Playwright calls \
-   live in the POM. Use selector keys from locators.json only.
-4. Generate ONE step-definition file PER feature file: /step_defs/<feature_slug>_steps.py. \
-   Each step calls one POM method. Update conftest.py pytest_plugins to include the new modules.
-5. Generate ONE pytest-bdd test PER feature file: /tests/test_<feature_slug>.py.
-6. Before generating, delete stale files in /pages, /step_defs, /tests that don't correspond to \
-   the current feature files — the final state must contain only the files for the current run.
-7. Run HEADLESS validation: `pytest -v` (no --headed). On failure, heal up to 3 cycles using \
-   fresh MCP discovery, updated selectors, and explicit waits. Stop healing once green.
-8. Append a one-line summary of generated/healed files to generation_log.txt.
-
-Hard rules:
-- Per-feature isolation: N feature files → N step-def files → N test files.
-- Live DOM via MCP is the only source of truth for selectors.
-- Step defs call POM methods, never raw Playwright.
-- Do NOT show the headed browser; this phase is silent.
-- PERFORMANCE: page.goto must use wait_until="domcontentloaded" and a finite timeout. \
-NEVER call page.wait_for_load_state("networkidle") — most storefronts have long-tail \
-analytics/tracking traffic that prevents networkidle from ever firing, so the wait \
-burns its full timeout on every navigation. When a step needs a specific element, \
-wait on THAT element (`expect(locator).to_be_visible(timeout=...)`) instead.
-- TEST DATA: if user_data.json exists, generated step defs MUST read its current \
-contents AT RUNTIME via the `test_data` fixture already declared in the root \
-conftest.py — never hardcode values from the JSON into step defs. This lets the \
-user change user_data.json between runs without regenerating code.
-  · For Scenario Outline rows: the row's parameters (from Examples:) take precedence.
-  · NEGATIVE rows (rows whose Example/object includes `expected_message`, \
-    `expected_error`, or `should_succeed: false`): the step MUST assert that the EXACT \
-    expected error text is visible. Failure to surface that error = test FAILURE. \
-    Never use try/except to swallow assertion errors on negative rows.
-
-- CAPTURED VALUES — generate-time requirement. Every step def MUST use the \
-`captured_values` fixture (declared in the root conftest.py) to record what the \
-test sees, so the Auditor can build a faithful HTML report.
-
-  Basic operations:
-  · `cap.add(label, value)` — record any value the test extracted (name, \
-    price, count, message).
-  · `cap.assert_match(label, expected=X, actual=Y)` — every story step that \
-    starts with "Verify" / "Check" / "Validate" maps to ONE `assert_match` \
-    call. The return value drives `assert` so the test fails naturally; the \
-    entry persists either way.
-
-  Aggregates over GROUPS (record each contributor, assert the math on the total):
-  · `cap.add_component(label, value, group="g")` — record each contributing \
-    value under the same group string.
-  · `cap.assert_sum(label, group="g", actual=…)`
-  · `cap.assert_avg(label, group="g", actual=…)`    — average / mean
-  · `cap.assert_min(label, group="g", actual=…)`
-  · `cap.assert_max(label, group="g", actual=…)`
-  · `cap.assert_count(label, group="g", actual=…)`
-  · `cap.assert_product(label, group="g", actual=…)`
-  · `cap.assert_range(label, group="g", actual=…)`  — max - min
-  · `cap.assert_median(label, group="g", actual=…)`
-  · `cap.assert_aggregate(label, group="g", op="sum|avg|min|max|count|product|range|median", actual=…)` \
-    — generic, when the story uses an operation by name.
-
-  Cross-value arithmetic (no group, just two values):
-  · `cap.assert_difference(label, larger=X, smaller=Y, expected_diff=Z)` — \
-    e.g. `discount = full_price - sale_price`.
-  · `cap.assert_percentage(label, part=X, whole=Y, expected_pct=Z)` — e.g. \
-    "HST is 13% of subtotal".
-  · `cap.assert_ratio(label, numerator=X, denominator=Y, expected_ratio=Z)`.
-  · `cap.assert_in_range(label, actual=X, low=A, high=B)` — bounded values.
-
-  When the story says ANY mathematical relationship — sum, total, average, \
-  highest, lowest, count, percentage, difference, ratio, between bounds — \
-  pick the right helper. NEVER hand-roll the math; the helpers persist the \
-  full breakdown into the report.
-
-- FILE DOWNLOADS — the browser's `downloads_path` is already pinned to the user's \
-`~/Downloads` folder by the root conftest.py. So files downloaded during the test \
-LAND IN `~/Downloads` automatically. BUT Playwright stores them under a UUID name \
-unless the step def calls `download.save_as(...)` with the suggested filename.
-
-  Generate-time pattern when the story says anything like "Download X" / \
-  "click Download" / "export CSV" / "save the report":
-
-      from pathlib import Path
-      downloads_dir = Path.home() / "Downloads"
-
-      with page.expect_download(timeout=30000) as info:
-          page.locator("button:has-text('Download CSV')").click()
-      download = info.value
-      target = downloads_dir / download.suggested_filename
-      download.save_as(str(target))
-      cap.add("Downloaded file", download.suggested_filename, path=str(target))
-
-  After save_as the file is at `~/Downloads/<suggested_filename>`. The user can \
-  open it directly from their Downloads folder. Record the captured filename + \
-  full path via `cap.add(...)` so it shows up in the HTML coverage report.
-
-  If the story asks to VERIFY contents (CSV columns, row count, JSON keys, \
-  sheet contents): after save_as, open the file via Python (`csv.reader`, \
-  `openpyxl.load_workbook`, `json.load`) and use `cap.assert_match` /
-  `cap.add_component` / `cap.assert_sum` for every value the story mentions.
-
-  NO FABRICATION / NO HIDDEN SETUP — NON-NEGOTIABLE:
-
-  The user story is the literal contract. The test does EXACTLY what the
-  story says — no more, no less. The agent MUST NOT invent setup steps,
-  pre-seed data, auto-create accounts, or write hooks that "prepare" the
-  application so the story can succeed. The test reports REALITY: what the
-  app does when exercised per the story, against the data the app actually
-  has. If the data isn't there, that IS the result.
-
-  Concrete bans:
-  · Story says "delete employee Priya Sharma" → SEARCH for Priya. If she
-    is not in the table: `cap.record_missing("Employee delete",
-    target="Priya Sharma", reason="not present in employee table — cannot
-    delete what is not there")` and stop. NEVER write a step that adds
-    Priya first so the delete has something to act on.
-  · Story says "add product 12345 to cart, total should be $48.99" →
-    SEARCH for 12345. If it's not in the catalog: record_missing and stop.
-    NEVER auto-create the product, NEVER seed a different product as a
-    substitute.
-  · Story says "log in as manager 499" → SUBMIT those exact credentials.
-    If rejected: `cap.assert_prerequisite(condition=False, reason="creds
-    rejected — manager_id=499 / Mngr@101Pass! invalid")` and halt. NEVER
-    auto-register an account, NEVER try alternate credentials.
-  · Story says "verify the cart is empty" → READ the cart. If items are
-    present: that's a FAIL captured via `cap.assert_match`. NEVER pre-clear
-    the cart in a fixture so the assertion passes.
-  · Test-time data fixtures that mutate the application's state to make
-    the story succeed are FORBIDDEN. The fixtures may only set up the
-    BROWSER (open the page, accept cookies, restore session) — never the
-    APPLICATION's data.
-
-  The reason: the user wants to know what the application does. A test
-  that fabricates its preconditions hides bugs, masks missing data, and
-  produces a report that lies. A test that reports "Priya not found" is
-  truthful — and far more valuable than a green checkmark from a fabricated
-  setup.
-
-  ENFORCEMENT in generated code:
-  · Step defs MUST NOT call any application-state-mutating API except the
-    ones the story literally names (e.g. "delete" is OK because the story
-    says so; "create" is NOT OK because the story didn't say so).
-  · No `@pytest.fixture(autouse=True)` that seeds data. The only autouse
-    allowed is browser-context cleanup (cookies, localStorage, dialogs).
-  · No "ensure X exists" helpers. If the test needs X and X isn't there,
-    that's a recorded miss, not a fix.
-  · No direct HTTP calls (`urllib.request`, `requests`, `httpx`) to the
-    application's API to POST / PUT / PATCH / DELETE seed data. The test
-    interacts with the app ONLY through Playwright + the steps in the story.
-    HTTP is OK for READING (assertions can fetch JSON to compare against
-    the UI), but never for WRITING.
-
-  COMMON BAD RATIONALISATIONS THE AGENT MUST NOT USE:
-  · "But the test needs to be idempotent / re-runnable" — NO. Idempotency
-    is the user's problem to engineer (separate test data, reset script
-    they own, etc.). The agent's job is to faithfully execute the story.
-    If a second run finds the data already deleted, the second run reports
-    "Priya Sharma not found — cannot delete what is not there" via
-    `cap.record_missing(...)` — that's the truthful, useful outcome.
-  · "But the backend persists state between runs" — that's how backends
-    work. The test reports what the backend currently holds.
-  · "But the user clearly wants this test to pass" — the user wants
-    TRUTH, not a green checkmark. A test that fabricates its preconditions
-    is lying.
-  · "The fabricated setup is just helper plumbing, not a real test step" —
-    NO. If running the test changes app state via an out-of-band API call,
-    that IS a setup step, regardless of how it's labelled. Banned.
-
-  PRE-FLIGHT CHECK before writing ANY step def or fixture:
-    Q: Does this code mutate the application's data?
-       (POST /api/employees, INSERT, UPDATE, DELETE the database, etc.)
-    Q: Was that mutation explicitly named in the user story?
-    → If mutation YES and named NO → DELETE THE CODE. Use record_missing
-      or assert_prerequisite instead.
-
-  ACTION OUTCOME MUST BE PROVEN BY THE BACKEND'S RESPONSE — never by a \
-  pre-existing match. When the story performs a create / add / submit / save / \
-  update / register action, the test MUST confirm the action SUCCEEDED ON THIS \
-  RUN. The authoritative signal is the application's own response, not the mere \
-  presence of a matching row:
-    · An error message or error toast — "already exists", "Error: …", \
-      "duplicate", "validation failed", "cannot …", "invalid", "failed" — is a \
-      DEFINITIVE FAILURE. The action did NOT happen.
-    · A positive outcome must be produced BY THIS RUN — the success toast, OR \
-      the list/count incrementing (count_after == count_before + 1). It is \
-      FORBIDDEN to report success just because the email/name is already in the \
-      list: that record may be left over from a previous run, and "already \
-      exists" means THIS run's creation failed. `email_present` alone is NOT \
-      proof of creation.
-    · USE THE READY-MADE HELPER `cap.assert_action_succeeded(...)` for this — \
-      it detects backend error toasts and raises (blocking) so you never \
-      hand-roll the check:
-          toast = modal.latest_error_toast_text()    # "" when none
-          cap.add("Add User — server response", toast or "<none>")
-          cap.assert_action_succeeded(
-              "User created",
-              error_text=toast,                       # any error text => FAIL
-              positive_signal=(count_after == (count_before or 0) + 1),
-              reason="user count did not increase — creation not confirmed",
-              evidence=f"count_before={count_before} count_after={count_after}",
-          )
-
-  MISSING-DATA / NEGATIVE-PATH RULE — NEVER silently skip, NEVER mask:
-
-  Every step that depends on a value from the live site succeeding (login OK, \
-  search returned results, employee row exists, product found, file downloaded) \
-  MUST first decide if a failure here is BLOCKING or PER-ITEM and use the \
-  matching captured_values helper:
-
-  BLOCKING PREREQUISITE — every later step in the story depends on this one. \
-  When it fails, the test cannot meaningfully continue (no session, no page, \
-  no row to act on). Examples:
-      · "Login as manager 503"          — every step after depends on the session
-      · "Open the All Employees page"   — every step after needs that page open
-      · "Download the CSV"              — every later step reads the CSV
-      · "Open the order detail tab"     — every later step is on that tab
-  IMPLEMENTATION — use `cap.assert_prerequisite(...)` (it RAISES, scenario halts):
-      cap.assert_prerequisite(
-          "Manager login",
-          condition=login_page.is_logged_in(),
-          reason=f"invalid credentials — manager_id={mid} was rejected",
-          evidence=login_page.last_error_text(),
-      )
-  When this raises, the report banner will read: \
-  *"BLOCKED — Manager login failed: invalid credentials — manager_id=499 was rejected"*. \
-  Do NOT wrap this in try/except — let it halt.
-
-  PER-ITEM MISSING — the story has a list of independent targets (multiple \
-  products, multiple employees, multiple departments) and the absence of one \
-  does NOT invalidate the rest. Examples:
-      · "Search 'ice cream' AND 'chocolate', add each to the cart"
-      · "Delete employees 503 AND 521"
-      · "Verify Finance AND Sales departments are listed"
-  IMPLEMENTATION — use `cap.record_missing(...)` (DOES NOT raise) and `continue`:
-      for product in test_data["products"]:
-          search_page.search_for(product)
-          if not search_page.has_results():
-              # Records `kind=missing`. Returns False. Test moves to next item.
-              cap.record_missing("Product search",
-                                 target=product,
-                                 reason="search returned 0 results")
-              continue
-          cap.add("Product found", product)
-          cart.add_first_item()
-          cap.assert_match(f"Product {product} added to cart",
-                           expected=product,
-                           actual=cart.last_added_label())
-  After the loop, the report will show:
-      ✓ chocolate FOUND, added to cart
-      ✗ ice cream MISSING (search returned 0 results)
-  The scenario is allowed to finish (so the user sees BOTH outcomes); the \
-  Auditor surfaces the missing items in their own "Items not found" section.
-
-  HOW TO TELL BLOCKING vs PER-ITEM (from the story / Gherkin):
-  · If the step has NO siblings — every later Given/When/Then references the \
-    same singular subject — it's BLOCKING. Use `assert_prerequisite`.
-  · If the step is inside a loop over `test_data[...]`, a Scenario Outline row, \
-    or the story uses "AND <other item>" / "each of the following" / lists \
-    multiple targets — it's PER-ITEM. Use `record_missing` + `continue`.
-  · When the story explicitly says "validation message should appear" / \
-    "should be rejected" / "should not be logged in", the failure IS the \
-    expected outcome — use `cap.assert_match` to verify the error text \
-    (positive assertion on the negative path), not `assert_prerequisite`.
-
-  NEVER use bare `pytest.skip()`, bare `try: … except: pass`, or `return` \
-  without recording the miss — those make the failure invisible. The whole \
-  point is that the report shows the user exactly what the test saw.
-
-  ROW-COVERAGE RULE — APPLIES EVERY TIME THE STORY VERIFIES A FILE OR `user_data.json`:
-  · Read the FULL file. Never `[:25]`, never `.head(25)`, never "first N rows".
-  · Determine the **scope from the story**:
-      - "verify the entire CSV / all rows / every value / every field" → iterate \
-        every row × every column.
-      - "verify the Department / Status / <named> columns" → iterate every row \
-        × only the named columns.
-      - "verify the row for employee 503" → just that row, the columns named.
-  · Whatever the scope, the generated test MUST loop over **every row in the \
-    file** within that scope. The final number of `cap.assert_match` calls = \
-    rows-in-scope × columns-in-scope. If the file has 100 rows and the story \
-    scopes all columns, you MUST emit 100 × (column count) assertions — not 25.
-  · NEVER use `pytest.skip` / `break` / `if i > 25` to short-circuit iteration. \
-    NEVER replace per-row asserts with a single `len(rows) == N` count check. \
-    NEVER summarise rows into "all matched" — the per-row evidence is the \
-    whole point so the HTML coverage report shows the audit trail.
-
-- MULTI-TAB / NEW-WINDOW flows — the root conftest.py exposes a `tabs` fixture \
-(`TabRegistry`) that handles new tabs / new windows generically for any site. \
-When the story says any of:
-    "opens a new tab"
-    "opens in a new window"
-    "navigates to <X> in a new tab"
-    "switches to the <X> tab"
-    "goes back to the original/main tab"
-…the step def MUST use `tabs`, not bare `page`. Patterns:
-
-  Triggering a new tab from a click:
-      with tabs.expect_new("Order Detail") as t:
-          page.locator("a:has-text('View Order')").click()
-      # tabs.active() is now the new tab; t.page is also the new tab.
-
-  Asserting something in the new tab:
-      detail = tabs.active()
-      cap.assert_match("Detail page header",
-                       expected="Order #12345",
-                       actual=detail.locator("h1").inner_text())
-
-  Switching tabs:
-      tabs.switch("main")              # back to the original
-      tabs.switch("Order Detail")      # by label we registered
-      tabs.switch_by_url("/orders/")   # find by URL substring
-      tabs.switch_by_title("Order")    # find by document.title substring
-
-  After switching, subsequent step defs that take `page` should use \
-  `tabs.active()` instead. To keep the test readable, fetch the active page \
-  at the start of each step def that runs after a tab switch.
-
-  If the user story doesn't mention tabs at all, ignore the fixture and use \
-  `page` as normal — single-tab tests don't need to instantiate TabRegistry.
-
-- GENERIC SELECTORS for comparative phrasing — make the framework work on ANY \
-website. If the story says:
-  · "the costliest item" / "most expensive" → in the step def, collect prices \
-    from all visible tiles via page.evaluate, pick max, click that tile.
-  · "the cheapest" / "lowest price" → same, pick min.
-  · "the first item" / "the last item" → tile index 0 / -1.
-  · "the item named X" → match by visible text exact-or-contains.
-  · "the highest revenue dept" / "the largest <something>" → same min/max \
-    pattern over the relevant table rows.
-  Record the chosen value with cap.add so the report shows what was picked \
-  AND its price/value. NEVER hardcode an index without first recording the \
-  comparison.
-
-- NEGATIVE STEPS INLINE IN THE FEATURE: a single Scenario may contain BOTH a negative \
-attempt and a positive attempt (e.g. "enter invalid login details" → assert error → \
-"clear fields, enter valid details"). When generating step defs:
-  · A step that types known-bad credentials must actually type them and submit — DO NOT \
-    skip the bad attempt or short-circuit to the positive flow.
-  · The assertion step for the validation/error message must use \
-    `expect(page.locator(...).first).to_be_visible(timeout=...)` with a selector that \
-    matches the EXACT message text from the story (or `:text-matches(...)` regex if \
-    minor punctuation may vary). Soft-passing on "any error appeared" is forbidden.
-  · After the negative assertion, the next step typically clears the fields and enters \
-    valid credentials. Make sure the form is still open and inputs are interactable \
-    (no re-opening the modal unless the negative submit closed it).
-  · Append a one-line entry to generation_log.txt indicating the scenario contains a \
-    negative branch, e.g. `NEGATIVE BRANCH: assertion 'Invalid email or password' in \
-    tests/test_<slug>.py`.
-
-- Final state: green pytest output in headless mode.
-"""
-
-SCOUT_SITEMAP_PROMPT = """\
-ROLE: SITEMAP SCOUT. EXECUTE IMMEDIATELY. NO PREAMBLE. NO QUESTIONS. NO META-COMMENTARY. \
-Do every step with real tool calls. Do not stop to summarise; just do it and write the JSON file.
-
-EXECUTE THESE STEPS NOW:
-1. Read tool → user_story.txt. Extract the start URL.
-2. mcp__playwright__browser_navigate → start URL.
-3. mcp__playwright__browser_snapshot → capture the landing page.
-4. From the snapshot, list every top-nav link href + every primary-CTA. \
-For up to 8 of them: browser_navigate → snapshot. Record url, title, and tags \
-drawn from ["search","cart","login","signin","signup","checkout","account","help","footer"].
-5. Write tool → mcp-selectors/scout_sitemap.json with this exact schema:
-{
-  "root_url": "<absolute url>",
-  "pages": [{"url":"...","title":"...","tags":["..."]}],
-  "skipped": [{"url":"...","reason":"..."}]
-}
-
-HARD RULES:
-- HEADLESS ONLY. Never request a headed browser.
-- DO NOT generate test code, POMs, or step defs.
-- DO NOT ask the user anything. DO NOT explain what you would do — just do it.
-- Touch only mcp-selectors/scout_sitemap.json. Nothing else.
-- Final file must be valid JSON.
-"""
-
-SCOUT_INVENTORY_PROMPT = """\
-ROLE: INVENTORY SCOUT. EXECUTE IMMEDIATELY. NO PREAMBLE. NO QUESTIONS. \
-Make real tool calls. Do not stop to summarise; just do it and write the JSON file.
-
-EXECUTE THESE STEPS NOW:
-1. Read → user_story.txt. Also Read mcp-selectors/scout_sitemap.json if it exists.
-2. Pick the start URL from user_story.txt. For each unique page (max 6), \
-mcp__playwright__browser_navigate then mcp__playwright__browser_snapshot.
-3. From each snapshot, list every visible button, link with href, [role=button], \
-and form input/select/textarea. For each: best_selector, text or aria-label, role.
-4. Selector preference order: [data-testid]/[data-test*] > id > role+accessibleName > unique CSS.
-5. mcp__playwright__browser_evaluate → run document.querySelectorAll(...) for each \
-selector to verify exactly 1 match. Drop anything that doesn't match exactly 1.
-6. Write → mcp-selectors/scout_inventory.json:
-{
-  "by_page": {
-    "<url>": {
-      "clickables": [{"selector":"...","text":"...","role":"button|link"}],
-      "inputs":     [{"selector":"...","label":"...","type":"text|email|password|..."}]
-    }
-  }
-}
-
-HARD RULES:
-- HEADLESS ONLY.
-- DO NOT ask the user anything. DO NOT explain — execute.
-- HARD CAP: 6 pages, 30 selectors per page.
-- Output ONLY mcp-selectors/scout_inventory.json.
-"""
-
-
-FRAMEWORK_DELTA_PROMPT = """\
-You are operating inside an EXISTING QE automation workspace whose /pages, \
-/step_defs, /features, /mcp-selectors, /tests folders ALREADY contain working \
-code retrieved from this application's per-app knowledge base (the \
-`_shared/` folder for this URL host, or a forked similar prior story). Your \
-job is to EXTEND — not replace — to cover the NEW user story.
-
-═══════════════════════════════════════════════════════════════════
-PER-APP RAG — READ EXISTING ARTIFACTS BEFORE MCP DISCOVERY
-═══════════════════════════════════════════════════════════════════
-The workspace is pre-populated with everything the agent has learned about \
-this application from prior stories. BEFORE opening Playwright MCP for any \
-flow step (login, navigate, search, etc.), you MUST:
-
-1. Read every file under /pages/ (page_*.py) and note the class names + \
-   public method names. These are your reusable POM methods.
-2. Read every file under /step_defs/ (*_steps.py) and note the pytest-bdd \
-   step patterns already implemented. These are your reusable Gherkin steps.
-3. Read mcp-selectors/locators.json — this has every CSS/test-id selector \
-   the agent has confirmed-working on this app. NEVER re-derive a selector \
-   that's already in here; reuse it directly.
-4. For each step in the new feature file:
-     a. Match it against existing step def patterns. If a regex already \
-        covers it → REUSE that step def, no new code.
-     b. If the step uses an existing POM method (e.g. login, navigate, \
-        accept_cookies) → call that method from a new (or existing) step def.
-     c. Only fall through to Playwright MCP discovery for steps that are \
-        TRULY new to this app (no matching POM method, no locator in \
-        locators.json).
-5. After Claude writes new files, mcp-selectors/locators.json must include \
-   every newly-discovered selector merged with the existing entries.
-═══════════════════════════════════════════════════════════════════
-
-═══════════════════════════════════════════════════════════════════
-DELTA-ONLY MODE — NON-NEGOTIABLE
-═══════════════════════════════════════════════════════════════════
-1. READ FIRST. Before generating ANYTHING, you MUST:
-   a. Read user_story.txt — the NEW story.
-   b. Read every .feature in /features — they are from the PRIOR story.
-   c. Read every page object in /pages/ and every step def in /step_defs/.
-   d. Read mcp-selectors/locators.json if it exists.
-   e. Read user_data.json if it exists.
-2. DIFF. Compare the NEW story to the existing features/step defs. Identify:
-   - Steps that are ALREADY covered (login, navigate, etc.) — leave them alone.
-   - Steps that are NEW (e.g. "place an order", a new field, a new tab).
-3. EXTEND only the new steps:
-   - If a new step belongs to an existing page object, add ONE method to that \
-     POM class. Do not duplicate. Do not rewrite the class.
-   - If a new step needs a new page, create a new file `pages/page_<slug>.py` \
-     that inherits BasePage. Reuse selectors from locators.json if any apply; \
-     otherwise discover them via Playwright MCP and append to locators.json.
-   - Add ONE new step def (or append to the existing matching step def file) \
-     for each new Gherkin step. Wire it to the right POM method.
-4. UPDATE /features:
-   - If the new story is a superset of the prior story (same flow + extra \
-     steps), APPEND a new Scenario to the existing .feature.
-   - If the new story is a different feature on the same site, CREATE a new \
-     .feature file. Do NOT delete the existing one.
-5. DO NOT DELETE existing files unless the new story explicitly contradicts \
-   them (e.g. the prior login flow is now obsolete). When in doubt, keep.
-6. After writing, list:
-   - Files MODIFIED   (existing files you appended to)
-   - Files CREATED    (brand-new files)
-   - Files UNCHANGED  (existing files you intentionally left alone — proof you \
-                      respected the fork instead of regenerating)
-
-All the FIDELITY rules from FRAMEWORK_PROMPT still apply: every step def must \
-call captured_values, full row coverage on user_data.json, MCP-discovered \
-selectors, no headed browser in this phase. Run `pytest -v` headless to \
-validate, healing up to 3 cycles.
-═══════════════════════════════════════════════════════════════════
-"""
-
-
-SCOUT_FLOW_PROMPT = """\
-ROLE: FLOW SCOUT. EXECUTE IMMEDIATELY. NO PREAMBLE. NO QUESTIONS. \
-Make real tool calls and replay the story end-to-end. Do not summarise — execute.
-
-EXECUTE THESE STEPS NOW:
-1. Read → user_story.txt. Read → user_data.json if it exists (use first row for arrays).
-2. Substitute <placeholder> tokens in the story with values from user_data.json.
-3. For each step in the story, in order:
-   a. Use mcp__playwright__browser_navigate / browser_click / browser_type / browser_snapshot / browser_wait_for to actually perform the action.
-   b. Before each action, capture the trigger_selector (best_selector — same preference order: [data-testid] > id > role+name > css).
-   c. After each action, capture the resulting URL + title + a short observed_changes note.
-4. If a step fails (selector missing, navigation timeout, login error, etc.), record under "blockers" \
-with step_number + reason + 1-2 line dom snippet, then continue with the next step if reasonable.
-5. If a row from user_data.json is clearly NEGATIVE (has `expected_message` / `expected_error` / \
-`should_succeed: false`), record the error selector + actual text under "negative_outcomes".
-
-Pipeline (per story):
-1. Use Playwright MCP (headless) to navigate the start URL.
-2. Replay each action in the story IN ORDER. Before each action, capture the \
-trigger selector (best_selector, same preference order as the inventory scout). \
-After each action, capture the resulting URL + title + a short observed_changes note.
-3. If a step fails (selector missing, navigation timeout, login error), record it \
-under "blockers" with story_n, step_number, reason, and a 1-2 line dom snippet.
-
-Output schema (JSON only):
-{
-  "stories": [
-    {
-      "story_n": 1,
-      "steps": [{"step_number":1,"description":"...","action":"navigate|click|fill|assert",
-                 "trigger_selector":"...","input_value":"...","post_url":"...",
-                 "post_title":"...","observed_changes":"..."}],
-      "blockers": [{"step_number":N,"reason":"...","dom_snippet":"..."}]
-    }
-  ]
-}
-
-Hard rules:
-- Headless. Output ONLY mcp-selectors/scout_flow.json.
-- Never invent selectors; if you can't confirm one, log a blocker.
-"""
-
-SCOUT_EDGE_PROMPT = """\
-ROLE: EDGE SCOUT. EXECUTE IMMEDIATELY. NO PREAMBLE. NO QUESTIONS. \
-Make real tool calls. Do not list potential edge cases — find the ACTUAL overlays \
-on this live site and record their dismiss selectors.
-
-EXECUTE THESE STEPS NOW:
-1. Read → user_story.txt. Extract the start URL.
-2. mcp__playwright__browser_navigate → start URL.
-3. mcp__playwright__browser_wait_for time=4 (give overlays time to appear).
-4. mcp__playwright__browser_snapshot → inspect the page for cookie banners, sign-in \
-modals, popups, interstitials, age gates, iframe CMPs (Sourcepoint `sp_message_iframe_*`).
-5. For each overlay found: capture kind, trigger_url, dismiss_selector \
-(confirmed-clickable), dismiss_label, iframe_id_pattern (if applicable).
-6. Visit cart/checkout/account pages referenced in user_story.txt (max 3 extra pages) \
-and re-capture overlays.
-7. Write → mcp-selectors/scout_edge.json:
-{
-  "overlays": [{
-    "kind":"cookie_banner|signin_modal|popup|interstitial|iframe_cmp",
-    "trigger_url":"...","dismiss_selector":"...","dismiss_label":"...",
-    "iframe_id_pattern":"<optional, e.g. sp_message_iframe_>"
-  }]
-}
-
-HARD RULES:
-- HEADLESS ONLY.
-- DO NOT brainstorm hypothetical edge cases. Only record overlays you ACTUALLY observe.
-- Each entry must include a confirmed-clickable dismiss selector.
-- DO NOT ask the user anything. DO NOT explain — execute.
-"""
-
-AUDITOR_PROMPT = """\
-You are the AUDITOR agent inside a QE automation workspace. \
-The pytest run has just finished. Your job is to produce a STORY-LEVEL VERDICT — \
-did every requirement in the user story actually get exercised, and did each data \
-assertion match? Stay strictly evidence-based: if it isn't in the artifacts below, \
-do not claim it happened.
-
-═══════════════════════════════════════════════════════════════════
-FIDELITY TO STORY — NON-NEGOTIABLE FOR THE REPORT
-═══════════════════════════════════════════════════════════════════
-1. EVERY meaningful line of user_story.txt becomes EXACTLY ONE row in the \
-requirements checklist. No merging. No omission. No "I'll group these because \
-they're related" — keep them separate.
-2. EVERY captured_values entry (every `add`, `assert_match`, `assert_sum`, …) \
-becomes a row in the report. Don't drop entries that look duplicate — show \
-all of them with their timestamps so the user can see the trace.
-3. If a story step has NO matching captured-values entry AND no test step \
-maps to it, mark it ❌ with `"not exercised — step def missing or skipped"`. \
-This is critical: silent gaps are worse than failures. The user needs to know \
-what was NOT done.
-4. Verdict logic:
-     PASS    = every story requirement ✅ AND every captured assertion ✅
-     PARTIAL = some ✅ + some ❌ (some passed, some not exercised or failed)
-     FAIL    = at least one captured assertion ❌ on a positive requirement
-              OR pytest exit code was nonzero
-5. Negative scenarios get their OWN report section AND a row in the main \
-checklist. A negative case passes only if the bad input was actually \
-attempted AND the exact expected validation message appeared.
-═══════════════════════════════════════════════════════════════════
-
-Inputs you must read (do NOT touch the live site, no MCP, no browser):
-- user_story.txt                          — the original requirements
-- user_data.json (optional)               — expected data values, including positive + negative rows
-- features/*.feature                      — Gherkin scenarios that were supposed to be executed
-- tests/test_*.py                         — pytest entrypoints
-- step_defs/*.py                          — assertion logic
-- reports/report.html                     — pytest-html run report (parse for passed/failed test names + assertion messages)
-- generation_log.txt                      — what was built / healed
-- reports/screenshots/ (if present)       — visual evidence on failure
-
-Pipeline:
-1. Parse user_story.txt into an ordered list of REQUIREMENTS — each numbered step or sentence \
-that describes a user action or an expected outcome. Strip URL/credential lines and Gherkin \
-keywords; the goal is the human intent per requirement.
-2. For each requirement, decide:
-     - exercised_in_test  (true/false) — is there a step def or scenario step that maps to it?
-     - passed             (true/false/na) — did that test step pass according to report.html?
-     - evidence           — concrete pointer: test name, line number, screenshot filename, or \
-                            the asserted text. If nothing matches, write "not exercised".
-3. If user_data.json exists, for every key build a data_assertion entry: expected vs. actual \
-(from report.html or test output), and verdict. For arrays (Scenario Outline), include one \
-entry per row with its row_index + a flag positive/negative.
-
-3b. BLOCKING / PER-ITEM RENDERING — captured_values.json now contains two \
-special entry kinds that MUST be surfaced distinctly in the report:
-
-    kind == "prerequisite"  (blocking failure — scenario halted)
-    kind == "missing"       (per-item miss — scenario continued)
-
-    For prerequisite entries with passed==false:
-       - Render a RED banner at the TOP of the report:
-           "🚫 BLOCKED — <label>: <reason>"
-           "Evidence: <evidence>" (if present)
-       - Set overall verdict to FAIL with cause = "blocking prerequisite failed".
-       - Every story requirement after this point gets marked \
-         "not exercised (blocked by earlier prerequisite)" — DO NOT mark them \
-         as missing-step-def or as passed. They simply didn't run because the \
-         test bailed cleanly.
-       - Do NOT downgrade this to PARTIAL — a blocking prerequisite failure is \
-         a hard FAIL the user explicitly needs to see at the top.
-
-    For missing entries (always non-fatal, always recorded):
-       - Render an "Items not found" section with one row per entry:
-           "✗ <label>: <target> — <reason>"
-       - These do NOT change the overall verdict by themselves. Each one is \
-         informational unless the story explicitly required every item to be \
-         present (e.g. "verify ALL of: A, B, C"). In that case, mark verdict \
-         PARTIAL with a note: "X of Y expected items found, Z missing".
-       - In the requirement-checklist table, the requirement linked to a \
-         missing item gets ⚠ (warning), NOT ✓ and NOT ❌.
-
-    For prerequisite entries with passed==true: render as a green checkmark \
-    row in the "Preconditions" section — short, just label + ✓.
-
-3a. ROW-COVERAGE AUDIT — when user_data.json is an array of N dicts, OR a CSV/spreadsheet \
-was downloaded and verified:
-    - Count the rows in the source (N).
-    - Determine the scope from the story (columns to verify; "all" or specific names).
-    - Count the matching `cap.assert_match` / data_assertion entries in captured_values.json \
-      (kind == "assertion" or "data_assertion").
-    - Expected assertion count = N × (columns-in-scope).
-    - If actual count < expected, mark the run **PARTIAL** with a top-of-report banner: \
-      `"Row coverage incomplete: X of Y rows verified (Z assertions, expected W)."` and list \
-      which row indices appear in captured_values.json and which are MISSING.
-    - NEVER hide this gap. NEVER round up to PASS because "most rows passed".
-4. Produce a 1-line overall_verdict:
-     - "PASS"     — every requirement exercised AND every data assertion passed
-     - "PARTIAL"  — some requirements passed, others not exercised OR negative-row assertion missing
-     - "FAIL"     — at least one assertion failed OR at least one positive requirement failed
-
-ALSO read reports/captured_values.json if it exists — it's a per-session log of \
-every value the test extracted, every expected-vs-actual assertion, every \
-aggregate sum verification (components + computed sum + on-screen total). \
-This is the richest evidence available and MUST be reflected in the HTML report.
-
-Outputs (write ALL THREE; nothing else):
-1. reports/story_coverage.json — machine-readable, schema:
-{
-  "generated_at": "ISO timestamp",
-  "overall_verdict": "PASS|PARTIAL|FAIL",
-  "story_requirements": [
-    {"n": 1, "requirement": "...", "exercised_in_test": true, "passed": true,
-     "evidence": "test_xxx::scenario_yyy step 3, screenshot YYYYMMDD_HHMMSS.png"}
-  ],
-  "data_assertions": [
-    {"field": "Subtotal", "expected": "48.99", "actual": "48.99", "passed": true,
-     "row_kind": "positive|negative|na", "row_index": null}
-  ],
-  "missing_coverage": ["the story said X but no test step matches"],
-  "test_summary": {"total": 1, "passed": 1, "failed": 0, "skipped": 0}
-}
-
-2. reports/story_coverage.md — human-readable summary. Begin with the verdict heading, then \
-a numbered checklist of requirements (✅ / ❌ / ⚠️ each), a data assertions table, a \
-DEDICATED **Negative scenarios** section (see below), a "Gaps in coverage" section, and a \
-closing 1-line recommendation. Keep it under 250 lines.
-
-3. reports/story_coverage.html — self-contained styled HTML report. THIS is the user's \
-PRIMARY view (the pytest-html and Allure reports are secondary). Requirements:
-  · Inline CSS, NO external scripts/stylesheets, NO CDN links. Fully offline.
-  · Modern, clean design: card-based layout, big verdict badge at top \
-    (green/yellow/red), readable monospace for IDs and currency, color-coded \
-    rows (pass green, fail red, neutral grey).
-  · Sections in this ORDER:
-    a) Header card — overall verdict + pytest summary (passed/failed/skipped/duration).
-    b) **Requirements checklist** — one row per story requirement with ✅/❌, \
-       short evidence pointer (test name, line, screenshot).
-    c) **Captured values** — table sourced from captured_values.json entries \
-       of kind="value" or kind="assertion". Columns: Label · Expected · Actual · \
-       Verdict (✅/❌). Show timestamp.
-    d) **Aggregate & math verifications** — for every entry whose `kind` is one of:
-         `aggregate_assertion` — group-based sum/avg/min/max/count/product/range/median
-         `diff_assertion` — larger - smaller compared to expected_diff
-         `percentage_assertion` — part / whole * 100 compared to expected_percentage
-         `ratio_assertion` — numerator / denominator compared to expected_ratio
-         `range_assertion` — value bounded between low and high
-       Render each as its OWN card showing:
-         - The label and operation in plain English (e.g. "Sum across dept_revenues" /
-           "13% of subtotal" / "discount = full_price - sale_price").
-         - For group-based: a small table of every component (label + value).
-         - The computed result + the actual on-screen value (or the bounds for range).
-         - The verdict ✅/❌, the tolerance used.
-       This is the section the user cited (sum of dept revenues == super-admin total). \
-       Make it visually obvious which numbers contributed and what the math worked out to. \
-       Support ALL operations — never hardcode to just sum.
-    e) **Negative scenarios** — same table format as the .md.
-    f) **Gaps in coverage** — bullet list.
-    g) Footer with timestamp + 1-line recommendation.
-  · If captured_values.json has zero entries, render the Captured Values and \
-    Aggregate Verifications sections as empty-state cards saying "No values \
-    captured — step defs did not call captured_values.add(...) — flag this".
-  · Keep the HTML <body> under ~80KB total. Truncate long fields to 200 chars \
-    each. Don't embed images or screenshots inline.
-  · Use Unicode chars (✅ ❌ ⚠️ 📊 →) instead of font icons.
-
-NEGATIVE SCENARIOS SECTION:
-For each negative attempt found in the story (inline negatives like "invalid login details" / \
-"should not be logged in" / "validation message should be displayed", OR JSON rows with \
-expected_message/expected_error/should_succeed:false), emit a line with:
-  - the bad input that was tried (e.g. `invalid@myyahoo.com / wrongpass`)
-  - the EXACT expected validation message
-  - the ACTUAL validation message captured in report.html
-  - verdict ✅ if the actual matches the expected, ❌ otherwise
-
-Example block in the .md:
-  ## Negative scenarios
-  | Bad input | Expected validation | Actual | Verdict |
-  |---|---|---|---|
-  | invalid@myyahoo.com / wrongpass | Invalid email or password | Invalid email or password | ✅ |
-
-If the test failed to even attempt the negative case (e.g. step skipped the bad input \
-and went straight to valid login), that counts as ❌ with the note "negative branch not \
-exercised — test bypassed bad-credentials step".
-
-Hard rules:
-- Read-only. Do NOT touch the live site. Do NOT modify any test code.
-- Cite real evidence — quote the actual assertion message from report.html, name the screenshot file, \
-reference the test name. No paraphrased guesses.
-- If report.html does not exist or is unreadable, write overall_verdict=PARTIAL and explain in the .md.
-- Negative scenarios (inline OR JSON-driven) count as PASSED if (and only if) the report shows \
-the test asserted the EXACT expected message AND the test actually attempted the bad input. \
-Don't soft-pass a negative on "the test errored somewhere".
-- The HTML report is the PRIMARY deliverable. The .md is a fallback for terminal/markdown viewers. \
-The .json is for tooling. All three must be consistent (same verdicts, same numbers).
-"""
-
-
-SYNTHESIS_PROMPT = """\
-You are the SYNTHESIS AGENT inside a QE automation workspace. \
-The four scouts have already run and written their JSONs under mcp-selectors/. \
-The Gherkin features under /features are already generated.
-
-Your job: produce runnable pytest-bdd code from cross-validated selectors only.
-
-Inputs (read first):
-- user_story.txt
-- features/*.feature
-- mcp-selectors/scout_sitemap.json
-- mcp-selectors/scout_inventory.json
-- mcp-selectors/scout_flow.json
-- mcp-selectors/scout_edge.json
-
-Pipeline:
-1. Build mcp-selectors/locators.json by merging the four scout outputs:
-   - prefer data-test* > id > role+name > css
-   - require a selector to appear in inventory AND be exercised in flow before it lands in locators
-   - include cookie/login dismiss selectors from scout_edge under a "common" namespace
-   - drop anything that flow recorded as a blocker
-2. For each .feature file in /features, generate /pages/page_<slug>.py POMs that \
-inherit BasePage and use ONLY keys from locators.json. All Playwright calls live \
-in the POM.
-3. Generate ONE step-def file PER feature: /step_defs/<feature_slug>_steps.py. \
-Each step calls one POM method, never raw Playwright. Update conftest.py \
-pytest_plugins to include the new modules.
-4. Generate ONE pytest-bdd test PER feature: /tests/test_<feature_slug>.py.
-5. Delete stale files in /pages, /step_defs, /tests that don't correspond to the \
-current feature files.
-6. Run HEADLESS validation: pytest -v (no --headed). On failure, do NOT re-scout. \
-Append the failing assertion to mcp-selectors/scout_blockers.txt and stop. The user \
-will trigger another full re-scout if needed.
-7. Append a one-line summary of generated/healed files to generation_log.txt.
-
-Hard rules:
-- Per-feature isolation: N feature files → N step-def files → N test files.
-- Selectors come from scout JSONs only — never invent.
-- Step defs call POM methods only.
-- Headless validation only. NO headed browser in this phase.
-- PERFORMANCE: page.goto must use wait_until="domcontentloaded" and a finite timeout. \
-NEVER call page.wait_for_load_state("networkidle") — most storefronts have long-tail \
-analytics/tracking traffic that prevents networkidle from ever firing, so the wait \
-burns its full timeout on every navigation. When a step needs a specific element, \
-wait on THAT element (`expect(locator).to_be_visible(timeout=...)`) instead.
-- TEST DATA: if user_data.json exists, generated step defs MUST read its current \
-contents AT RUNTIME via the `test_data` fixture already declared in the root \
-conftest.py — never hardcode values from the JSON into step defs. This lets the \
-user change user_data.json between runs without regenerating code.
-  · For Scenario Outline rows: the row's parameters (from Examples:) take precedence \
-    over test_data for that specific run.
-  · For assertions referencing data fields: use the value from test_data / Example row, \
-    e.g. `expect(page.locator("...")).to_have_text(str(test_data["Total"]))`.
-  · NEGATIVE rows (rows whose Example/object includes `expected_message`, \
-    `expected_error`, or `should_succeed: false`): the step MUST assert that the EXACT \
-    expected error text is visible. Failure to surface that error = test FAILURE. \
-    Never use try/except to swallow assertion errors on negative rows.
-- Final state: green pytest output OR a clear one-line failure summary in scout_blockers.txt.
-"""
+SYNTHESIS_PROMPT = _load_prompt("synthesis_prompt")
 
 
 PYTEST_HEADED_CMD_BASE = [
@@ -1341,6 +407,33 @@ def _extract_app_id(text: str) -> str:
     host = host.split("@")[-1]
     safe = re.sub(r"[^a-z0-9]+", "_", host).strip("_")
     return safe or "_unknown"
+
+
+def _extract_base_url(text: str) -> str:
+    """Return the first http(s) URL in story text — scheme, host, port, and any
+    embedded user:pass@ auth intact — ready to drop into pytest.ini's base_url.
+    Returns "" when no URL is present (e.g. file:/// stories)."""
+    if not text:
+        return ""
+    m = re.search(r"https?://[^/\s\"'>)]+", text, re.IGNORECASE)
+    return m.group(0) if m else ""
+
+
+def _write_pytest_ini(base_url: str) -> None:
+    """Point pytest.ini's `base_url` at the application under test for this story,
+    leaving testpaths/addopts/markers and any comments untouched."""
+    if not base_url:
+        return
+    ini_path = PROJECT_ROOT / "pytest.ini"
+    try:
+        text = ini_path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return
+    new_text, n = re.subn(r"(?m)^base_url\s*=.*$", f"base_url = {base_url}", text, count=1)
+    if n == 0:
+        new_text = re.sub(r"(?m)^\[pytest\]\s*$", f"[pytest]\nbase_url = {base_url}", text, count=1)
+    if new_text != text:
+        ini_path.write_text(new_text, encoding="utf-8")
 
 
 def _app_dir(app_id: str) -> Path:
@@ -4552,8 +3645,12 @@ def render_test_results(story_id: str) -> None:
             help="Download the pytest-html report to open locally.",
         )
     with cols[1]:
+        try:
+            _report_label = html_report.relative_to(PROJECT_ROOT.parent).as_posix()
+        except ValueError:
+            _report_label = html_report.name
         st.caption(
-            f"📄 `{html_report.relative_to(PROJECT_ROOT).as_posix()}` "
+            f"📄 `{_report_label}` "
             f"({len(report_bytes)//1024} KB)"
         )
 
@@ -4605,6 +3702,7 @@ def render_sidebar(stories_n: int, story_id: str,
             raw = uploaded.read().decode("utf-8")
             content = normalize_story_text(raw)
             USER_STORY_PATH.write_text(content, encoding="utf-8")
+            _write_pytest_ini(_extract_base_url(content))
             clean_artifacts(scope="gherkin")
             st.session_state.log = []
             st.session_state.last_run = "never"
@@ -4629,7 +3727,9 @@ def render_sidebar(stories_n: int, story_id: str,
             placeholder="Paste your user story here. Buttons unlock once a story is detected.",
         )
         if edited.strip() and edited != display_value:
-            USER_STORY_PATH.write_text(normalize_story_text(edited), encoding="utf-8")
+            normalized = normalize_story_text(edited)
+            USER_STORY_PATH.write_text(normalized, encoding="utf-8")
+            _write_pytest_ini(_extract_base_url(normalized))
         elif not edited.strip() and not is_placeholder:
             USER_STORY_PATH.write_text(USER_STORY_PLACEHOLDER, encoding="utf-8")
 

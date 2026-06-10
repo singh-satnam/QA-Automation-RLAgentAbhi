@@ -1,22 +1,2 @@
-Given user navigate to the below site
-https://ra-demo.rlcatalyst.com/login
- 
-Click on the sign in link and enter the below details to login
-               Email id:- sundeep.mallya+a@relevancelab.com
-               password:- Relevance@123
- 
-And user will land on My Organizations page
- 
-And click on Add New 
-Then Create Organization should be displayed
- 
-And fill all the details for create new Organization
- 
-	Organization Name:- Relevance Lab
- 
-	Organization Description:- Providing IT services globaly
- 
- 
-Then click on Create Organization button
- 
-And Organization with Name Relevance Lab should be created And should be shown on My Organizations page
+# Add one or more user stories below in plain English.
+# Separate distinct stories with a blank line.

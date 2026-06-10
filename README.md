@@ -94,24 +94,51 @@ For an executive-grade write-up of the architecture, see
 - Python 3.11+
 - Node.js 18+ (for the Claude Code CLI)
 - Chromium installed via Playwright (`python -m playwright install chromium`)
-- `claude` CLI: `npm install -g @anthropic-ai/claude-code`
+- `claude` CLI, authenticated: `npm install -g @anthropic-ai/claude-code` then `claude login`
 - A running target application (e.g. `http://localhost:5173/`)
 
 ### Install
 ```bash
-git clone https://github.com/AbhiRLE2016/QA-Automation.git
-cd QA-Automation
+git clone <this-repo-url>
+cd QA-Automation-RLAgentAbhi/core
 pip install -r requirements.txt
 python -m playwright install chromium
 ```
 
+The engine is self-contained inside **`core/`** — that's the directory you `cd`
+into and run from. It ships as pure code with no app-specific data.
+
+### Where your data goes — `QA_WORKSPACE_DIR`
+
+On first run, the engine creates a **sibling `workspace/` directory** next to
+`core/` (i.e. `QA-Automation-RLAgentAbhi/workspace/projects/`) and stores every
+application's automation framework there — POMs, step defs, selectors, and
+reports, one isolated project per application (see
+[AGENT_FLOW.md](AGENT_FLOW.md) for exactly how that isolation works).
+
+To point the knowledge base somewhere else (e.g. a per-client path), set the
+`QA_WORKSPACE_DIR` environment variable before launching:
+
+```bash
+# Windows (PowerShell)
+$env:QA_WORKSPACE_DIR = "D:\Clients\AcmeCorp\qa-workspace"
+
+# macOS / Linux
+export QA_WORKSPACE_DIR=/clients/acmecorp/qa-workspace
+```
+
+If unset, it defaults to the sibling `workspace/` directory described above.
+
 ### Run the UI
 ```bash
+# from core/
 streamlit run agent_ui.py
 ```
 
 Open **http://localhost:8501**, paste a user story into the textarea, and click
-the three pipeline buttons in order.
+the three pipeline buttons in order. The application-under-test is identified
+automatically from the first URL in your story — no manual project naming or
+`pytest.ini` editing required.
 
 ---
 
@@ -125,68 +152,62 @@ the three pipeline buttons in order.
 
 Each step is **gated** by the previous one — ② is locked until ① has run in
 the current session; ③ is locked until ② has run. Each step **persists** its
-outputs to `projects/<app>/<story_id>/` so the run is resumable.
+outputs to `workspace/projects/<app_id>/<story_id>/` so the run is resumable.
+See [AGENT_FLOW.md](AGENT_FLOW.md) for the full internal call sequence.
 
 ---
 
 ## 5. Project structure
 
+The repo splits cleanly into **`core/`** (the shippable engine — pure code, no
+app data) and a sibling **`workspace/`** (the per-client knowledge base,
+created on first run and relocatable via `QA_WORKSPACE_DIR`):
+
 ```
-QA-Automation/
-├── agent_ui.py                       # Streamlit UI + orchestrator (~5000 LOC)
-├── conftest.py                       # pytest fixtures, CaptureLog, TabRegistry
-├── ARCHITECTURE.md                   # Executive-level architecture doc
-├── pytest.ini                        # pytest-bdd configuration
-├── requirements.txt
+QA-Automation-RLAgentAbhi/
+├── ARCHITECTURE.md
+├── README.md
 │
-├── pages/                            # Page Object Models (in-flight workspace)
-│   ├── base_page.py                  # Shared Playwright helpers
-│   └── page_*.py                     # Generated POMs per feature
+├── core/                             # ── THE ENGINE — ship this ──
+│   ├── agent_ui.py                   # Streamlit UI + orchestrator (~4800 LOC)
+│   ├── conftest.py                   # pytest fixtures, CaptureLog, TabRegistry
+│   ├── pytest.ini                    # auto-rewritten per story (base_url)
+│   ├── requirements.txt
+│   ├── user_story.txt                # current story (reset on refresh)
+│   │
+│   ├── prompts/                      # the 9 LLM prompts as editable .md templates
+│   │   ├── gherkin_prompt.md, framework_prompt.md, …
+│   │
+│   ├── pages/base_page.py            # framework template (shared Playwright helpers)
+│   ├── step_defs/__init__.py         # generated POMs/step_defs/tests/selectors/
+│   ├── tests/conftest.py             # reports land here per-run, then get archived
+│   └── features/, mcp-selectors/, reports/   # … into workspace/projects/<app_id>/
 │
-├── step_defs/                        # pytest-bdd step definitions
-│   └── *_steps.py
-│
-├── features/                         # Gherkin feature files (just-generated)
-│   └── story_*.feature
-│
-├── tests/                            # pytest entrypoints
-│   ├── conftest.py                   # Imports step_defs to register them
-│   └── test_*.py
-│
-├── mcp-selectors/                    # MCP-discovered locators
-│   └── locators.json
-│
-├── reports/                          # Latest run's outputs
-│   ├── report.html                   # pytest-html report
-│   ├── story_coverage.html           # Our deterministic verdict report
-│   ├── captured_values.json          # Every assertion / observation
-│   └── allure-results/
-│
-└── projects/                         # Persistent per-app knowledge base
-    ├── localhost_5173/
-    │   ├── _shared/                  # Reusable knowledge (POMs, step defs, …)
-    │   │   ├── pages/
-    │   │   ├── step_defs/
-    │   │   ├── mcp-selectors/locators.json
-    │   │   └── flow_index.json       # {method_name: file} index
-    │   │
-    │   └── <slug>__<digest>/         # Per-story archive
-    │       ├── .story_id             # 8-char digest sidecar
-    │       ├── user_story.txt
-    │       ├── features/
-    │       ├── pages/
-    │       ├── step_defs/
-    │       ├── tests/
-    │       └── reports/
-    │           ├── story_coverage.html
-    │           └── runs/<YYYY-MM-DD_HH-MM-SS>/
-    │               ├── story_coverage.html
-    │               ├── report.html
-    │               └── screenshots/
-    │
-    └── education_qa_scholastic_ca/
-        └── …
+└── workspace/                        # ── PER-CLIENT DATA — never ship ──
+    └── projects/                     # persistent per-app knowledge base
+        ├── localhost_5173/
+        │   ├── _shared/              # reusable knowledge for THIS app only
+        │   │   ├── pages/
+        │   │   ├── step_defs/
+        │   │   ├── mcp-selectors/locators.json
+        │   │   └── flow_index.json   # {method_name: file} index
+        │   │
+        │   └── <slug>__<digest>/     # per-story archive
+        │       ├── .story_id         # 8-char digest sidecar
+        │       ├── user_story.txt
+        │       ├── features/, pages/, step_defs/, tests/
+        │       └── reports/
+        │           ├── story_coverage.html
+        │           └── runs/<YYYY-MM-DD_HH-MM-SS>/
+        │               ├── story_coverage.html, report.html
+        │               └── screenshots/
+        │
+        └── education_qa_scholastic_ca/
+            └── …
 ```
+
+> Set `QA_WORKSPACE_DIR=/path/to/workspace` to relocate the entire knowledge
+> base — e.g. one path per client engagement — without touching `core/`.
 
 ---
 

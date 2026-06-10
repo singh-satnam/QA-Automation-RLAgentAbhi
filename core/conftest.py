@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from playwright.sync_api import Browser, BrowserContext, Page, Playwright, sync_playwright
 
-pytest_plugins = ('step_defs.story_1_create_organization_relevance_lab_steps',)
+pytest_plugins = ()
 
 # Captured-values log: a per-session record of every value the test extracted,
 # every assertion expected-vs-actual, every aggregate-sum check. The Auditor
@@ -685,8 +685,14 @@ def _invalidate_storage_state() -> None:
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
-    parser.addoption("--headed", action="store_true", default=False, help="Run browser in headed mode")
-    parser.addini("base_url", help="Base URL for the application under test", default="")
+    try:
+        parser.addoption("--headed", action="store_true", default=False, help="Run browser in headed mode")
+    except Exception:
+        pass  # pytest-playwright already registered --headed
+    try:
+        parser.addini("base_url", help="Base URL for the application under test", default="")
+    except Exception:
+        pass  # already registered
 
 
 @pytest.fixture(scope="session")
@@ -729,6 +735,7 @@ def browser(playwright_instance: Playwright, pytestconfig: pytest.Config) -> Bro
     browser = playwright_instance.chromium.launch(
         headless=not is_headed,
         slow_mo=slow_mo_ms,
+        args=["--start-maximized"],
     )
     yield browser
     browser.close()
@@ -854,7 +861,7 @@ def context(browser: Browser) -> BrowserContext:
     # the already-logged-in case), so reusing state is safe.
     cached_state = _load_storage_state()
     context = browser.new_context(
-        viewport={"width": 1600, "height": 1000},
+        no_viewport=True,
         http_credentials={"username": "storefront", "password": "storefront"},
         ignore_https_errors=True,
         storage_state=cached_state,
