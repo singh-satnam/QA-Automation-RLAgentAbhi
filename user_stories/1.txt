@@ -1,8 +1,0 @@
-Given user login to the clubs canada site 
-    URL:https://storefront:storefront@bookclubs-qa.scholastic.ca/en/home
-email-qauto@myyahoo.com
-password: passw0rd
-And user land on the homepage
-User clicks on the search icon to get all the items
-Add the first item and note the $value for the item
-Item should be added to the cart page.

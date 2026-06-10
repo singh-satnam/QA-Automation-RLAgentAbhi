@@ -1,6 +1,0 @@
-- iframe [active] [ref=e604]:
-  - generic [ref=f4e4]:
-    - paragraph [ref=f4e6]: We use cookies to improve your experience on our website by enhancing site navigation, usability and content personalization. By clicking on "Accept All Cookies" you consent to the use of all cookies. You can click on "Manage My Preferences" to learn about the types of cookies that we use or to opt out of specific types of cookies.
-    - generic [ref=f4e7]:
-      - button "Manage My Preferences" [ref=f4e8] [cursor=pointer]
-      - button "Accept All Cookies" [ref=f4e9] [cursor=pointer]

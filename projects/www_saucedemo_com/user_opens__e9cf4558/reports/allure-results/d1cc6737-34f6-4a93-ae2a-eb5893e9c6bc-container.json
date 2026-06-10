@@ -1,1 +1,0 @@
-{"uuid": "9123aa5f-f05f-4310-8900-21c3b00ac10e", "befores": [{"name": "pytestbdd_stepdef_when_the user logs in with username \"{username}\" and password \"{password}\"", "status": "passed", "start": 1777958518245, "stop": 1777958518245}], "start": 1777958518245, "stop": 1777958520132}

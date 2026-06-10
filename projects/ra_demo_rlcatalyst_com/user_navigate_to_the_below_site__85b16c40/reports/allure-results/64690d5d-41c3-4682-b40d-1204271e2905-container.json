@@ -1,1 +1,0 @@
-{"uuid": "4b51663f-a767-40a0-a4fa-6695e4742ab9", "befores": [{"name": "pytestbdd_stepdef_*_the user clicks on \"{trigger}\" and the list appears and selects \"{option}\"", "status": "passed", "start": 1780562043706, "stop": 1780562043706}], "start": 1780562043706, "stop": 1780562094980}
