@@ -2286,7 +2286,7 @@ USER_DATA_SUPPORTED_EXTENSIONS = ("json", "csv", "tsv", "xlsx", "xls")
 # running subprocess is killed.  Cross-tab usage: if a run is stuck and the
 # main tab is blocked, open this Streamlit URL in a SECOND browser tab and
 # click Stop — that new session can write the file freely.
-STOP_SIGNAL_PATH = PROJECT_ROOT / "reports" / ".stop_signal"
+STOP_SIGNAL_PATH = PROJECT_ROOT / ".stop_signal"
 
 
 def _stop_signal_fresh() -> bool:
@@ -3068,6 +3068,7 @@ def render_sidebar(stories_n: int, story_id: str,
         # (re-clicks just re-load the same files instantly).
         # ② is locked until ① has been clicked in this session.
         # ③ is locked until ② has been clicked in this session.
+        has_active_story = bool(current_project() and st.session_state.get("active_story"))
         if not gherkin_done_session:
             next_step = "gherkin"
         elif not framework_done_session:
@@ -3077,8 +3078,8 @@ def render_sidebar(stories_n: int, story_id: str,
 
         gen_clicked = st.button(
             "① Generate Gherkin",
-            type="primary" if next_step == "gherkin" and stories_n > 0 else "secondary",
-            disabled=stories_n == 0,
+            type="primary" if next_step == "gherkin" and has_active_story else "secondary",
+            disabled=not has_active_story,
             help="Generate feature files from your user story. Re-click anytime — the same files re-load.",
         )
 
@@ -3161,7 +3162,6 @@ def main() -> None:
         log_event(f"Project `{story_id}` selected — {n_stories} stor"
                   f"{'y' if n_stories == 1 else 'ies'}")
         st.session_state.logged_story_id = story_id
-    ws_state = story_folder_state(story_id)
     features = story_feature_count(story_id)
     tests_n = story_test_count(story_id)
 
