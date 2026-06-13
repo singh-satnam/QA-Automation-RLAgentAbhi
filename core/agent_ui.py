@@ -3298,14 +3298,15 @@ def main() -> None:
 
     # ---- Run Tests (sidebar "Run All" OR per-test ▶ Run from main panel) ----
     if pytest_target:
+        project = current_project()
         is_all = pytest_target == "all"
-        target_path = None if is_all else pytest_target
+        target = None if is_all else pytest_target
         label = "Run All Tests" if is_all else f"Run {Path(pytest_target).name}"
-        log_event(f"{label} clicked — story {story_id}")
-        append_process_log(story_id, f"{label} clicked")
-        # Make sure the working set reflects this story's folder before pytest runs
-        restore_artifacts(story_id)
-        # Deterministically register the story's step-def modules. Never rely on
+        log_event(f"{label} clicked — project {project}")
+        append_process_log(project, f"{label} clicked")
+        # Fresh timestamped report dir for this run.
+        run_dir = ws.new_report_run_dir(project)
+        # Deterministically register the project's step-def modules. Never rely on
         # the LLM to have populated pytest_plugins — if it didn't, pytest-bdd
         # finds zero steps and every scenario fails with StepDefinitionNotFound.
         registered = sync_pytest_plugins()
@@ -3314,60 +3315,39 @@ def main() -> None:
             + (", ".join(registered) if registered else "(none found)")
         )
         with st.status(f"Running pytest in headed mode — {label} ...", expanded=True) as status:
-            clean_reports()
-            ALLURE_RESULTS.mkdir(parents=True, exist_ok=True)
-            log_event(f"Reports cleaned — invoking pytest --headed (target={target_path or 'all'})")
+            cmd = pytest_headed_cmd(project, run_dir, target)
+            log_event(f"Invoking pytest --headed (target={target or 'all'})")
             rc = stream_command(
-                pytest_headed_cmd(target_path),
-                log_placeholder, st.session_state.log, story_id=story_id,
+                cmd, log_placeholder, st.session_state.log,
+                story_id=project, cwd=ws.project_dir(project),
             )
             log_event(f"Pytest finished — exit code {rc}")
             status.update(label=f"{label} finished (exit {rc})",
                           state="complete" if rc == 0 else "error")
-        # Inline (Python-only) coverage report — replaces the 2-3 minute LLM
-        # Auditor. Reads captured_values.json + the pytest result and writes
-        # story_coverage.html/md/json in <100 ms. Also snapshots a per-run
-        # timestamped copy to projects/<id>/reports/runs/<ts>/ for history.
-        pytest_html = REPORTS_DIR / "report.html"
-        collection_failed = rc in (2, 3, 4) and not pytest_html.exists()
+        st.session_state["last_report_dir"] = str(run_dir)
+        # Inline (Python-only) coverage report — reads captured_values.json + the
+        # pytest result and writes story_coverage.html/md/json into the run dir.
+        collection_failed = rc in (2, 3, 4) and not (run_dir / "report.html").exists()
         try:
-            report = write_inline_coverage_report(story_id, rc)
+            report = write_inline_coverage_report(project, rc, run_dir)
             verdict = report["verdict"]
             ts = report["run_timestamp"]
-            log_event(
-                f"📊 Coverage report ready (inline, {verdict}) — "
-                f"snapshot: projects/{story_id}/reports/runs/{ts}/"
-            )
+            log_event(f"📊 Coverage report ready (inline, {verdict}) — report/{ts}/")
         except Exception as exc:
             log_event(f"⚠ Inline coverage report failed: {exc}")
             verdict = "ERROR"
         if collection_failed:
             st.error(
                 f"Pytest could not collect tests (exit {rc}) — most often an "
-                f"ImportError in tests/conftest.py. The coverage report still "
-                f"opened, but you'll likely want to fix imports before rerunning."
+                f"ImportError in conftest.py. The coverage report still opened, "
+                f"but you'll likely want to fix imports before rerunning."
             )
-        archive_artifacts(story_id, phase="run")
-        # Promote post-③ — if the test run healed any selectors, the workspace
-        # has the latest authoritative versions. Push them to _shared/.
-        if rc == 0:
-            try:
-                ps = promote_to_shared(story_id)
-                if ps["pages"] or ps["step_defs"] or ps["selectors"]:
-                    log_event(
-                        f"📚 Promoted to app _shared/ after green run: "
-                        f"pages:{ps['pages']} "
-                        f"step_defs:{ps['step_defs']} "
-                        f"selectors:{ps['selectors']}"
-                    )
-            except Exception as exc:
-                append_process_log(story_id, f"post-run promote WARN: {exc}")
-        log_event(f"Run reports + coverage saved to /projects/{story_id}/reports/")
+        log_event(f"Run reports + coverage saved to report/{run_dir.name}/")
         st.session_state.last_run = _dt.datetime.now().strftime(
             f"%H:%M:%S · {'run-all' if is_all else 'run-single'}"
         )
-        st.session_state.loaded_for_story = story_id
         st.rerun()
+
 
 if __name__ == "__main__":
     main()
