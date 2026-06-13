@@ -27,8 +27,8 @@ The workspace is pre-populated with everything the agent has learned about this 
 DELTA-ONLY MODE — NON-NEGOTIABLE
 ═══════════════════════════════════════════════════════════════════
 1. READ FIRST. Before generating ANYTHING, you MUST:
-   a. Read user_story.txt — the NEW story.
-   b. Read every .feature in feature/ — they are from the PRIOR story.
+   a. Read the NEW story file `user_story/{{STORY_FILE}}`.
+   b. Read every .feature in feature/ — these include prior stories' features AND the new feature just generated for this story.
    c. Read every page object in /pages/ and every step def in /step_defs/.
    d. Read mcp-selectors/locators.json if it exists.
    e. Read user_data.json if it exists.
