@@ -2868,6 +2868,27 @@ def render_sidebar(stories_n: int, story_id: str,
         )
 
         st.markdown('<div class="section-heading" style="margin-top:0;">User stories</div>', unsafe_allow_html=True)
+
+        # ----- Project / story selector (switch between existing stories) -----
+        projects = ws.list_projects()
+        if projects:
+            sel_proj = st.selectbox(
+                "Project", projects,
+                index=(projects.index(current_project())
+                       if current_project() in projects else 0),
+            )
+            st.session_state.project = sel_proj
+            stories = ws.list_stories(sel_proj)
+            if stories:
+                names = [p.name for p in stories]
+                sel_story = st.selectbox(
+                    "Story", names,
+                    index=(names.index(st.session_state.get("active_story"))
+                           if st.session_state.get("active_story") in names else 0),
+                )
+                st.session_state.active_story = sel_story
+
+        # ----- Upload a .txt story (project derived from filename prefix) -----
         uploaded = st.file_uploader(
             "Upload .txt", type=["txt"], label_visibility="collapsed",
             key=f"upload_{st.session_state.get('upload_nonce', 0)}",
@@ -2875,41 +2896,67 @@ def render_sidebar(stories_n: int, story_id: str,
         if uploaded is not None:
             raw = uploaded.read().decode("utf-8")
             content = normalize_story_text(raw)
-            USER_STORY_PATH.write_text(content, encoding="utf-8")
-            _write_pytest_ini(_extract_base_url(content))
-            clean_artifacts(scope="gherkin")
-            st.session_state.log = []
-            st.session_state.last_run = "never"
-            st.session_state.last_upload_info = (
-                f"**{uploaded.name}** · {len(raw)} chars\n\n"
-                f"Preview: `{raw[:120].replace(chr(10), ' / ')}...`"
-            )
-            st.session_state.upload_nonce = st.session_state.get("upload_nonce", 0) + 1
-            st.rerun()
+            try:
+                project = ws.derive_project_name(uploaded.name)
+            except ws.ProjectNameError as exc:
+                st.error(str(exc))
+            else:
+                filename = ws.sanitize_filename(uploaded.name)
+                if ws.story_exists(project, filename):
+                    st.error("same user story exists. Proceed to execute the test")
+                    st.session_state.project = project
+                    st.session_state.active_story = filename
+                else:
+                    ws.add_story(project, filename, content)
+                    ws.write_pytest_ini(project, ws.extract_base_url(content))
+                    st.session_state.project = project
+                    st.session_state.active_story = filename
+                    st.session_state.log = []
+                    st.session_state.last_run = "never"
+                    st.session_state.last_upload_info = (
+                        f"**{uploaded.name}** → project `{project}` · {len(raw)} chars"
+                    )
+                    st.session_state.upload_nonce = st.session_state.get("upload_nonce", 0) + 1
+                    st.rerun()
 
         if "last_upload_info" in st.session_state:
             st.success("Uploaded: " + st.session_state.last_upload_info)
 
-        on_disk = USER_STORY_PATH.read_text(encoding="utf-8") if USER_STORY_PATH.exists() else ""
-        is_placeholder = on_disk.strip() == USER_STORY_PLACEHOLDER.strip()
-        display_value = "" if is_placeholder else on_disk
-        edited = st.text_area(
-            "Story content",
-            display_value,
-            height=200,
-            label_visibility="collapsed",
-            placeholder="Paste your user story here. Buttons unlock once a story is detected.",
-        )
-        if edited.strip() and edited != display_value:
-            normalized = normalize_story_text(edited)
-            USER_STORY_PATH.write_text(normalized, encoding="utf-8")
-            _write_pytest_ini(_extract_base_url(normalized))
-        elif not edited.strip() and not is_placeholder:
-            USER_STORY_PATH.write_text(USER_STORY_PLACEHOLDER, encoding="utf-8")
+        # ----- Or paste a story (explicit project name + filename) -----
+        st.markdown('<div class="section-heading">Or paste a story</div>', unsafe_allow_html=True)
+        paste_project = st.text_input("Project name", key="paste_project",
+                                      placeholder="e.g. RLRG")
+        paste_filename = st.text_input("Story file name (.txt)", key="paste_filename",
+                                       placeholder="e.g. RLRG_login.txt")
+        paste_body = st.text_area("Story content", key="paste_body", height=180,
+                                  placeholder="Paste your user story here.")
+        if st.button("Save story", disabled=not (paste_project.strip()
+                                                 and paste_filename.strip()
+                                                 and paste_body.strip())):
+            project = re.sub(r"[^A-Za-z0-9]+", "", paste_project.strip())
+            if not project:
+                st.error("Project name must contain letters or digits.")
+            else:
+                filename = ws.sanitize_filename(paste_filename)
+                content = normalize_story_text(paste_body)
+                if ws.story_exists(project, filename):
+                    st.error("same user story exists. Proceed to execute the test")
+                    st.session_state.project = project
+                    st.session_state.active_story = filename
+                else:
+                    ws.add_story(project, filename, content)
+                    ws.write_pytest_ini(project, ws.extract_base_url(content))
+                    st.session_state.project = project
+                    st.session_state.active_story = filename
+                    st.session_state.log = []
+                    st.session_state.last_run = "never"
+                    st.rerun()
 
         story_caption = (
-            f"**{stories_n}** stor{'y' if stories_n == 1 else 'ies'} detected"
-            + ("" if stories_n else " · paste or upload to begin")
+            f"Project `{current_project()}`"
+            + (f" · story `{st.session_state.get('active_story', '')}`"
+               if st.session_state.get("active_story") else "")
+            if current_project() else "Upload or paste a story to begin."
         )
         st.caption(story_caption)
 
@@ -2930,54 +2977,41 @@ def render_sidebar(stories_n: int, story_id: str,
                 "test_data fixture. The original file is preserved as user_data.<ext>."
             ),
         )
-        if data_uploaded is not None:
+        if data_uploaded is not None and current_project():
             raw_bytes = data_uploaded.read()
             json_text, msg = convert_uploaded_to_json(data_uploaded.name, raw_bytes)
             if json_text is None:
                 st.error(msg or "Could not convert file.")
             else:
                 # Canonical JSON used by the runtime test_data fixture
-                USER_DATA_PATH.write_text(json_text, encoding="utf-8")
+                user_data_path().parent.mkdir(parents=True, exist_ok=True)
+                user_data_path().write_text(json_text, encoding="utf-8")
                 # Persist the ORIGINAL file too so the user can download/inspect
                 ext = data_uploaded.name.rsplit(".", 1)[-1].lower() if "." in data_uploaded.name else "bin"
                 # Clear any stale original-format files first
                 for prev_ext in USER_DATA_SUPPORTED_EXTENSIONS:
-                    prev = USER_DATA_PATH.with_name(f"user_data.{prev_ext}")
-                    if prev != USER_DATA_PATH and prev.exists():
+                    prev = proj_path(f"user_data.{prev_ext}")
+                    if prev != user_data_path() and prev.exists():
                         try:
                             prev.unlink()
                         except OSError:
                             pass
                 if ext != "json":
                     try:
-                        USER_DATA_PATH.with_name(f"user_data.{ext}").write_bytes(raw_bytes)
+                        proj_path(f"user_data.{ext}").write_bytes(raw_bytes)
                     except OSError:
                         pass
                 if msg:
                     st.info(msg)
-                # Mark this session as having uploaded data, so `_restore_user_data`
-                # may pull from the archive after a clean ② / ③ if needed.
                 st.session_state["user_uploaded_data"] = True
                 st.session_state.data_upload_nonce = st.session_state.get("data_upload_nonce", 0) + 1
                 st.rerun()
+        elif data_uploaded is not None and not current_project():
+            st.warning("Select or create a project before adding test data.")
 
-        # Hygiene: if the user hasn't actively provided data THIS SESSION, the
-        # sidebar shows nothing — and we also purge any stale user_data.* files
-        # left on disk by a prior session / fork / refresh-race. The story is
-        # used as-is unless the user explicitly uploads or types data.
-        user_provided = bool(st.session_state.get("user_uploaded_data"))
-        if not user_provided:
-            for ext in (("json",) + USER_DATA_SUPPORTED_EXTENSIONS):
-                p = USER_DATA_PATH.with_name(f"user_data.{ext}")
-                if p.exists():
-                    try:
-                        p.unlink()
-                    except OSError:
-                        pass
-
-        # If user didn't provide data, the text_area starts empty regardless
-        # of any leftover on disk (the purge above keeps disk in sync too).
-        current_data_text = _read_user_data_text() if user_provided else ""
+        # Test data is stored per project under user_data.json. It persists with
+        # the project — no session-scoped purge.
+        current_data_text = _read_user_data_text()
         data_edited = st.text_area(
             "Test data JSON",
             current_data_text,
@@ -2986,28 +3020,27 @@ def render_sidebar(stories_n: int, story_id: str,
             placeholder='Optional. Paste JSON like {"productid":"123","Subtotal":48.99} '
                         'OR an array of objects for parameterised rows (positive + negative).',
         )
-        if data_edited != current_data_text:
+        if data_edited != current_data_text and current_project():
             if data_edited.strip():
-                USER_DATA_PATH.write_text(data_edited, encoding="utf-8")
+                user_data_path().parent.mkdir(parents=True, exist_ok=True)
+                user_data_path().write_text(data_edited, encoding="utf-8")
                 st.session_state["user_uploaded_data"] = True
-            elif USER_DATA_PATH.exists():
+            elif user_data_path().exists():
                 try:
-                    USER_DATA_PATH.unlink()
+                    user_data_path().unlink()
                 except OSError:
                     pass
                 st.session_state.pop("user_uploaded_data", None)
 
-        # Show parse status + a tiny preview ONLY if the user provided data
-        # this session. Otherwise the caption stays mute — no implication
-        # that data is being used silently behind the scenes.
-        if user_provided and _read_user_data_text().strip():
+        # Show parse status + a tiny preview if the project has test data.
+        if _read_user_data_text().strip():
             parsed, err = parse_user_data(_read_user_data_text())
             # Detect if there's a preserved original (non-JSON) file
             original_ext = None
             for ext in USER_DATA_SUPPORTED_EXTENSIONS:
                 if ext == "json":
                     continue
-                if USER_DATA_PATH.with_name(f"user_data.{ext}").exists():
+                if proj_path(f"user_data.{ext}").exists():
                     original_ext = ext
                     break
             origin = f" (auto-converted from .{original_ext})" if original_ext else ""
@@ -3021,7 +3054,7 @@ def render_sidebar(stories_n: int, story_id: str,
                 keys = ", ".join(list(parsed.keys())[:5])
                 more = "…" if len(parsed) > 5 else ""
                 st.caption(f"✓ object with keys: {keys}{more}{origin}")
-        elif not user_provided:
+        else:
             st.caption("No test data — story will be used as-is.")
 
         st.markdown('<div class="section-heading">Pipeline (3 steps)</div>', unsafe_allow_html=True)
@@ -3096,7 +3129,6 @@ def render_sidebar(stories_n: int, story_id: str,
 def main() -> None:
     st.set_page_config(page_title="QE Agent", layout="wide", initial_sidebar_state="expanded")
     st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
-    ensure_user_story()
     initialize_session()
 
     st.markdown(
@@ -3110,98 +3142,60 @@ def main() -> None:
 
     render_status_pills()
 
-    current_story = USER_STORY_PATH.read_text(encoding="utf-8")
-    stories = parse_stories(current_story)
-    story_id = compute_story_id(current_story)
+    # The active project + story are set by the sidebar (upload/paste/selector).
+    # Render the sidebar first so a just-selected project is reflected this run.
+    gherkin_done = bool(st.session_state.get("gherkin_done"))
+    framework_done = bool(st.session_state.get("framework_done"))
+    story_id = current_project()
+    gen_clicked, fw_clicked, run_clicked = render_sidebar(
+        0, story_id, gherkin_done, framework_done,
+    )
+    # Re-read the project after the sidebar (it may have changed it this run).
+    story_id = current_project()
+
+    n_stories = len(ws.list_stories(story_id)) if story_id else 0
     if story_id and st.session_state.get("logged_story_id") != story_id:
-        log_event(
-            f"Story detected — {len(stories)} stor"
-            f"{'y' if len(stories) == 1 else 'ies'}"
-        )
+        log_event(f"Project `{story_id}` selected — {n_stories} stor"
+                  f"{'y' if n_stories == 1 else 'ies'}")
         st.session_state.logged_story_id = story_id
     ws_state = story_folder_state(story_id)
     features = story_feature_count(story_id)
     tests_n = story_test_count(story_id)
 
-    render_summary_line(len(stories), features, tests_n)
+    render_summary_line(n_stories, features, tests_n)
 
-    # Reset session flags if the story changed (e.g. user pasted a new one).
-    # Without this, the previous story's "done" state would let them skip steps.
+    # Reset session flags if the project changed.
     if st.session_state.get("flags_for_story") != story_id:
-        # Detect first-time-this-session vs. genuine story switch
-        is_first = st.session_state.get("flags_for_story") is None
         st.session_state.gherkin_done = False
         st.session_state.framework_done = False
         st.session_state.flags_for_story = story_id
-        # Clear any prior fork decision so the user is asked fresh for this story.
-        st.session_state.pop("reuse_from", None)
-        st.session_state.pop("reuse_declined", None)
-        # Wipe ALL stale test-data sidecars on a real story change. The
-        # `initialize_session` guard above only fires once per browser session,
-        # so a user pasting a 2nd / 3rd story in the same tab kept inheriting
-        # the previous story's data (or yesterday's file if the tab stayed
-        # open). Reset to a clean slate; the user re-uploads if they want data.
-        # Skip on the very first detection (refresh already wiped via
-        # initialize_session) — only fire on genuine subsequent switches.
-        if not is_first:
-            for ext in (("json",) + USER_DATA_SUPPORTED_EXTENSIONS):
-                p = USER_DATA_PATH.with_name(f"user_data.{ext}")
-                if p.exists():
-                    try:
-                        p.unlink()
-                    except OSError:
-                        pass
-            # Drop the "user uploaded data this session" flag so any restore
-            # logic knows the user starts fresh.
-            st.session_state.pop("user_uploaded_data", None)
+        gherkin_done = False
+        framework_done = False
 
-    gherkin_done = bool(st.session_state.get("gherkin_done"))
-    framework_done = bool(st.session_state.get("framework_done"))
-    gen_clicked, fw_clicked, run_clicked = render_sidebar(
-        len(stories), story_id, gherkin_done, framework_done,
-    )
-
-    tab_features, tab_framework, tab_results, tab_suites = st.tabs(
-        ["Feature files", "Framework code", "Test results", "Website suites"]
+    tab_features, tab_framework, tab_results = st.tabs(
+        ["Feature files", "Framework code", "Test results"]
     )
     no_story_msg = (
-        '<div class="empty-state"><strong>No story entered.</strong><br>'
-        "Paste or upload a user story in the sidebar to begin.</div>"
+        '<div class="empty-state"><strong>No project selected.</strong><br>'
+        "Upload or paste a user story in the sidebar to begin.</div>"
     )
-    not_loaded_msg = (
-        '<div class="empty-state"><strong>Click a button to display.</strong><br>'
-        "Files for this story are not loaded into the UI yet. "
-        "Press <b>① Generate Gherkin</b>, <b>② Generate Test Framework</b>, "
-        "or <b>③ Run All Tests</b> in the sidebar.</div>"
-    )
-    loaded_for = st.session_state.get("loaded_for_story")
-    show_for_story = (loaded_for == story_id) and bool(story_id)
     runner_target: str | None = None
-    suite_request: dict | None = None
     with tab_features:
         if not story_id:
             st.markdown(no_story_msg, unsafe_allow_html=True)
-        elif not show_for_story:
-            st.markdown(not_loaded_msg, unsafe_allow_html=True)
         else:
             render_feature_files(story_id)
     with tab_framework:
         if not story_id:
             st.markdown(no_story_msg, unsafe_allow_html=True)
-        elif not show_for_story:
-            st.markdown(not_loaded_msg, unsafe_allow_html=True)
         else:
             render_framework_files(story_id)
     with tab_results:
         if not story_id:
             st.markdown(no_story_msg, unsafe_allow_html=True)
-        elif not show_for_story:
-            st.markdown(not_loaded_msg, unsafe_allow_html=True)
         else:
             runner_target = render_test_runner(story_id, framework_done)
             render_test_results(story_id)
-    with tab_suites:
-        suite_request = render_suites_panel()
 
     # Sidebar "Run All" or per-test "▶ Run" both feed the same handler.
     pytest_target = "all" if run_clicked else runner_target
@@ -3575,96 +3569,6 @@ def main() -> None:
         )
         st.session_state.loaded_for_story = story_id
         st.rerun()
-
-    # ---- Run a whole website suite (every checked story, one after another) ----
-    if suite_request:
-        app_id = suite_request["app_id"]
-        host = suite_request["host"]
-        suite_stories = suite_request["stories"]
-        run_ts = _dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        log_event(
-            f"▶ Website suite '{host}' — running {len(suite_stories)} test(s) "
-            f"one by one"
-        )
-        results: list[dict] = []
-        with st.status(
-            f"Running suite: {host} — {len(suite_stories)} test(s)…",
-            expanded=True,
-        ) as status:
-            for idx, s in enumerate(suite_stories, 1):
-                sid = s["story_id"]
-                title = s.get("title") or sid
-                status.update(
-                    label=f"[{idx}/{len(suite_stories)}] {title} — running…"
-                )
-                log_event(f"[{idx}/{len(suite_stories)}] {title} — preparing workspace")
-                # Isolate THIS story's artifacts: wipe the workspace, restore the
-                # story, register its steps. Without the wipe, a previous story's
-                # test files would linger and run too.
-                clean_artifacts(scope="all")
-                restore_artifacts(sid)
-                sync_pytest_plugins()
-                clean_reports()
-                ALLURE_RESULTS.mkdir(parents=True, exist_ok=True)
-                rc = stream_command(
-                    pytest_headed_cmd(None),
-                    log_placeholder, st.session_state.log,
-                    story_id=sid, heartbeat_secs=10,
-                )
-                # Per-story report + history snapshot (same as a single ③ run).
-                try:
-                    write_inline_coverage_report(sid, rc)
-                    archive_artifacts(sid, phase="run")
-                except Exception as exc:
-                    log_event(f"⚠ per-story report failed for {sid}: {exc}")
-                res = _capture_suite_story_result(sid, title, s.get("story_text", ""), rc)
-                results.append(res)
-                log_event(
-                    f"[{idx}/{len(suite_stories)}] {title} — {res['verdict']} "
-                    f"(exit {rc})"
-                )
-
-            suite_html = build_suite_report(app_id, host, results, run_ts)
-            # Durable snapshot first (survives the workspace restore below, which
-            # cleans reports/). The convenience copy in reports/ is (re)written
-            # AFTER the restore so it isn't wiped.
-            try:
-                snap = PROJECTS_DIR / app_id / "_suite_runs" / run_ts
-                snap.mkdir(parents=True, exist_ok=True)
-                (snap / "suite_report.html").write_text(suite_html, encoding="utf-8")
-            except OSError:
-                pass
-            n_pass = sum(1 for r in results if r["verdict"] == "PASS")
-            status.update(
-                label=f"Suite finished — {n_pass}/{len(results)} passed",
-                state="complete" if n_pass == len(results) else "error",
-            )
-
-        # Restore the user's current story so the other tabs stay consistent.
-        if story_id:
-            try:
-                clean_artifacts(scope="all")
-                restore_artifacts(story_id)
-                sync_pytest_plugins()
-            except Exception:
-                pass
-        # Now write the convenience copy (post-restore so it persists).
-        try:
-            REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-            (REPORTS_DIR / "suite_report.html").write_text(suite_html, encoding="utf-8")
-        except OSError:
-            pass
-        st.session_state["suite_report_html"] = suite_html
-        st.session_state["suite_report_meta"] = {
-            "host": host, "app_id": app_id, "ts": run_ts,
-            "passed": n_pass, "total": len(results),
-        }
-        log_event(
-            f"📊 Consolidated suite report ready — {n_pass}/{len(results)} passed "
-            f"· saved reports/suite_report.html"
-        )
-        st.rerun()
-
 
 if __name__ == "__main__":
     main()
