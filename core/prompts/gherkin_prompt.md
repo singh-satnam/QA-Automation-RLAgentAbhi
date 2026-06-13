@@ -1,9 +1,9 @@
-You are operating inside the QE automation framework rooted at the current working directory. Read user_story.txt and convert each user story it contains into a Gherkin .feature file under /features.
+You are operating inside the QE automation framework rooted at the current working directory (a single project folder). Read the user story file `user_story/{{STORY_FILE}}` and convert it into Gherkin `.feature` file(s) under `feature/`.
 
 ═══════════════════════════════════════════════════════════════════
 FIDELITY TO USER STORY — NON-NEGOTIABLE
 ═══════════════════════════════════════════════════════════════════
-1. EVERY meaningful line of user_story.txt becomes AT LEAST ONE Gherkin step. No line is silently dropped. No story step is merged with another.
+1. EVERY meaningful line of the user story file becomes AT LEAST ONE Gherkin step. No line is silently dropped. No story step is merged with another.
 2. Do NOT invent steps that aren't in the story. No extra "best-practice" checks the user didn't ask for.
 3. Preserve the ORDER from the story. If the story says A then B then C, the scenario does A then B then C — never reordered for "convenience".
 4. Every line that contains words like "Verify", "Check", "Validate", "should be", "should display", "is shown", "is displayed", "matches" → translate into ONE explicit `Then` step. Don't bundle multiple verifications into one step.
@@ -11,7 +11,7 @@ FIDELITY TO USER STORY — NON-NEGOTIABLE
 6. Inline data tables (Field: Value blocks, address blocks, etc.) become Gherkin doc-strings or data tables — every key/value preserved.
 ═══════════════════════════════════════════════════════════════════
 
-ALSO read user_data.json if it exists in the cwd. It is an OPTIONAL sidecar that drives parameterisation:
+ALSO read the test-data JSON file referenced by the story (if present in the project folder). It is an OPTIONAL sidecar that drives parameterisation:
 
   - SHAPE A — JSON object (one dict at the top level):
       user_data.json contains key/value pairs the story references via <placeholder> tokens.
@@ -28,7 +28,7 @@ ALSO read user_data.json if it exists in the cwd. It is an OPTIONAL sidecar that
 
 NEGATIVE STEPS INLINE IN THE STORY (no JSON needed)
 
-The user may write negative-path steps directly in user_story.txt, e.g.:
+The user may write negative-path steps directly in the user story file, e.g.:
   "enter the below invalid login details"
   "User should not be logged in"
   "Invalid email or password validation message should be displayed"
@@ -68,12 +68,10 @@ When the story has a BLOCKING prerequisite (e.g. "log in as manager 503 then …
 Never collapse a "search A and search B" story into one step "search the catalog". Each named target needs its own step so missing items can be individually reported.
 
 Hard rules:
-- EXACTLY ONE .feature file per distinct user story. If user_story.txt has N stories, write   EXACTLY N .feature files — no more, no fewer.
-- Stories are separated by blank lines or numbered headings ("1.", "2.", "Story 1:"). If a single   continuous flow has no separator, treat it as ONE story.
-- Before writing, delete any existing .feature files in /features that don't correspond to the   current stories — the final state of /features must contain only the files for the current run.
-- Filenames: features/story_<n>_<short_slug>.feature.
-- Use clear Given/When/Then phrasing. Include URL/credentials as scenario context if specified.
-- For Scenario Outlines, every row in Examples must end up with an assertable expected outcome.   Negative rows must assert the EXACT error message string from user_data.json — never just   "some error happens".
+- Write feature file(s) into `feature/`. Name each file after the FEATURE under test — a short snake_case slug of the feature, e.g. `feature/login_validation.feature`.
+- NEVER delete or overwrite an existing `.feature` file. If a file with your chosen name already exists, append a short disambiguating suffix so the new file is unique.
+- One `.feature` file may contain multiple `Scenario` / `Scenario Outline` blocks. Cover the positive path, negative/invalid paths, and boundary conditions that the story implies — but do NOT invent requirements the story does not state.
+- For Scenario Outlines, every Examples row must end with an assertable expected outcome. Negative rows must assert the EXACT error/validation string from the story or its data file — never just "some error happens".
 - After writing, list every file you created with one-line summaries.
 
 Do not generate page objects, step definitions, or tests in this pass. Only Gherkin.
