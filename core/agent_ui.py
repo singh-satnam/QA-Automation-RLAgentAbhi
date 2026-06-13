@@ -18,6 +18,8 @@ from pathlib import Path
 
 import streamlit as st
 
+import workspace as ws
+
 PROJECT_ROOT = Path(__file__).resolve().parent
 PROMPTS_DIR = PROJECT_ROOT / "prompts"
 
@@ -27,33 +29,17 @@ def _load_prompt(name: str) -> str:
     return (PROMPTS_DIR / f"{name}.md").read_text(encoding="utf-8")
 
 
-USER_STORY_PATH = PROJECT_ROOT / "user_story.txt"
-# Optional sidecar: a JSON file the user can upload alongside the story.
-# Story may contain <placeholder> tokens that get filled from this JSON.
-# Single-object JSON → one parameterized scenario.
-# Array-of-objects JSON → Scenario Outline + Examples table (positive + negative rows).
-USER_DATA_PATH = PROJECT_ROOT / "user_data.json"
-FEATURES_DIR = PROJECT_ROOT / "features"
-PAGES_DIR = PROJECT_ROOT / "pages"
-STEP_DEFS_DIR = PROJECT_ROOT / "step_defs"
-TESTS_DIR = PROJECT_ROOT / "tests"
-CONFTEST_PATH = PROJECT_ROOT / "conftest.py"
-LOCATORS_PATH = PROJECT_ROOT / "mcp-selectors" / "locators.json"
-DISCOVERY_META_PATH = PROJECT_ROOT / "mcp-selectors" / "discovery_meta.json"
-GENERATION_LOG_PATH = PROJECT_ROOT / "generation_log.txt"
-REPORTS_DIR = PROJECT_ROOT / "reports"
-ALLURE_RESULTS = REPORTS_DIR / "allure-results"
-HTML_REPORT = REPORTS_DIR / "report.html"
-SCREENSHOT_DIR = REPORTS_DIR / "screenshots"
-# The cross-app knowledge base (POMs/step_defs/locators/run history) is kept
-# OUTSIDE the shippable engine package by default — a sibling `workspace/`
-# directory — so `core/` stays pure code with zero client-specific data.
-# Override with QA_WORKSPACE_DIR to point it anywhere (e.g. a per-client path).
-WORKSPACE_DIR = Path(os.environ.get("QA_WORKSPACE_DIR", PROJECT_ROOT.parent / "workspace"))
-PROJECTS_DIR = WORKSPACE_DIR / "projects"
-JRE_HOME = Path(os.environ.get("USERPROFILE", "")) / "tools" / "jdk-21.0.10+7-jre"
+def current_project() -> str:
+    """The active project name (from the most recent upload/paste), or ''."""
+    return st.session_state.get("project", "")
 
-ARTIFACT_DIRS = ("features", "pages", "step_defs", "tests", "mcp-selectors", "reports")
+
+def proj_path(*parts: str) -> Path:
+    """Resolve a path inside the active project's folder."""
+    return ws.project_dir(current_project()).joinpath(*parts)
+
+
+JRE_HOME = Path(os.environ.get("USERPROFILE", "")) / "tools" / "jdk-21.0.10+7-jre"
 
 USER_STORY_PLACEHOLDER = (
     "# Add one or more user stories below in plain English.\n"
@@ -83,21 +69,19 @@ AUDITOR_PROMPT = _load_prompt("auditor_prompt")
 SYNTHESIS_PROMPT = _load_prompt("synthesis_prompt")
 
 
-PYTEST_HEADED_CMD_BASE = [
-    sys.executable, "-m", "pytest", "-v",
-    "--headed",
-    f"--html={HTML_REPORT}",
-    "--self-contained-html",
-    f"--alluredir={ALLURE_RESULTS}",
-]
-
-
-def pytest_headed_cmd(target: str | None = None) -> list[str]:
-    """Build the pytest --headed command. If target is None, run everything in /tests.
-    If target is given (e.g. 'tests/test_story_1.py'), run only that file."""
-    cmd = list(PYTEST_HEADED_CMD_BASE)
+def pytest_headed_cmd(project: str, run_dir: Path, target: str | None = None) -> list[str]:
+    """Build the pytest --headed command writing HTML+Allure into run_dir.
+    target is relative to the project dir (e.g. 'test/test_login.py')."""
+    cmd = [
+        sys.executable, "-m", "pytest", "-v", "--headed",
+        f"--html={run_dir / 'report.html'}",
+        "--self-contained-html",
+        f"--alluredir={run_dir / 'allure-results'}",
+    ]
     if target:
         cmd.append(target)
+    else:
+        cmd.append("test")
     return cmd
 
 GHERKIN_TOOLS = ["Write", "Read", "Edit", "Glob"]
@@ -351,31 +335,31 @@ def story_label(text: str) -> str:
     return "Untitled story"
 
 
-def write_story_readme(story_id: str) -> None:
-    """Write/refresh README.md at the root of /projects/<story_id>/ so the folder
+def write_story_readme(project: str) -> None:
+    """Write/refresh README.md at the root of workspace/<project>/ so the folder
     is self-describing when browsed in Explorer or VS Code."""
-    if not story_id:
+    if not project:
         return
-    proj = project_dir(story_id)
+    proj = ws.project_dir(project)
     proj.mkdir(parents=True, exist_ok=True)
-    archived_story = proj / "user_story.txt"
-    if archived_story.exists():
-        story_text = archived_story.read_text(encoding="utf-8")
-    elif USER_STORY_PATH.exists():
-        story_text = USER_STORY_PATH.read_text(encoding="utf-8")
-    else:
-        story_text = ""
+    stories = ws.list_stories(project)
+    story_text = ""
+    if stories:
+        try:
+            story_text = stories[0].read_text(encoding="utf-8")
+        except OSError:
+            story_text = ""
     label = story_label(story_text)
-    n_features = len(list((proj / "features").glob("*.feature"))) if (proj / "features").exists() else 0
-    n_tests = len(list((proj / "tests").glob("test_*.py"))) if (proj / "tests").exists() else 0
-    has_report = (proj / "reports" / "report.html").exists()
-    feature_list = sorted((proj / "features").glob("*.feature")) if (proj / "features").exists() else []
-    test_list = sorted((proj / "tests").glob("test_*.py")) if (proj / "tests").exists() else []
+    n_features = len(list((proj / "feature").glob("*.feature"))) if (proj / "feature").exists() else 0
+    n_tests = len(list((proj / "test").glob("test_*.py"))) if (proj / "test").exists() else 0
+    has_report = bool(ws.report_runs(project))
+    feature_list = sorted((proj / "feature").glob("*.feature")) if (proj / "feature").exists() else []
+    test_list = sorted((proj / "test").glob("test_*.py")) if (proj / "test").exists() else []
 
     lines = [
         f"# {label}",
         "",
-        f"- **Story id:** `{story_id}`",
+        f"- **Project:** `{project}`",
         f"- **Last updated:** {_dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
         f"- **Counts:** {n_features} feature(s) · {n_tests} test(s)"
         + ("  ·  report ✓" if has_report else ""),
@@ -384,12 +368,13 @@ def write_story_readme(story_id: str) -> None:
         "",
         "| Path | Contents |",
         "|---|---|",
-        "| `features/`      | Gherkin `.feature` files (one per scenario) |",
+        "| `user_story/`    | Source user stories for this project |",
+        "| `feature/`       | Gherkin `.feature` files (one per scenario) |",
         "| `pages/`         | Page Object Model classes |",
         "| `step_defs/`     | pytest-bdd step definitions |",
-        "| `tests/`         | pytest-bdd test entrypoints |",
+        "| `test/`          | pytest-bdd test entrypoints |",
         "| `mcp-selectors/` | Live selectors captured by Playwright MCP |",
-        "| `reports/`       | HTML + Allure run artifacts |",
+        "| `report/`        | HTML + Allure run artifacts (per timestamped run) |",
         "| `process_log.txt`| Timestamped subprocess history |",
         "",
     ]
@@ -398,13 +383,13 @@ def write_story_readme(story_id: str) -> None:
         lines.append("")
         for f in feature_list:
             title = _extract_feature_title(f) or f.stem
-            lines.append(f"- `features/{f.name}` — {title}")
+            lines.append(f"- `feature/{f.name}` — {title}")
         lines.append("")
     if test_list:
         lines.append("## Tests")
         lines.append("")
         for t in test_list:
-            lines.append(f"- `tests/{t.name}`")
+            lines.append(f"- `test/{t.name}`")
         lines.append("")
     lines += [
         "## User story",
@@ -419,10 +404,10 @@ def write_story_readme(story_id: str) -> None:
     (proj / "README.md").write_text("\n".join(lines), encoding="utf-8")
 
 
-def append_process_log(story_id: str, msg: str) -> None:
-    if not story_id:
+def append_process_log(project: str, msg: str) -> None:
+    if not project:
         return
-    proj = project_dir(story_id)
+    proj = ws.project_dir(project)
     proj.mkdir(parents=True, exist_ok=True)
     stamp = _dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with (proj / "process_log.txt").open("a", encoding="utf-8") as f:
@@ -430,38 +415,41 @@ def append_process_log(story_id: str, msg: str) -> None:
 
 
 def flat_has_features() -> bool:
-    return FEATURES_DIR.exists() and any(FEATURES_DIR.glob("*.feature"))
+    fdir = proj_path("feature")
+    return fdir.exists() and any(fdir.glob("*.feature"))
 
 
 def flat_has_framework() -> bool:
+    pages = proj_path("pages")
+    steps = proj_path("step_defs")
+    tests = proj_path("test")
     return (
         flat_has_features()
-        and PAGES_DIR.exists()
-        and any(p for p in PAGES_DIR.glob("*.py") if p.name not in ("base_page.py", "__init__.py"))
-        and STEP_DEFS_DIR.exists()
-        and any(p.name != "__init__.py" for p in STEP_DEFS_DIR.glob("*.py"))
-        and TESTS_DIR.exists()
-        and any(TESTS_DIR.glob("test_*.py"))
+        and pages.exists()
+        and any(p for p in pages.glob("*.py") if p.name not in ("base_page.py", "__init__.py"))
+        and steps.exists()
+        and any(p.name != "__init__.py" for p in steps.glob("*.py"))
+        and tests.exists()
+        and any(tests.glob("test_*.py"))
     )
 
 
-def story_folder_state(story_id: str) -> dict[str, bool]:
-    """Check the story's folder under /projects/<id>/ to see what files have already been
-    generated for this exact story. The story folder is the persistent workspace per story id.
+def story_folder_state(project: str) -> dict[str, bool]:
+    """Check the project's folder under workspace/<project>/ to see what files
+    have already been generated.
 
-    A framework counts as 'ready' when features + step_defs + a pytest entrypoint all
-    exist. Page Objects are a style preference, not a hard requirement — some Claude
-    generations call Playwright directly from step defs and still produce passing
-    tests. Demanding POMs here would punish the user by regenerating a runnable
-    framework, which is exactly the opposite of what cached behavior is for."""
-    if not story_id:
+    A framework counts as 'ready' when features + step_defs + a pytest entrypoint
+    all exist. Page Objects are a style preference, not a hard requirement — some
+    Claude generations call Playwright directly from step defs and still produce
+    passing tests."""
+    if not project:
         return {"gherkin": False, "framework": False}
-    proj = project_dir(story_id)
+    proj = ws.project_dir(project)
     if not proj.exists():
         return {"gherkin": False, "framework": False}
-    has_features = (proj / "features").exists() and any((proj / "features").glob("*.feature"))
+    has_features = (proj / "feature").exists() and any((proj / "feature").glob("*.feature"))
     step_defs_dir = proj / "step_defs"
-    tests_dir = proj / "tests"
+    tests_dir = proj / "test"
     has_framework = (
         has_features
         and step_defs_dir.exists()
@@ -471,17 +459,17 @@ def story_folder_state(story_id: str) -> dict[str, bool]:
     return {"gherkin": has_features, "framework": has_framework}
 
 
-def story_feature_count(story_id: str) -> int:
-    if not story_id:
+def story_feature_count(project: str) -> int:
+    if not project:
         return 0
-    p = project_dir(story_id) / "features"
+    p = ws.subdir(project, "feature")
     return len(list(p.glob("*.feature"))) if p.exists() else 0
 
 
-def story_test_count(story_id: str) -> int:
-    if not story_id:
+def story_test_count(project: str) -> int:
+    if not project:
         return 0
-    p = project_dir(story_id) / "tests"
+    p = ws.subdir(project, "test")
     return len(list(p.glob("test_*.py"))) if p.exists() else 0
 
 
@@ -521,24 +509,24 @@ def _feature_for_test(test_path: Path, features_dir: Path) -> Path | None:
     return candidate if candidate.exists() else None
 
 
-def discover_tests(story_id: str) -> list[dict]:
-    """Return one row per discovered pytest-bdd test file for this story.
+def discover_tests(project: str) -> list[dict]:
+    """Return one row per discovered pytest-bdd test file for this project.
     Each row: {file: Path, rel: str, name: str, title: str, feature: Path|None}."""
-    proj = project_dir(story_id) if story_id else None
-    tests_dir = (proj / "tests") if proj else TESTS_DIR
-    features_dir = (proj / "features") if proj else FEATURES_DIR
+    if not project:
+        return []
+    tests_dir = ws.subdir(project, "test")
+    features_dir = ws.subdir(project, "feature")
     if not tests_dir.exists():
         return []
     rows: list[dict] = []
     for test_file in sorted(tests_dir.glob("test_*.py")):
         feature = _feature_for_test(test_file, features_dir)
         title = _extract_feature_title(feature) if feature else ""
-        # pytest target should be relative to PROJECT_ROOT (the flat workspace),
-        # because that's where pytest runs from after restore_artifacts(...)
-        flat_target = (TESTS_DIR / test_file.name).relative_to(PROJECT_ROOT).as_posix()
+        # pytest target is relative to the project dir, where pytest runs from.
+        rel_target = f"test/{test_file.name}"
         rows.append({
             "file": test_file,
-            "rel": flat_target,
+            "rel": rel_target,
             "name": test_file.name,
             "title": title or test_file.stem.replace("_", " ").title(),
             "feature": feature.name if feature else "",
@@ -560,9 +548,10 @@ def _delete_files(folder: Path, keep: set[str], glob: str = "*") -> None:
 
 
 def reset_pytest_plugins() -> None:
-    if not CONFTEST_PATH.exists():
+    conftest = proj_path("conftest.py")
+    if not conftest.exists():
         return
-    text = CONFTEST_PATH.read_text(encoding="utf-8")
+    text = conftest.read_text(encoding="utf-8")
     new_text = re.sub(
         r"pytest_plugins\s*=\s*\([^)]*\)",
         "pytest_plugins = ()",
@@ -570,7 +559,7 @@ def reset_pytest_plugins() -> None:
         count=1,
     )
     if new_text != text:
-        CONFTEST_PATH.write_text(new_text, encoding="utf-8")
+        conftest.write_text(new_text, encoding="utf-8")
 
 
 def sync_pytest_plugins() -> list[str]:
@@ -597,15 +586,18 @@ def sync_pytest_plugins() -> list[str]:
         than nothing — mirrors the older shared-steps projects.
 
     Returns the list of dotted module paths written (for logging)."""
-    if not CONFTEST_PATH.exists():
+    conftest = proj_path("conftest.py")
+    if not conftest.exists():
         return []
+    features_dir = proj_path("feature")
+    step_defs_dir = proj_path("step_defs")
     feature_stems = (
-        {p.stem for p in FEATURES_DIR.glob("*.feature")}
-        if FEATURES_DIR.exists() else set()
+        {p.stem for p in features_dir.glob("*.feature")}
+        if features_dir.exists() else set()
     )
     all_steps = sorted(
-        p.stem for p in STEP_DEFS_DIR.glob("*_steps.py")
-    ) if STEP_DEFS_DIR.exists() else []
+        p.stem for p in step_defs_dir.glob("*_steps.py")
+    ) if step_defs_dir.exists() else []
     matched = [
         s for s in all_steps
         if any(s == f"{fstem}_steps" for fstem in feature_stems)
@@ -613,7 +605,7 @@ def sync_pytest_plugins() -> list[str]:
     modules = matched or all_steps
     plugins = tuple(f"step_defs.{m}" for m in modules)
 
-    text = CONFTEST_PATH.read_text(encoding="utf-8")
+    text = conftest.read_text(encoding="utf-8")
     new_text = re.sub(
         r"pytest_plugins\s*=\s*\([^)]*\)",
         f"pytest_plugins = {plugins!r}",
@@ -621,16 +613,18 @@ def sync_pytest_plugins() -> list[str]:
         count=1,
     )
     if new_text != text:
-        CONFTEST_PATH.write_text(new_text, encoding="utf-8")
+        conftest.write_text(new_text, encoding="utf-8")
     return list(plugins)
 
 
 def reset_locators() -> None:
-    LOCATORS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    LOCATORS_PATH.write_text("{}\n", encoding="utf-8")
-    if DISCOVERY_META_PATH.exists():
+    locators = proj_path("mcp-selectors", "locators.json")
+    discovery_meta = proj_path("mcp-selectors", "discovery_meta.json")
+    locators.parent.mkdir(parents=True, exist_ok=True)
+    locators.write_text("{}\n", encoding="utf-8")
+    if discovery_meta.exists():
         try:
-            DISCOVERY_META_PATH.unlink()
+            discovery_meta.unlink()
         except OSError:
             pass
 
@@ -645,14 +639,12 @@ def reset_locators() -> None:
 # .html/.md/.json in <100 ms.
 # ---------------------------------------------------------------------------
 
-_CAPTURED_VALUES_FILE = REPORTS_DIR / "captured_values.json"
-
-
 def _load_captured_values() -> list[dict]:
-    if not _CAPTURED_VALUES_FILE.exists():
+    captured = proj_path("report", "captured_values.json")
+    if not captured.exists():
         return []
     try:
-        data = json.loads(_CAPTURED_VALUES_FILE.read_text(encoding="utf-8"))
+        data = json.loads(captured.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return []
     if isinstance(data, dict):
@@ -665,7 +657,7 @@ def _load_captured_values() -> list[dict]:
 def _load_step_trace() -> list[dict]:
     """Per-step records (keyword/name/status/screenshot) written by conftest's
     pytest_bdd_after_step / pytest_bdd_step_error hooks during the run."""
-    p = REPORTS_DIR / "step_trace.json"
+    p = proj_path("report", "step_trace.json")
     if not p.exists():
         return []
     try:
@@ -677,11 +669,11 @@ def _load_step_trace() -> list[dict]:
 
 
 def _img_data_uri(rel_path: str) -> str:
-    """Inline a screenshot (path relative to reports/) as a base64 data URI so
+    """Inline a screenshot (path relative to report/) as a base64 data URI so
     the report HTML is fully self-contained and portable."""
     if not rel_path:
         return ""
-    fp = REPORTS_DIR / rel_path
+    fp = proj_path("report", rel_path)
     try:
         raw = fp.read_bytes()
     except OSError:
@@ -1096,19 +1088,16 @@ def build_inline_coverage_report(
     verdict, css_class, reasons = _compute_verdict(buckets, pytest_exit_code)
 
     story_text = ""
-    archived_story = project_dir(story_id) / "user_story.txt" if story_id else None
-    if archived_story and archived_story.exists():
+    stories = ws.list_stories(story_id) if story_id else []
+    if stories:
         try:
-            story_text = archived_story.read_text(encoding="utf-8")
-        except OSError:
-            story_text = ""
-    elif USER_STORY_PATH.exists():
-        try:
-            story_text = USER_STORY_PATH.read_text(encoding="utf-8")
+            story_text = stories[0].read_text(encoding="utf-8")
         except OSError:
             story_text = ""
 
-    pytest_html_exists = HTML_REPORT.exists()
+    pytest_html_exists = (
+        proj_path("report", run_timestamp, "report.html").exists() if story_id else False
+    )
 
     # ---- JSON ----
     summary = {
@@ -1310,55 +1299,39 @@ def build_inline_coverage_report(
 
 
 def write_inline_coverage_report(
-    story_id: str,
+    project: str,
     pytest_exit_code: int,
+    run_dir: Path,
 ) -> dict[str, str]:
-    """Build + write the report. Returns the dict so callers can inspect verdict."""
-    run_timestamp = _dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    out = build_inline_coverage_report(story_id, pytest_exit_code, run_timestamp)
-    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    (REPORTS_DIR / "story_coverage.html").write_text(out["html"], encoding="utf-8")
-    (REPORTS_DIR / "story_coverage.md").write_text(out["md"], encoding="utf-8")
-    (REPORTS_DIR / "story_coverage.json").write_text(out["json"], encoding="utf-8")
-    # Snapshot to /projects/<id>/reports/runs/<ts>/ so the user can browse history
-    if story_id:
-        runs_dir = project_dir(story_id) / "reports" / "runs" / run_timestamp
-        try:
-            runs_dir.mkdir(parents=True, exist_ok=True)
-            for name in ("story_coverage.html", "story_coverage.md",
-                         "story_coverage.json", "captured_values.json"):
-                src = REPORTS_DIR / name
-                if src.exists():
-                    (runs_dir / name).write_bytes(src.read_bytes())
-            if HTML_REPORT.exists():
-                (runs_dir / "report.html").write_bytes(HTML_REPORT.read_bytes())
-            if SCREENSHOT_DIR.exists() and SCREENSHOT_DIR.is_dir():
-                ss_dst = runs_dir / "screenshots"
-                ss_dst.mkdir(parents=True, exist_ok=True)
-                for f in SCREENSHOT_DIR.glob("*"):
-                    if f.is_file():
-                        try:
-                            (ss_dst / f.name).write_bytes(f.read_bytes())
-                        except OSError:
-                            continue
-        except OSError:
-            pass
+    """Build + write the report into the run dir. Returns the dict so callers
+    can inspect the verdict."""
+    run_timestamp = run_dir.name
+    out = build_inline_coverage_report(project, pytest_exit_code, run_timestamp)
+    try:
+        run_dir.mkdir(parents=True, exist_ok=True)
+        (run_dir / "story_coverage.html").write_text(out["html"], encoding="utf-8")
+        (run_dir / "story_coverage.md").write_text(out["md"], encoding="utf-8")
+        (run_dir / "story_coverage.json").write_text(out["json"], encoding="utf-8")
+        # Mirror the captured values into the run dir for portability.
+        captured = proj_path("report", "captured_values.json")
+        if captured.exists() and captured.parent != run_dir:
+            try:
+                (run_dir / "captured_values.json").write_bytes(captured.read_bytes())
+            except OSError:
+                pass
+    except OSError:
+        pass
     out["run_timestamp"] = run_timestamp
     return out
 
 
-def discover_run_history(story_id: str) -> list[dict]:
-    """Return list of historical runs for a story, newest first.
+def discover_run_history(project: str) -> list[dict]:
+    """Return list of historical runs for a project, newest first.
     Each entry: {timestamp, verdict, html_path, dir, has_pytest_html}."""
-    if not story_id:
-        return []
-    runs_dir = project_dir(story_id) / "reports" / "runs"
-    if not runs_dir.exists():
+    if not project:
         return []
     results: list[dict] = []
-    for d in runs_dir.iterdir():
-        if not d.is_dir():
-            continue
+    for d in ws.report_runs(project):
         verdict = "?"
         cv_json = d / "story_coverage.json"
         if cv_json.exists():
@@ -1374,55 +1347,47 @@ def discover_run_history(story_id: str) -> list[dict]:
             "html_path": (d / "story_coverage.html"),
             "has_pytest_html": (d / "report.html").exists(),
         })
-    results.sort(key=lambda r: r["timestamp"], reverse=True)
     return results
 
 
-def clean_reports() -> None:
-    if ALLURE_RESULTS.exists():
-        shutil.rmtree(ALLURE_RESULTS, ignore_errors=True)
-    if SCREENSHOT_DIR.exists():
-        shutil.rmtree(SCREENSHOT_DIR, ignore_errors=True)
-    if HTML_REPORT.exists():
-        try:
-            HTML_REPORT.unlink()
-        except OSError:
-            pass
-
-
 def clean_artifacts(scope: str, *, preserve_code: bool = False) -> None:
-    """Wipe generated artifacts.
+    """Wipe generated artifacts inside the active project's folders.
 
-    scope='gherkin' → wipes features/*.feature in addition to the framework code.
-    scope='tests'   → leaves features/ alone; just wipes framework code.
+    scope='gherkin' → wipes feature/*.feature in addition to the framework code.
+    scope='tests'   → leaves feature/ alone; just wipes framework code.
     scope='all'     → wipes both.
 
-    preserve_code=True keeps pages/step_defs/tests intact. Use this when
-    ① is running in FORK MODE — the forked POMs/step defs must survive
-    ①'s "generate gherkin" pass so that ② DELTA mode can build on top of
-    them. Without this guard the existing logic wiped them on every ① click."""
+    NEVER touches user_story/ — source stories are preserved. preserve_code=True
+    keeps pages/step_defs/test intact."""
     if scope in ("gherkin", "all"):
-        _delete_files(FEATURES_DIR, keep=set(), glob="*.feature")
+        _delete_files(proj_path("feature"), keep=set(), glob="*.feature")
     if not preserve_code:
-        _delete_files(PAGES_DIR, keep={"base_page.py", "__init__.py"}, glob="*.py")
-        _delete_files(STEP_DEFS_DIR, keep={"__init__.py"}, glob="*.py")
-        _delete_files(TESTS_DIR, keep={"__init__.py"}, glob="test_*.py")
+        _delete_files(proj_path("pages"), keep={"base_page.py", "__init__.py"}, glob="*.py")
+        _delete_files(proj_path("step_defs"), keep={"__init__.py"}, glob="*.py")
+        _delete_files(proj_path("test"), keep={"__init__.py"}, glob="test_*.py")
         reset_pytest_plugins()
         reset_locators()
-    clean_reports()
 
 
 def syntax_check_generated() -> tuple[bool, list[str]]:
     errors: list[str] = []
+    pages = proj_path("pages")
+    steps = proj_path("step_defs")
+    tests = proj_path("test")
     targets: list[Path] = []
-    targets.extend([p for p in PAGES_DIR.glob("*.py") if p.name not in ("__init__.py",)])
-    targets.extend([p for p in STEP_DEFS_DIR.glob("*.py") if p.name != "__init__.py"])
-    targets.extend(TESTS_DIR.glob("test_*.py"))
+    targets.extend([p for p in pages.glob("*.py") if p.name not in ("__init__.py",)])
+    targets.extend([p for p in steps.glob("*.py") if p.name != "__init__.py"])
+    targets.extend(tests.glob("test_*.py"))
+    proj_root = ws.project_dir(current_project())
     for f in targets:
         try:
             ast.parse(f.read_text(encoding="utf-8"))
         except SyntaxError as e:
-            errors.append(f"{f.relative_to(PROJECT_ROOT)}: {e.msg} (line {e.lineno})")
+            try:
+                label = f.relative_to(proj_root)
+            except ValueError:
+                label = f.name
+            errors.append(f"{label}: {e.msg} (line {e.lineno})")
     return (not errors, errors)
 
 
@@ -2064,7 +2029,7 @@ SCOUT_DEFINITIONS: tuple[tuple[str, str, str], ...] = (
 
 
 def _ensure_scout_dir() -> None:
-    LOCATORS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    proj_path("mcp-selectors").mkdir(parents=True, exist_ok=True)
 
 
 SCOUT_HARD_TIMEOUT_SECS = 300  # 5 min per scout — kill if it exceeds this
@@ -2283,17 +2248,20 @@ def run_multi_agent_framework(log_placeholder, log_buf: list[str], story_id: str
     )
 
 
-def ensure_user_story() -> None:
-    if not USER_STORY_PATH.exists():
-        USER_STORY_PATH.write_text(USER_STORY_PLACEHOLDER, encoding="utf-8")
+def user_data_path() -> Path:
+    """Path to the active project's test-data sidecar (user_data.json)."""
+    return proj_path("user_data.json")
 
 
 def _read_user_data_text() -> str:
-    """Raw text of user_data.json (or '' if missing/empty)."""
-    if not USER_DATA_PATH.exists():
+    """Raw text of the active project's user_data.json (or '' if missing/empty)."""
+    if not current_project():
+        return ""
+    p = user_data_path()
+    if not p.exists():
         return ""
     try:
-        return USER_DATA_PATH.read_text(encoding="utf-8")
+        return p.read_text(encoding="utf-8")
     except OSError:
         return ""
 
@@ -2474,25 +2442,13 @@ def log_event(msg: str) -> None:
 
 
 def initialize_session() -> None:
-    """Clean Slate for the *UI session only*: wipe session_state on fresh page load
-    AND reset user_story.txt to the placeholder so the user always starts from a
-    blank story area on refresh — explicit user preference: refresh = fresh session,
-    no past data carried over.
+    """Clean slate for the *UI session only*: wipe session_state on fresh page
+    load so the user always starts from a blank slate on refresh.
 
-    Files on disk in /projects/<id>/ are NOT touched — they remain the persistent
-    source of truth, retrievable by re-entering the same story."""
+    Project folders under workspace/<project>/ are NOT touched — they remain the
+    persistent source of truth, retrievable by selecting the project/story."""
     if st.session_state.get("session_initialized"):
         return
-    USER_STORY_PATH.write_text(USER_STORY_PLACEHOLDER, encoding="utf-8")
-    # Wipe sidecar test data too — refresh = clean slate. Includes any non-JSON
-    # originals (CSV/Excel/TSV) preserved from a prior session.
-    for ext in (("json",) + USER_DATA_SUPPORTED_EXTENSIONS):
-        p = USER_DATA_PATH.with_name(f"user_data.{ext}")
-        if p.exists():
-            try:
-                p.unlink()
-            except OSError:
-                pass
     for key in list(st.session_state.keys()):
         del st.session_state[key]
     st.session_state.session_initialized = True
@@ -2533,8 +2489,8 @@ def render_summary_line(stories: int, features: int, tests: int) -> None:
 
 
 def render_feature_files(story_id: str) -> None:
-    proj = project_dir(story_id)
-    feat_dir = proj / "features"
+    proj = ws.project_dir(story_id)
+    feat_dir = proj / "feature"
     files = sorted(feat_dir.glob("*.feature")) if feat_dir.exists() else []
     if not files:
         st.markdown(
@@ -2554,10 +2510,10 @@ def render_feature_files(story_id: str) -> None:
 
 
 def render_framework_files(story_id: str) -> None:
-    proj = project_dir(story_id)
+    proj = ws.project_dir(story_id)
     pages_dir = proj / "pages"
     step_dir = proj / "step_defs"
-    tests_dir = proj / "tests"
+    tests_dir = proj / "test"
     locators = proj / "mcp-selectors" / "locators.json"
     page_files = sorted([p for p in pages_dir.glob("*.py") if p.name not in ("base_page.py", "__init__.py")]) if pages_dir.exists() else []
     step_files = sorted([p for p in step_dir.glob("*.py") if p.name != "__init__.py"]) if step_dir.exists() else []
@@ -2653,8 +2609,8 @@ def render_test_runner(story_id: str, framework_ready: bool) -> str | None:
                      use_container_width=True, help="Run every test for this story (headed)"):
             clicked = "all"
     with cols[1]:
-        proj = project_dir(story_id)
-        html_report = proj / "reports" / "report.html"
+        runs = ws.report_runs(story_id)
+        html_report = (runs[0] / "report.html") if runs else Path()
         if html_report.exists():
             try:
                 st.download_button(
@@ -2677,14 +2633,15 @@ def render_test_runner(story_id: str, framework_ready: bool) -> str | None:
 
 
 def render_test_results(story_id: str) -> None:
-    proj = project_dir(story_id)
-    html_report = proj / "reports" / "report.html"
-    allure = proj / "reports" / "allure-results"
-    screenshots = proj / "reports" / "screenshots"
-    coverage_md = proj / "reports" / "story_coverage.md"
-    coverage_json = proj / "reports" / "story_coverage.json"
-    coverage_html = proj / "reports" / "story_coverage.html"
-    captured_values = proj / "reports" / "captured_values.json"
+    runs = ws.report_runs(story_id)
+    latest = runs[0] if runs else Path()
+    html_report = latest / "report.html"
+    allure = latest / "allure-results"
+    screenshots = latest / "screenshots"
+    coverage_md = latest / "story_coverage.md"
+    coverage_json = latest / "story_coverage.json"
+    coverage_html = latest / "story_coverage.html"
+    captured_values = latest / "captured_values.json"
 
     # ============================================================
     # RUN HISTORY — every ③ Run press snapshots its outputs into
@@ -2893,11 +2850,13 @@ def render_test_results(story_id: str) -> None:
 
 
 def feature_count() -> int:
-    return len(list(FEATURES_DIR.glob("*.feature"))) if FEATURES_DIR.exists() else 0
+    fdir = proj_path("feature")
+    return len(list(fdir.glob("*.feature"))) if fdir.exists() else 0
 
 
 def test_count() -> int:
-    return len(list(TESTS_DIR.glob("test_*.py"))) if TESTS_DIR.exists() else 0
+    tdir = proj_path("test")
+    return len(list(tdir.glob("test_*.py"))) if tdir.exists() else 0
 
 
 def render_sidebar(stories_n: int, story_id: str,
