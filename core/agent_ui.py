@@ -1810,10 +1810,12 @@ def _heartbeat_phrases_for(cmd: list[str]) -> tuple[str, ...]:
 
 
 def stream_command(cmd, placeholder, log: list[str], story_id: str = "",
-                   heartbeat_secs: int = 10) -> int:
+                   heartbeat_secs: int = 10, cwd: Path | None = None) -> int:
     """Run a command, stream stdout to the activity panel, and emit a heartbeat
     line every `heartbeat_secs` seconds of silence so long MCP/Claude steps with
     no console output don't make the UI look frozen.
+
+    Runs in `cwd` if given, else the active project's folder.
 
     `cmd` may be either:
       - a list[str]  → no stdin, run as-is (pytest, generic commands)
@@ -1825,6 +1827,7 @@ def stream_command(cmd, placeholder, log: list[str], story_id: str = "",
     if isinstance(cmd, tuple) and len(cmd) == 2 and isinstance(cmd[1], str):
         cmd, stdin_text = list(cmd[0]), cmd[1]
 
+    proc_cwd = str(cwd or ws.project_dir(current_project()))
     display = _redact_command(cmd)
     log.append(f"$ {display}")
     if story_id:
@@ -1834,7 +1837,7 @@ def stream_command(cmd, placeholder, log: list[str], story_id: str = "",
     try:
         process = subprocess.Popen(
             cmd,
-            cwd=str(PROJECT_ROOT),
+            cwd=proc_cwd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             stdin=subprocess.PIPE if stdin_text is not None else subprocess.DEVNULL,
@@ -2082,7 +2085,7 @@ def run_parallel_scouts(log_placeholder, log_buf: list[str], story_id: str = "",
         try:
             proc = subprocess.Popen(
                 scout_cmd,
-                cwd=str(PROJECT_ROOT),
+                cwd=str(ws.project_dir(current_project())),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 stdin=subprocess.PIPE,
@@ -3236,266 +3239,62 @@ def main() -> None:
     # ---- Button 1 — Generate Gherkin ----
     if gen_clicked:
         log_event("Step ① clicked — Generate Gherkin")
-        append_process_log(story_id, "Step 1 (Generate Gherkin) clicked")
-        project_dir(story_id).mkdir(parents=True, exist_ok=True)
-        # DEMO STASH PATH — story has pre-captured artifacts; replay them.
-        if _has_demo_stash(story_id, "gherkin"):
-            with st.status("Generating Gherkin…", expanded=False) as status:
-                _fake_claude_stream([
-                    ("$ claude --print --permission-mode bypassPermissions --output-format stream-json --include-partial-messages --verbose --allowedTools <tools> (<prompt via stdin>)", 0.4),
-                    ("(pid 4820 started)", 0.6),
-                    ("⚙ Session started · model=claude-opus-4-7[1m]", 1.0),
-                    ("🧠 Claude is reasoning (extended thinking)…", 1.6),
-                    ("🔧 starting Read …", 0.4),
-                    ("📖 Reading user_story.txt", 1.2),
-                    ("💬 Parsing the user story into Gherkin steps.", 1.4),
-                    ("💬 Story has multiple actions — login, dashboard verification, employee CRUD, KPI setup, PLI verification.", 1.6),
-                    ("🔧 starting Bash …", 0.3),
-                    ("💻 Bash: ls features/", 1.0),
-                    ("💬 Building one Feature with a single end-to-end Scenario per the story's flow.", 1.4),
-                    ("🔧 starting Write …", 0.6),
-                    ("✍ Writing features/story_1_manager_onboards_employee_pli.feature", 2.0),
-                    ("💬 Created 1 feature file.", 0.8),
-                    ("✓ Claude session done · verdict=success · 14.8s", 0.5),
-                ], log_placeholder, st.session_state.log)
-                _replay_stash(story_id, "gherkin")
-                n = story_feature_count(story_id)
-                status.update(label=f"Gherkin ready — {n} file(s)", state="complete")
-            log_event(f"Gherkin done — {n} feature file(s) written, exit 0")
-            st.session_state.gherkin_done = True
-            st.session_state.last_run = _dt.datetime.now().strftime("%H:%M:%S")
-            st.session_state.loaded_for_story = story_id
-            st.rerun()
-        with st.status(f"Generating Gherkin for {len(stories)} stor"
-                       f"{'y' if len(stories)==1 else 'ies'}…",
-                       expanded=False) as status:
-            in_fork_mode = bool(st.session_state.get("reuse_from"))
-            # CRITICAL: in fork mode, NEVER take the cached/restore path. The
-            # archive's "cached" features belong to either (a) a prior buggy
-            # fork attempt that copied the OLD story's gherkin, or (b) a
-            # stale generation against an earlier version of the new story.
-            # Either way, we must always regenerate Gherkin from the current
-            # user_story.txt — the whole point of the fork is to extend with
-            # NEW features, not replay old ones.
-            if ws_state["gherkin"] and not in_fork_mode:
-                # Cached path — restore from archive but show the same loading
-                # affordance so the UX is identical to a fresh generation. We
-                # never tell the user "this was cached".
-                clean_artifacts(scope="gherkin", preserve_code=False)
-                restore_artifacts(story_id)
-                time.sleep(1.5)
-                n = story_feature_count(story_id)
-                status.update(label=f"Gherkin ready — {n} file(s)", state="complete")
-            else:
-                # FORK MODE: preserve forked pages/step_defs — only wipe features
-                # so the new story gets fresh Gherkin against the reused POMs.
-                clean_artifacts(scope="gherkin", preserve_code=in_fork_mode)
-                rc = stream_command(
-                    claude_command(GHERKIN_PROMPT, GHERKIN_TOOLS),
-                    log_placeholder, st.session_state.log, story_id=story_id,
-                )
-                n = len(list(FEATURES_DIR.glob("*.feature")))
-                log_event(f"Gherkin done — {n} feature file(s) written, exit {rc}")
-                status.update(label=f"Gherkin ready — {n} file(s)",
-                              state="complete" if rc == 0 else "error")
-                archive_artifacts(story_id, phase="gherkin")
+        project = current_project()
+        ws.ensure_project_dirs(project)
+        story_file = st.session_state.get("active_story", "")
+        append_process_log(project, f"Generate Gherkin clicked for {story_file}")
+        with st.status("Generating Gherkin…", expanded=False) as status:
+            prompt = GHERKIN_PROMPT.replace("{{STORY_FILE}}", story_file)
+            rc = stream_command(
+                claude_command(prompt, GHERKIN_TOOLS),
+                log_placeholder, st.session_state.log, story_id=project,
+            )
+            n = len(list(proj_path("feature").glob("*.feature")))
+            log_event(f"Gherkin done — {n} feature file(s) written, exit {rc}")
+            status.update(label=f"Gherkin ready — {n} file(s)",
+                          state="complete" if rc == 0 else "error")
         st.session_state.gherkin_done = True
         st.session_state.last_run = _dt.datetime.now().strftime("%H:%M:%S")
-        st.session_state.loaded_for_story = story_id
         st.rerun()
 
     # ---- Button 2 — Generate Test Framework ----
     if fw_clicked:
         log_event("Step ② clicked — Generate Test Framework")
-        append_process_log(story_id, "Step 2 (Generate Test Framework) clicked")
-        # DEMO STASH PATH — story has pre-captured framework files; replay.
-        if _has_demo_stash(story_id, "framework"):
-            with st.status("Generating test framework (POMs, step defs, tests)…",
-                           expanded=False) as status:
-                _fake_claude_stream([
-                    ("$ claude --print --permission-mode bypassPermissions --output-format stream-json --include-partial-messages --verbose --allowedTools <tools> (<prompt via stdin>)", 0.4),
-                    ("(pid 12044 started)", 0.6),
-                    ("⚙ Session started · model=claude-opus-4-7[1m]", 1.0),
-                    ("🧠 Claude is reasoning (extended thinking)…", 1.8),
-                    ("🔧 starting Bash …", 0.3),
-                    ("💻 Bash: ls -la features/ pages/ step_defs/ tests/ mcp-selectors/", 1.0),
-                    ("🔧 starting Read …", 0.4),
-                    ("📖 Reading features/story_1_manager_onboards_employee_pli.feature", 1.6),
-                    ("💬 Reading the app's _shared/ knowledge base — pages, step_defs, locators already present.", 1.4),
-                    ("🔧 starting Read …", 0.3),
-                    ("📖 Reading projects/localhost_5173/_shared/flow_index.json", 1.2),
-                    ("💬 Matched 18 of 22 feature steps against existing step def patterns. 4 new steps need POM methods.", 1.8),
-                    ("🔧 starting mcp__playwright__browser_navigate …", 0.6),
-                    ("🌐 mcp navigate http://localhost:5173/", 2.4),
-                    ("🔧 starting mcp__playwright__browser_snapshot …", 0.5),
-                    ("📸 mcp snapshot — captured DOM tree", 1.8),
-                    ("🔧 starting mcp__playwright__browser_click …", 0.4),
-                    ("🖱 mcp click 'Manage Revenue' tab", 1.6),
-                    ("🔧 starting Write …", 0.5),
-                    ("✍ Writing pages/page_manager_pli.py", 2.4),
-                    ("🔧 starting Write …", 0.4),
-                    ("✍ Writing step_defs/story_1_manager_pli_end_to_end_steps.py", 2.6),
-                    ("🔧 starting Write …", 0.4),
-                    ("✍ Writing tests/test_story_1_manager_onboards_employee_pli.py", 1.8),
-                    ("🔧 starting Write …", 0.3),
-                    ("✍ Writing mcp-selectors/locators.json", 1.4),
-                    ("🔧 starting Bash …", 0.3),
-                    ("💻 Bash: pytest -v --tb=short --no-header --headless tests/", 2.0),
-                    ("💬 Headless validation passed on the first run. No healing needed.", 1.6),
-                    ("✓ Claude session done · verdict=success · 47.2s", 0.6),
-                ], log_placeholder, st.session_state.log)
-                _replay_stash(story_id, "framework")
-                n_tests = len(list(TESTS_DIR.glob("test_*.py")))
-                status.update(label=f"Framework ready — {n_tests} test(s)", state="complete")
-            log_event(f"Framework done — {n_tests} test file(s) written, exit 0")
-            try:
-                ps = promote_to_shared(story_id)
-                if ps["pages"] or ps["step_defs"] or ps["selectors"]:
-                    log_event(
-                        f"📚 Promoted to app _shared/: "
-                        f"pages:{ps['pages']} step_defs:{ps['step_defs']} "
-                        f"selectors:{ps['selectors']}"
-                    )
-            except Exception:
-                pass
-            st.session_state.framework_done = True
-            st.session_state.last_run = _dt.datetime.now().strftime("%H:%M:%S")
-            st.session_state.loaded_for_story = story_id
-            st.rerun()
-        in_fork_mode_btn2 = bool(st.session_state.get("reuse_from"))
-        # Make sure the flat working set has the story's gherkin available.
-        # In fork mode skip the restore — the workspace already has fresh
-        # Gherkin (from the previous ① click) AND the forked pages/step_defs;
-        # restore would risk merging stale archived files into them.
-        if (not in_fork_mode_btn2 and
-                not (FEATURES_DIR.exists() and any(FEATURES_DIR.glob("*.feature")))):
-            restore_artifacts(story_id)
+        project = current_project()
+        ws.ensure_project_dirs(project)
+        append_process_log(project, "Generate Test Framework clicked")
+        has_framework = (
+            any(proj_path("pages").glob("page_*.py"))
+            or any(proj_path("step_defs").glob("*_steps.py"))
+        )
+        story_file = st.session_state.get("active_story", "")
+        reuse_idx = ws.load_reuse_index(project)
+        prompt_base = FRAMEWORK_DELTA_PROMPT if has_framework else FRAMEWORK_PROMPT
+        prompt = (prompt_base
+                  .replace("{{STORY_FILE}}", story_file)
+                  .replace("{{REUSE_INDEX}}", json.dumps(reuse_idx, indent=2)))
         with st.status("Generating test framework (POMs, step defs, tests)…",
                        expanded=False) as status:
-            # Fork mode bypasses the framework cache — we ALWAYS want ② to
-            # run DELTA mode and produce code for the new story's steps.
-            if ws_state["framework"] and not in_fork_mode_btn2:
-                # Cached: restore but feign generation timing.
-                restore_artifacts(story_id)
-                time.sleep(1.5)
-                n_tests = len(list(TESTS_DIR.glob("test_*.py")))
-                status.update(label=f"Framework ready — {n_tests} test(s)",
-                              state="complete")
-            else:
-                st.warning(
-                    "Generating framework via MCP discovery (headless) + POMs + "
-                    "step defs + tests. Typical 5–15 min on a live site."
-                )
-                with st.spinner("Working…"):
-                    # If the user accepted a fork offer, the forked pages /
-                    # step_defs / features are already in the workspace. Skip
-                    # `clean_artifacts(scope="tests")` (it would wipe them) and
-                    # use FRAMEWORK_DELTA_PROMPT so Claude extends rather than
-                    # regenerates.
-                    forked_from = st.session_state.get("reuse_from")
-                    if forked_from:
-                        log_event(
-                            f"② running in DELTA mode (forked from {forked_from})"
-                        )
-                        prompt_for_run = FRAMEWORK_DELTA_PROMPT
-                    else:
-                        clean_artifacts(scope="tests")
-                        restore_artifacts(story_id)
-                        prompt_for_run = FRAMEWORK_PROMPT
-                    # Single-agent FRAMEWORK_PROMPT — the multi-agent scouts
-                    # added complexity without reliability gains on real sites.
-                    # Single agent path is the proven working version.
-                    rc = stream_command(
-                        claude_command(prompt_for_run, BUILD_TOOLS),
-                        log_placeholder, st.session_state.log,
-                        story_id=story_id, heartbeat_secs=10,
-                    )
-                    # Deterministically register step-def modules so the very
-                    # next ③ Run resolves steps even if the LLM forgot to touch
-                    # pytest_plugins (the common failure mode).
-                    registered = sync_pytest_plugins()
-                    append_process_log(
-                        story_id,
-                        "pytest_plugins set to: "
-                        + (", ".join(registered) if registered else "(none)"),
-                    )
-                    ok, errs = syntax_check_generated()
-                    n_tests = len(list(TESTS_DIR.glob("test_*.py")))
-                    n_pages = len([p for p in PAGES_DIR.glob("*.py")
-                                   if p.name not in ("__init__.py", "base_page.py")])
-                    n_steps = len([p for p in STEP_DEFS_DIR.glob("*.py")
-                                   if p.name != "__init__.py"])
-                    files_written = n_tests + n_pages + n_steps
-                    # Treat "exit failed but files written" as PARTIAL SUCCESS
-                    # so the user knows the work isn't lost. (Real-world case: a
-                    # 12-min run threw red errors at the end but the framework
-                    # was actually fully generated — user refreshed and saw it.)
-                    if rc == 0 and ok:
-                        status.update(label=f"Framework ready — {n_tests} test(s)",
-                                      state="complete")
-                        append_process_log(story_id, "Syntax check: OK")
-                    elif files_written > 0:
-                        status.update(
-                            label=(f"Framework generated with issues — "
-                                   f"{n_pages} POM(s), {n_steps} step-def(s), "
-                                   f"{n_tests} test(s) written. "
-                                   f"Exit={rc}, syntax errors={len(errs)}."),
-                            state="error" if not ok else "complete",
-                        )
-                        st.info(
-                            f"📁 Files were generated despite issues — they're in "
-                            f"`projects/{story_id}/`. Review them before clicking ③ Run, "
-                            f"or click ② again to retry."
-                        )
-                        for e in errs[:5]:
-                            st.warning(f"Syntax: {e}")
-                        append_process_log(
-                            story_id,
-                            f"Partial: rc={rc}, syntax_ok={ok}, "
-                            f"files={files_written}, errs={len(errs)}",
-                        )
-                    else:
-                        # Nothing written and exit failed — true failure.
-                        status.update(
-                            label=f"Framework generation FAILED (exit {rc}, no files written)",
-                            state="error",
-                        )
-                        st.error(
-                            "Generation failed. The activity log above has the details. "
-                            "Try ② again — Claude sometimes recovers on retry."
-                        )
-                        append_process_log(story_id, f"FAIL: rc={rc}, no files written")
-                    # Defensive: even if archiving runs into a transient FS error
-                    # (race with pytest screenshot cleanup etc.), unlock ③ so
-                    # the user can run the tests sitting in the flat workspace.
-                    try:
-                        archive_artifacts(story_id, phase="framework")
-                        # Promote this story's new POMs / step defs / selectors
-                        # into the app's _shared/ folder so the next story on
-                        # the same app inherits them automatically.
-                        try:
-                            ps = promote_to_shared(story_id)
-                            if ps["pages"] or ps["step_defs"] or ps["selectors"]:
-                                log_event(
-                                    f"📚 Promoted to app _shared/: "
-                                    f"pages:{ps['pages']} "
-                                    f"step_defs:{ps['step_defs']} "
-                                    f"selectors:{ps['selectors']}"
-                                )
-                        except Exception as exc:
-                            append_process_log(story_id, f"promote_to_shared WARN: {exc}")
-                    except Exception as exc:
-                        append_process_log(story_id, f"archive WARN: {exc}")
-                        st.warning(
-                            f"⚠ Some files couldn't be archived to projects/{story_id}/ "
-                            f"({type(exc).__name__}). Test files are still in the flat "
-                            f"workspace and ③ Run will work — but a future refresh may "
-                            f"have to regenerate."
-                        )
+            rc = stream_command(
+                claude_command(prompt, BUILD_TOOLS),
+                log_placeholder, st.session_state.log,
+                story_id=project, heartbeat_secs=10,
+            )
+            registered = sync_pytest_plugins()
+            append_process_log(project, "pytest_plugins: "
+                               + (", ".join(registered) if registered else "(none)"))
+            ok, errs = syntax_check_generated()
+            ws.rebuild_reuse_index(project)   # refresh reuse map after generation
+            n_tests = len(list(proj_path("test").glob("test_*.py")))
+            log_event(f"Framework done — {n_tests} test file(s) written, exit {rc}")
+            status.update(label=f"Framework ready — {n_tests} test(s)",
+                          state="complete" if (rc == 0 and ok) else "error")
+            for e in errs[:5]:
+                st.warning(f"Syntax: {e}")
         st.session_state.framework_done = True
         st.session_state.last_run = _dt.datetime.now().strftime("%H:%M:%S")
-        st.session_state.loaded_for_story = story_id
         st.rerun()
+
 
     # ---- Run Tests (sidebar "Run All" OR per-test ▶ Run from main panel) ----
     if pytest_target:
