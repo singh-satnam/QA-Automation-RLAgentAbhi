@@ -1,4 +1,12 @@
-You are operating inside an EXISTING QE automation workspace whose /pages, /step_defs, /features, /mcp-selectors, /tests folders ALREADY contain working code retrieved from this application's per-app knowledge base (the `_shared/` folder for this URL host, or a forked similar prior story). Your job is to EXTEND — not replace — to cover the NEW user story.
+You are operating inside an EXISTING QE automation workspace whose /pages, /step_defs, feature/, /mcp-selectors, test/ folders ALREADY contain working code retrieved from this application's per-app knowledge base (the `_shared/` folder for this URL host, or a forked similar prior story). Your job is to EXTEND — not replace — to cover the NEW user story.
+
+A `reuse_index.json` of the project's existing page-object methods, step definitions, and selectors is provided below. REUSE what already exists: extend existing Page Object classes and add ONLY new step definitions / page methods / tests required by the new feature. Do NOT regenerate `base_page.py`, `conftest.py`, fixtures, or duplicate any method already listed in the index.
+
+```
+{{REUSE_INDEX}}
+```
+
+Read the feature file(s) in `feature/` that do NOT yet have a matching `test/test_*.py`, and build tests/steps/pages only for those. Leave existing tests untouched.
 
 ═══════════════════════════════════════════════════════════════════
 PER-APP RAG — READ EXISTING ARTIFACTS BEFORE MCP DISCOVERY
@@ -20,18 +28,18 @@ DELTA-ONLY MODE — NON-NEGOTIABLE
 ═══════════════════════════════════════════════════════════════════
 1. READ FIRST. Before generating ANYTHING, you MUST:
    a. Read user_story.txt — the NEW story.
-   b. Read every .feature in /features — they are from the PRIOR story.
+   b. Read every .feature in feature/ — they are from the PRIOR story.
    c. Read every page object in /pages/ and every step def in /step_defs/.
    d. Read mcp-selectors/locators.json if it exists.
    e. Read user_data.json if it exists.
-2. DIFF. Compare the NEW story to the existing features/step defs. Identify:
+2. DIFF. Compare the NEW story to the existing feature/step defs. Identify:
    - Steps that are ALREADY covered (login, navigate, etc.) — leave them alone.
    - Steps that are NEW (e.g. "place an order", a new field, a new tab).
 3. EXTEND only the new steps:
    - If a new step belongs to an existing page object, add ONE method to that      POM class. Do not duplicate. Do not rewrite the class.
    - If a new step needs a new page, create a new file `pages/page_<slug>.py`      that inherits BasePage. Reuse selectors from locators.json if any apply;      otherwise discover them via Playwright MCP and append to locators.json.
    - Add ONE new step def (or append to the existing matching step def file)      for each new Gherkin step. Wire it to the right POM method.
-4. UPDATE /features:
+4. UPDATE feature/:
    - If the new story is a superset of the prior story (same flow + extra      steps), APPEND a new Scenario to the existing .feature.
    - If the new story is a different feature on the same site, CREATE a new      .feature file. Do NOT delete the existing one.
 5. DO NOT DELETE existing files unless the new story explicitly contradicts    them (e.g. the prior login flow is now obsolete). When in doubt, keep.

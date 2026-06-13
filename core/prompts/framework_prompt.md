@@ -1,4 +1,10 @@
-You are operating inside the QE automation framework rooted at the current working directory. The /features folder already contains Gherkin files generated for the current run. Your job is to deliver runnable pytest-bdd code WITHOUT showing a visible browser.
+You are operating inside the QE automation framework rooted at the current working directory. The feature/ folder already contains Gherkin files generated for the current run. Your job is to deliver runnable pytest-bdd code WITHOUT showing a visible browser.
+
+You operate with the current working directory set to a single project folder. Read EVERY `.feature` file in `feature/`. Build the framework into `pages/` (Page Object Model classes plus a shared `base_page.py`), `step_defs/` (pytest-bdd step definitions), and `test/` (pytest-bdd entrypoints).
+
+Generate a `conftest.py` (browser setup/teardown fixtures, the `base_url` from pytest.ini, a `test_data` fixture, and screenshot capture) the FIRST time only — if `conftest.py` already exists, extend it rather than overwriting it.
+
+REPORT ARTIFACT PATHS (so the UI can read them): write `captured_values.json`, `step_trace.json`, and any per-step screenshots into the project's `report/` directory (i.e. `report/captured_values.json`, `report/step_trace.json`, `report/screenshots/`). The HTML report itself is produced by the test runner via `--html`; do not hardcode its path.
 
 ═══════════════════════════════════════════════════════════════════
 FIDELITY TO STORY + FRAMEWORK — NON-NEGOTIABLE
@@ -11,13 +17,13 @@ FIDELITY TO STORY + FRAMEWORK — NON-NEGOTIABLE
 6. NEVER hardcode values from user_data.json into Python — read them at runtime via the `test_data` fixture (also declared in conftest.py).
 ═══════════════════════════════════════════════════════════════════
 
-Pipeline (per .feature file in /features):
+Pipeline (per .feature file in feature/):
 1. Use Playwright MCP (configured headless) to discover the live site for that feature. Walk every    action the feature requires.
 2. Capture real selectors into mcp-selectors/locators.json. Never guess.
 3. Generate Page Objects under /pages/page_<slug>.py, inheriting BasePage. All Playwright calls    live in the POM. Use selector keys from locators.json only.
 4. Generate ONE step-definition file PER feature file: /step_defs/<feature_slug>_steps.py.    Each step calls one POM method. Update conftest.py pytest_plugins to include the new modules.
-5. Generate ONE pytest-bdd test PER feature file: /tests/test_<feature_slug>.py.
-6. Before generating, delete stale files in /pages, /step_defs, /tests that don't correspond to    the current feature files — the final state must contain only the files for the current run.
+5. Generate ONE pytest-bdd test PER feature file: test/test_<feature_slug>.py.
+6. Before generating, delete stale files in /pages, /step_defs, test/ that don't correspond to    the current feature files — the final state must contain only the files for the current run.
 7. Run HEADLESS validation: `pytest -v` (no --headed). On failure, heal up to 3 cycles using    fresh MCP discovery, updated selectors, and explicit waits. Stop healing once green.
 8. Append a one-line summary of generated/healed files to generation_log.txt.
 
@@ -262,6 +268,6 @@ Hard rules:
   · A step that types known-bad credentials must actually type them and submit — DO NOT     skip the bad attempt or short-circuit to the positive flow.
   · The assertion step for the validation/error message must use     `expect(page.locator(...).first).to_be_visible(timeout=...)` with a selector that     matches the EXACT message text from the story (or `:text-matches(...)` regex if     minor punctuation may vary). Soft-passing on "any error appeared" is forbidden.
   · After the negative assertion, the next step typically clears the fields and enters     valid credentials. Make sure the form is still open and inputs are interactable     (no re-opening the modal unless the negative submit closed it).
-  · Append a one-line entry to generation_log.txt indicating the scenario contains a     negative branch, e.g. `NEGATIVE BRANCH: assertion 'Invalid email or password' in     tests/test_<slug>.py`.
+  · Append a one-line entry to generation_log.txt indicating the scenario contains a     negative branch, e.g. `NEGATIVE BRANCH: assertion 'Invalid email or password' in     test/test_<slug>.py`.
 
 - Final state: green pytest output in headless mode.
