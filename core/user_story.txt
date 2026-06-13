@@ -1,2 +1,0 @@
-# Add one or more user stories below in plain English.
-# Separate distinct stories with a blank line.
