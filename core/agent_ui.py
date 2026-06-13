@@ -17,6 +17,7 @@ import time
 from pathlib import Path
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 import workspace as ws
 
@@ -2208,6 +2209,11 @@ def render_test_runner(story_id: str, framework_ready: bool) -> str | None:
     return clicked
 
 
+def _runs_with_report(project: str) -> list[Path]:
+    """Report run dirs that actually produced a report.html, newest first."""
+    return [d for d in ws.report_runs(project) if (d / "report.html").exists()]
+
+
 def render_test_results(story_id: str) -> None:
     runs = ws.report_runs(story_id)
     latest = runs[0] if runs else Path()
@@ -2369,44 +2375,35 @@ def render_test_results(story_id: str) -> None:
                 except OSError:
                     st.caption("(could not read story_coverage.json)")
 
-    if not html_report.exists():
-        return
-    st.markdown('<div class="section-heading" style="margin-top: 1.5rem;">'
-                'Raw pytest artifacts (secondary)</div>',
-                unsafe_allow_html=True)
-    try:
-        report_html = html_report.read_text(encoding="utf-8", errors="replace")
-        report_bytes = html_report.read_bytes()
-    except OSError as exc:
-        st.error(f"Could not read report.html: {exc}")
-        return
-
-    cols = st.columns([1, 1, 2])
-    with cols[0]:
-        st.download_button(
-            "⬇ Download HTML report",
-            data=report_bytes,
-            file_name=f"report_{story_id}.html",
-            mime="text/html",
-            key=f"dl_report_{story_id}",
-            use_container_width=True,
-            help="Download the pytest-html report to open locally.",
-        )
-    with cols[1]:
-        try:
-            _report_label = html_report.relative_to(PROJECT_ROOT.parent).as_posix()
-        except ValueError:
-            _report_label = html_report.name
-        st.caption(
-            f"📄 `{_report_label}` "
-            f"({len(report_bytes)//1024} KB)"
-        )
-
-    # pytest-html report is SECONDARY (the Auditor's story_coverage.html above
-    # is the primary). Default to collapsed so it doesn't compete visually.
-    with st.expander("📊 Raw pytest-html report (developer view)", expanded=False):
-        import streamlit.components.v1 as components
-        components.html(report_html, height=700, scrolling=True)
+    # ============================================================
+    # Raw pytest-html reports — one per run, newest first. The run the
+    # user just triggered (st.session_state["last_report_dir"]) is
+    # labelled "Current run" and expanded by default; older runs are
+    # available as collapsed history, each with its own download button.
+    # ============================================================
+    report_runs = _runs_with_report(story_id)
+    if report_runs:
+        st.markdown('<div class="section-heading" style="margin-top: 1.5rem;">'
+                    'Raw pytest artifacts (secondary)</div>',
+                    unsafe_allow_html=True)
+        current = st.session_state.get("last_report_dir")
+        for i, run in enumerate(report_runs):
+            is_current = (str(run) == current)
+            label = f"{'▶ Current run · ' if is_current else ''}{run.name}"
+            with st.expander(label, expanded=is_current or i == 0):
+                try:
+                    run_html = (run / "report.html").read_text(encoding="utf-8", errors="replace")
+                except OSError as exc:
+                    st.error(f"Could not read report.html: {exc}")
+                    continue
+                components.html(run_html, height=700, scrolling=True)
+                st.download_button(
+                    "⬇ Download report.html",
+                    data=run_html,
+                    file_name=f"{story_id}_{run.name}.html",
+                    mime="text/html",
+                    key=f"dl_{run.name}",
+                )
 
     if allure.exists():
         st.markdown('<div class="section-heading">Serve the Allure dashboard</div>', unsafe_allow_html=True)
