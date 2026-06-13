@@ -5,7 +5,8 @@ EXECUTE THESE STEPS NOW:
 2. mcp__playwright__browser_navigate → start URL.
 3. mcp__playwright__browser_snapshot → capture the landing page.
 4. From the snapshot, list every top-nav link href + every primary-CTA. For up to 8 of them: browser_navigate → snapshot. Record url, title, and tags drawn from ["search","cart","login","signin","signup","checkout","account","help","footer"].
-5. Write tool → mcp-selectors/scout_sitemap.json with this exact schema:
+5. Create `mcp-selectors/` if it does not exist; APPEND your JSON output, and never delete existing selector files.
+6. Write tool → mcp-selectors/scout_sitemap.json with this exact schema:
 {
   "root_url": "<absolute url>",
   "pages": [{"url":"...","title":"...","tags":["..."]}],

@@ -6,7 +6,8 @@ EXECUTE THESE STEPS NOW:
 3. From each snapshot, list every visible button, link with href, [role=button], and form input/select/textarea. For each: best_selector, text or aria-label, role.
 4. Selector preference order: [data-testid]/[data-test*] > id > role+accessibleName > unique CSS.
 5. mcp__playwright__browser_evaluate → run document.querySelectorAll(...) for each selector to verify exactly 1 match. Drop anything that doesn't match exactly 1.
-6. Write → mcp-selectors/scout_inventory.json:
+6. Create `mcp-selectors/` if it does not exist; APPEND your JSON output, and never delete existing selector files.
+7. Write → mcp-selectors/scout_inventory.json:
 {
   "by_page": {
     "<url>": {

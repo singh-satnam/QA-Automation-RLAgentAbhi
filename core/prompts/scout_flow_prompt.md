@@ -31,3 +31,4 @@ Output schema (JSON only):
 Hard rules:
 - Headless. Output ONLY mcp-selectors/scout_flow.json.
 - Never invent selectors; if you can't confirm one, log a blocker.
+- Create `mcp-selectors/` if it does not exist; APPEND your JSON output, and never delete existing selector files.

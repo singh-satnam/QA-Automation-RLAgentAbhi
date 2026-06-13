@@ -17,12 +17,12 @@ FIDELITY TO STORY — NON-NEGOTIABLE FOR THE REPORT
 Inputs you must read (do NOT touch the live site, no MCP, no browser):
 - user_story.txt                          — the original requirements
 - user_data.json (optional)               — expected data values, including positive + negative rows
-- features/*.feature                      — Gherkin scenarios that were supposed to be executed
-- tests/test_*.py                         — pytest entrypoints
+- feature/*.feature                       — Gherkin scenarios that were supposed to be executed
+- test/test_*.py                          — pytest entrypoints
 - step_defs/*.py                          — assertion logic
-- reports/report.html                     — pytest-html run report (parse for passed/failed test names + assertion messages)
+- report/report.html                      — pytest-html run report (parse for passed/failed test names + assertion messages)
 - generation_log.txt                      — what was built / healed
-- reports/screenshots/ (if present)       — visual evidence on failure
+- report/screenshots/ (if present)        — visual evidence on failure
 
 Pipeline:
 1. Parse user_story.txt into an ordered list of REQUIREMENTS — each numbered step or sentence that describes a user action or an expected outcome. Strip URL/credential lines and Gherkin keywords; the goal is the human intent per requirement.
@@ -65,10 +65,10 @@ Pipeline:
      - "PARTIAL"  — some requirements passed, others not exercised OR negative-row assertion missing
      - "FAIL"     — at least one assertion failed OR at least one positive requirement failed
 
-ALSO read reports/captured_values.json if it exists — it's a per-session log of every value the test extracted, every expected-vs-actual assertion, every aggregate sum verification (components + computed sum + on-screen total). This is the richest evidence available and MUST be reflected in the HTML report.
+ALSO read report/captured_values.json if it exists — it's a per-session log of every value the test extracted, every expected-vs-actual assertion, every aggregate sum verification (components + computed sum + on-screen total). This is the richest evidence available and MUST be reflected in the HTML report.
 
 Outputs (write ALL THREE; nothing else):
-1. reports/story_coverage.json — machine-readable, schema:
+1. report/story_coverage.json — machine-readable, schema:
 {
   "generated_at": "ISO timestamp",
   "overall_verdict": "PASS|PARTIAL|FAIL",
@@ -84,9 +84,9 @@ Outputs (write ALL THREE; nothing else):
   "test_summary": {"total": 1, "passed": 1, "failed": 0, "skipped": 0}
 }
 
-2. reports/story_coverage.md — human-readable summary. Begin with the verdict heading, then a numbered checklist of requirements (✅ / ❌ / ⚠️ each), a data assertions table, a DEDICATED **Negative scenarios** section (see below), a "Gaps in coverage" section, and a closing 1-line recommendation. Keep it under 250 lines.
+2. report/story_coverage.md — human-readable summary. Begin with the verdict heading, then a numbered checklist of requirements (✅ / ❌ / ⚠️ each), a data assertions table, a DEDICATED **Negative scenarios** section (see below), a "Gaps in coverage" section, and a closing 1-line recommendation. Keep it under 250 lines.
 
-3. reports/story_coverage.html — self-contained styled HTML report. THIS is the user's PRIMARY view (the pytest-html and Allure reports are secondary). Requirements:
+3. report/story_coverage.html — self-contained styled HTML report. THIS is the user's PRIMARY view (the pytest-html and Allure reports are secondary). Requirements:
   · Inline CSS, NO external scripts/stylesheets, NO CDN links. Fully offline.
   · Modern, clean design: card-based layout, big verdict badge at top     (green/yellow/red), readable monospace for IDs and currency, color-coded     rows (pass green, fail red, neutral grey).
   · Sections in this ORDER:

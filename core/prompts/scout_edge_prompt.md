@@ -7,7 +7,8 @@ EXECUTE THESE STEPS NOW:
 4. mcp__playwright__browser_snapshot → inspect the page for cookie banners, sign-in modals, popups, interstitials, age gates, iframe CMPs (Sourcepoint `sp_message_iframe_*`).
 5. For each overlay found: capture kind, trigger_url, dismiss_selector (confirmed-clickable), dismiss_label, iframe_id_pattern (if applicable).
 6. Visit cart/checkout/account pages referenced in user_story.txt (max 3 extra pages) and re-capture overlays.
-7. Write → mcp-selectors/scout_edge.json:
+7. Create `mcp-selectors/` if it does not exist; APPEND your JSON output, and never delete existing selector files.
+8. Write → mcp-selectors/scout_edge.json:
 {
   "overlays": [{
     "kind":"cookie_banner|signin_modal|popup|interstitial|iframe_cmp",
