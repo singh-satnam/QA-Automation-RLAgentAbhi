@@ -2053,8 +2053,10 @@ def run_parallel_scouts(log_placeholder, log_buf: list[str], story_id: str = "",
     _ensure_scout_dir()
 
     # Wipe previous scout outputs so a partial run can't fool synthesis.
+    # Scouts run with cwd=project_dir and write relative paths like
+    # "mcp-selectors/scout_sitemap.json", so resolve against the active project.
     for _, _, rel_path in SCOUT_DEFINITIONS:
-        p = PROJECT_ROOT / rel_path
+        p = proj_path(*Path(rel_path).parts)
         if p.exists():
             try:
                 p.unlink()
@@ -2105,14 +2107,14 @@ def run_parallel_scouts(log_placeholder, log_buf: list[str], story_id: str = "",
         except FileNotFoundError as exc:
             _emit(log_buf, f"[orchestrator] {role}: failed to start — {exc}")
             scouts[role] = {
-                "rc": 127, "json_path": PROJECT_ROOT / out_rel,
+                "rc": 127, "json_path": proj_path(*Path(out_rel).parts),
                 "json_ok": False, "elapsed": 0, "started": False,
                 "last_activity": "failed to start", "last_event_at": time.monotonic(),
                 "killed": False,
             }
             continue
         scouts[role] = {
-            "proc": proc, "rc": None, "json_path": PROJECT_ROOT / out_rel,
+            "proc": proc, "rc": None, "json_path": proj_path(*Path(out_rel).parts),
             "json_ok": False, "elapsed": 0, "started_at": time.monotonic(),
             "started": True, "last_activity": "(starting…)",
             "last_event_at": time.monotonic(), "killed": False,
