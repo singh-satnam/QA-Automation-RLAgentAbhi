@@ -222,6 +222,101 @@ CUSTOM_CSS = """
 
     #MainMenu, footer { visibility: hidden; }
     header { background: transparent; }
+
+    /* ============ Pipeline stepper (main panel) ============================
+       Three real st.buttons (keys step_gherkin/step_framework/step_run) styled
+       into a stepper. Scoped to the `st-key-step_*` container classes so no
+       other button is affected. State -> look:
+         active    = type="primary"               -> indigo + 2px border
+         completed = type="secondary", enabled     -> green pill + check
+         locked    = disabled                      -> muted gray            */
+    .stepper-caption { font-size: 0.78rem; color: #64748b; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.05em; margin: 0.25rem 0 0.5rem 0; }
+
+    .st-key-step_gherkin button,
+    .st-key-step_framework button,
+    .st-key-step_run button {
+        width: 100%; text-align: left; white-space: nowrap;
+        min-height: 2.7rem; border-radius: 10px;
+        padding: 0.5rem 0.9rem 0.5rem 2.9rem; position: relative;
+        font-weight: 600; font-size: 0.9rem; line-height: 1.1;
+        border: 1px solid #e2e8f0; background: #ffffff; color: #475569;
+        box-shadow: none; transition: none;
+    }
+    /* numbered circle */
+    .st-key-step_gherkin button::before,
+    .st-key-step_framework button::before,
+    .st-key-step_run button::before {
+        position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%);
+        width: 1.45rem; height: 1.45rem; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.78rem; font-weight: 700; background: #f1f5f9; color: #64748b;
+    }
+    .st-key-step_gherkin button::before  { content: "1"; }
+    .st-key-step_framework button::before { content: "2"; }
+    .st-key-step_run button::before       { content: "3"; }
+
+    /* ACTIVE — type=primary -> solid indigo, the loudest cell */
+    .st-key-step_gherkin button[kind="primary"],
+    .st-key-step_framework button[kind="primary"],
+    .st-key-step_run button[kind="primary"],
+    .st-key-step_gherkin button[data-testid="stBaseButton-primary"],
+    .st-key-step_framework button[data-testid="stBaseButton-primary"],
+    .st-key-step_run button[data-testid="stBaseButton-primary"] {
+        background: #4f46e5; border: 2px solid #4338ca; color: #ffffff;
+    }
+    .st-key-step_gherkin button[kind="primary"]::before,
+    .st-key-step_framework button[kind="primary"]::before,
+    .st-key-step_run button[kind="primary"]::before,
+    .st-key-step_gherkin button[data-testid="stBaseButton-primary"]::before,
+    .st-key-step_framework button[data-testid="stBaseButton-primary"]::before,
+    .st-key-step_run button[data-testid="stBaseButton-primary"]::before {
+        background: #ffffff; color: #4338ca;
+    }
+
+    /* COMPLETED — type=secondary AND enabled -> quiet green */
+    .st-key-step_gherkin button[kind="secondary"]:not(:disabled),
+    .st-key-step_framework button[kind="secondary"]:not(:disabled),
+    .st-key-step_run button[kind="secondary"]:not(:disabled),
+    .st-key-step_gherkin button[data-testid="stBaseButton-secondary"]:not(:disabled),
+    .st-key-step_framework button[data-testid="stBaseButton-secondary"]:not(:disabled),
+    .st-key-step_run button[data-testid="stBaseButton-secondary"]:not(:disabled) {
+        background: #ffffff; border: 1px solid #bbf7d0;
+        border-left: 3px solid #16a34a; color: #166534;
+    }
+    .st-key-step_gherkin button[kind="secondary"]:not(:disabled)::before,
+    .st-key-step_framework button[kind="secondary"]:not(:disabled)::before,
+    .st-key-step_run button[kind="secondary"]:not(:disabled)::before,
+    .st-key-step_gherkin button[data-testid="stBaseButton-secondary"]:not(:disabled)::before,
+    .st-key-step_framework button[data-testid="stBaseButton-secondary"]:not(:disabled)::before,
+    .st-key-step_run button[data-testid="stBaseButton-secondary"]:not(:disabled)::before {
+        content: "✓"; background: #16a34a; color: #ffffff;
+    }
+
+    /* LOCKED — disabled -> gray */
+    .st-key-step_gherkin button:disabled,
+    .st-key-step_framework button:disabled,
+    .st-key-step_run button:disabled {
+        background: #f8fafc; border: 1.5px solid #eef2f7; color: #cbd5e1;
+        opacity: 1; cursor: not-allowed;
+    }
+    .st-key-step_gherkin button:disabled::before,
+    .st-key-step_framework button:disabled::before,
+    .st-key-step_run button:disabled::before { background: #eef2f7; color: #cbd5e1; }
+
+    /* connector lines between steps (green once the left step is completed) */
+    .st-key-step_gherkin, .st-key-step_framework { position: relative; }
+    .st-key-step_gherkin::after, .st-key-step_framework::after {
+        content: ""; position: absolute; top: 50%; right: -0.5rem;
+        transform: translateY(-50%); width: 1rem; height: 2px;
+        background: #e2e8f0; z-index: 0;
+    }
+    .st-key-step_gherkin:has(button[kind="secondary"]:not(:disabled))::after,
+    .st-key-step_framework:has(button[kind="secondary"]:not(:disabled))::after,
+    .st-key-step_gherkin:has(button[data-testid="stBaseButton-secondary"]:not(:disabled))::after,
+    .st-key-step_framework:has(button[data-testid="stBaseButton-secondary"]:not(:disabled))::after {
+        background: #16a34a;
+    }
 </style>
 """
 
@@ -2302,8 +2397,7 @@ def test_count() -> int:
     return len(list(tdir.glob("test_*.py"))) if tdir.exists() else 0
 
 
-def render_sidebar(stories_n: int, story_id: str,
-                   gherkin_done_session: bool, framework_done_session: bool) -> tuple[bool, bool, bool]:
+def render_sidebar(stories_n: int, story_id: str) -> None:
     with st.sidebar:
         st.markdown(
             '<div style="font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0.25rem 0 1rem 0;">Workflow</div>',
@@ -2331,69 +2425,75 @@ def render_sidebar(stories_n: int, story_id: str,
                 )
                 st.session_state.active_story = sel_story
 
-        # ----- Upload a .txt story (project derived from filename prefix) -----
-        uploaded = st.file_uploader(
-            "Upload .txt", type=["txt"], label_visibility="collapsed",
-            key=f"upload_{st.session_state.get('upload_nonce', 0)}",
-        )
-        if uploaded is not None:
-            raw = uploaded.read().decode("utf-8")
-            content = normalize_story_text(raw)
-            try:
-                project = ws.derive_project_name(uploaded.name)
-            except ws.ProjectNameError as exc:
-                st.error(str(exc))
-            else:
-                filename = ws.sanitize_filename(uploaded.name)
-                if ws.story_exists(project, filename):
-                    st.error("same user story exists. Proceed to execute the test")
-                    st.session_state.project = project
-                    st.session_state.active_story = filename
+        # ----- Add a new story (upload OR paste) — one collapsible block. Auto-
+        # opens for first-time users (no active story), collapsed once one exists.
+        with st.expander(
+            "➕ Add a new story",
+            expanded=not bool(current_project() and st.session_state.get("active_story")),
+        ):
+            # ----- Upload a .txt story (project derived from filename prefix) -----
+            uploaded = st.file_uploader(
+                "Upload .txt", type=["txt"], label_visibility="collapsed",
+                key=f"upload_{st.session_state.get('upload_nonce', 0)}",
+            )
+            if uploaded is not None:
+                raw = uploaded.read().decode("utf-8")
+                content = normalize_story_text(raw)
+                try:
+                    project = ws.derive_project_name(uploaded.name)
+                except ws.ProjectNameError as exc:
+                    st.error(str(exc))
                 else:
-                    ws.add_story(project, filename, content)
-                    ws.write_pytest_ini(project, ws.extract_base_url(content))
-                    st.session_state.project = project
-                    st.session_state.active_story = filename
-                    st.session_state.log = []
-                    st.session_state.last_run = "never"
-                    st.session_state.last_upload_info = (
-                        f"**{uploaded.name}** → project `{project}` · {len(raw)} chars"
-                    )
-                    st.session_state.upload_nonce = st.session_state.get("upload_nonce", 0) + 1
-                    st.rerun()
+                    filename = ws.sanitize_filename(uploaded.name)
+                    if ws.story_exists(project, filename):
+                        st.error("same user story exists. Proceed to execute the test")
+                        st.session_state.project = project
+                        st.session_state.active_story = filename
+                    else:
+                        ws.add_story(project, filename, content)
+                        ws.write_pytest_ini(project, ws.extract_base_url(content))
+                        st.session_state.project = project
+                        st.session_state.active_story = filename
+                        st.session_state.log = []
+                        st.session_state.last_run = "never"
+                        st.session_state.last_upload_info = (
+                            f"**{uploaded.name}** → project `{project}` · {len(raw)} chars"
+                        )
+                        st.session_state.upload_nonce = st.session_state.get("upload_nonce", 0) + 1
+                        st.rerun()
 
-        if "last_upload_info" in st.session_state:
-            st.success("Uploaded: " + st.session_state.last_upload_info)
+            if "last_upload_info" in st.session_state:
+                st.success("Uploaded: " + st.session_state.last_upload_info)
 
-        # ----- Or paste a story (explicit project name + filename) -----
-        st.markdown('<div class="section-heading">Or paste a story</div>', unsafe_allow_html=True)
-        paste_project = st.text_input("Project name", key="paste_project",
-                                      placeholder="e.g. RLRG")
-        paste_filename = st.text_input("Story file name (.txt)", key="paste_filename",
-                                       placeholder="e.g. RLRG_login.txt")
-        paste_body = st.text_area("Story content", key="paste_body", height=180,
-                                  placeholder="Paste your user story here.")
-        if st.button("Save story", disabled=not (paste_project.strip()
-                                                 and paste_filename.strip()
-                                                 and paste_body.strip())):
-            project = re.sub(r"[^A-Za-z0-9]+", "", paste_project.strip())
-            if not project:
-                st.error("Project name must contain letters or digits.")
-            else:
-                filename = ws.sanitize_filename(paste_filename)
-                content = normalize_story_text(paste_body)
-                if ws.story_exists(project, filename):
-                    st.error("same user story exists. Proceed to execute the test")
-                    st.session_state.project = project
-                    st.session_state.active_story = filename
+            # ----- Or paste a story (explicit project name + filename) -----
+            st.markdown('<div class="section-heading">Or paste a story</div>', unsafe_allow_html=True)
+            paste_project = st.text_input("Project name", key="paste_project",
+                                          placeholder="e.g. RLRG")
+            paste_filename = st.text_input("Story file name (.txt)", key="paste_filename",
+                                           placeholder="e.g. RLRG_login.txt")
+            paste_body = st.text_area("Story content", key="paste_body", height=180,
+                                      placeholder="Paste your user story here.")
+            if st.button("Save story", disabled=not (paste_project.strip()
+                                                     and paste_filename.strip()
+                                                     and paste_body.strip())):
+                project = re.sub(r"[^A-Za-z0-9]+", "", paste_project.strip())
+                if not project:
+                    st.error("Project name must contain letters or digits.")
                 else:
-                    ws.add_story(project, filename, content)
-                    ws.write_pytest_ini(project, ws.extract_base_url(content))
-                    st.session_state.project = project
-                    st.session_state.active_story = filename
-                    st.session_state.log = []
-                    st.session_state.last_run = "never"
-                    st.rerun()
+                    filename = ws.sanitize_filename(paste_filename)
+                    content = normalize_story_text(paste_body)
+                    if ws.story_exists(project, filename):
+                        st.error("same user story exists. Proceed to execute the test")
+                        st.session_state.project = project
+                        st.session_state.active_story = filename
+                    else:
+                        ws.add_story(project, filename, content)
+                        ws.write_pytest_ini(project, ws.extract_base_url(content))
+                        st.session_state.project = project
+                        st.session_state.active_story = filename
+                        st.session_state.log = []
+                        st.session_state.last_run = "never"
+                        st.rerun()
 
         story_caption = (
             f"Project `{current_project()}`"
@@ -2403,140 +2503,106 @@ def render_sidebar(stories_n: int, story_id: str,
         )
         st.caption(story_caption)
 
-        # ----- Optional test data (JSON / CSV / TSV / Excel) -----
-        st.markdown(
-            '<div class="section-heading">Test data (optional · JSON / CSV / TSV / Excel)</div>',
-            unsafe_allow_html=True,
-        )
-        data_uploaded = st.file_uploader(
-            "Upload data file",
-            type=list(USER_DATA_SUPPORTED_EXTENSIONS),
-            label_visibility="collapsed",
-            key=f"data_upload_{st.session_state.get('data_upload_nonce', 0)}",
-            help=(
-                "Upload a .json (object or array of objects), a .csv/.tsv (header row + "
-                "data rows), or an Excel .xlsx/.xls file (first sheet). It will be "
-                "converted to user_data.json and exposed to your tests via the "
-                "test_data fixture. The original file is preserved as user_data.<ext>."
-            ),
-        )
-        if data_uploaded is not None and current_project():
-            raw_bytes = data_uploaded.read()
-            json_text, msg = convert_uploaded_to_json(data_uploaded.name, raw_bytes)
-            if json_text is None:
-                st.error(msg or "Could not convert file.")
-            else:
-                # Canonical JSON used by the runtime test_data fixture
-                user_data_path().parent.mkdir(parents=True, exist_ok=True)
-                user_data_path().write_text(json_text, encoding="utf-8")
-                # Persist the ORIGINAL file too so the user can download/inspect
-                ext = data_uploaded.name.rsplit(".", 1)[-1].lower() if "." in data_uploaded.name else "bin"
-                # Clear any stale original-format files first
-                for prev_ext in USER_DATA_SUPPORTED_EXTENSIONS:
-                    prev = proj_path(f"user_data.{prev_ext}")
-                    if prev != user_data_path() and prev.exists():
+        # ----- Optional test data (JSON / CSV / TSV / Excel) — collapsible -----
+        # Auto-opens only when the project already has test data.
+        with st.expander(
+            "Test data (optional · JSON / CSV / TSV / Excel)",
+            expanded=bool(_read_user_data_text().strip()),
+        ):
+            data_uploaded = st.file_uploader(
+                "Upload data file",
+                type=list(USER_DATA_SUPPORTED_EXTENSIONS),
+                label_visibility="collapsed",
+                key=f"data_upload_{st.session_state.get('data_upload_nonce', 0)}",
+                help=(
+                    "Upload a .json (object or array of objects), a .csv/.tsv (header row + "
+                    "data rows), or an Excel .xlsx/.xls file (first sheet). It will be "
+                    "converted to user_data.json and exposed to your tests via the "
+                    "test_data fixture. The original file is preserved as user_data.<ext>."
+                ),
+            )
+            if data_uploaded is not None and current_project():
+                raw_bytes = data_uploaded.read()
+                json_text, msg = convert_uploaded_to_json(data_uploaded.name, raw_bytes)
+                if json_text is None:
+                    st.error(msg or "Could not convert file.")
+                else:
+                    # Canonical JSON used by the runtime test_data fixture
+                    user_data_path().parent.mkdir(parents=True, exist_ok=True)
+                    user_data_path().write_text(json_text, encoding="utf-8")
+                    # Persist the ORIGINAL file too so the user can download/inspect
+                    ext = data_uploaded.name.rsplit(".", 1)[-1].lower() if "." in data_uploaded.name else "bin"
+                    # Clear any stale original-format files first
+                    for prev_ext in USER_DATA_SUPPORTED_EXTENSIONS:
+                        prev = proj_path(f"user_data.{prev_ext}")
+                        if prev != user_data_path() and prev.exists():
+                            try:
+                                prev.unlink()
+                            except OSError:
+                                pass
+                    if ext != "json":
                         try:
-                            prev.unlink()
+                            proj_path(f"user_data.{ext}").write_bytes(raw_bytes)
                         except OSError:
                             pass
-                if ext != "json":
+                    if msg:
+                        st.info(msg)
+                    st.session_state["user_uploaded_data"] = True
+                    st.session_state.data_upload_nonce = st.session_state.get("data_upload_nonce", 0) + 1
+                    st.rerun()
+            elif data_uploaded is not None and not current_project():
+                st.warning("Select or create a project before adding test data.")
+
+            # Test data is stored per project under user_data.json. It persists with
+            # the project — no session-scoped purge.
+            current_data_text = _read_user_data_text()
+            data_edited = st.text_area(
+                "Test data JSON",
+                current_data_text,
+                height=140,
+                label_visibility="collapsed",
+                placeholder='Optional. Paste JSON like {"productid":"123","Subtotal":48.99} '
+                            'OR an array of objects for parameterised rows (positive + negative).',
+            )
+            if data_edited != current_data_text and current_project():
+                if data_edited.strip():
+                    user_data_path().parent.mkdir(parents=True, exist_ok=True)
+                    user_data_path().write_text(data_edited, encoding="utf-8")
+                    st.session_state["user_uploaded_data"] = True
+                elif user_data_path().exists():
                     try:
-                        proj_path(f"user_data.{ext}").write_bytes(raw_bytes)
+                        user_data_path().unlink()
                     except OSError:
                         pass
-                if msg:
-                    st.info(msg)
-                st.session_state["user_uploaded_data"] = True
-                st.session_state.data_upload_nonce = st.session_state.get("data_upload_nonce", 0) + 1
-                st.rerun()
-        elif data_uploaded is not None and not current_project():
-            st.warning("Select or create a project before adding test data.")
+                    st.session_state.pop("user_uploaded_data", None)
 
-        # Test data is stored per project under user_data.json. It persists with
-        # the project — no session-scoped purge.
-        current_data_text = _read_user_data_text()
-        data_edited = st.text_area(
-            "Test data JSON",
-            current_data_text,
-            height=140,
-            label_visibility="collapsed",
-            placeholder='Optional. Paste JSON like {"productid":"123","Subtotal":48.99} '
-                        'OR an array of objects for parameterised rows (positive + negative).',
-        )
-        if data_edited != current_data_text and current_project():
-            if data_edited.strip():
-                user_data_path().parent.mkdir(parents=True, exist_ok=True)
-                user_data_path().write_text(data_edited, encoding="utf-8")
-                st.session_state["user_uploaded_data"] = True
-            elif user_data_path().exists():
-                try:
-                    user_data_path().unlink()
-                except OSError:
-                    pass
-                st.session_state.pop("user_uploaded_data", None)
+            # Show parse status + a tiny preview if the project has test data.
+            if _read_user_data_text().strip():
+                parsed, err = parse_user_data(_read_user_data_text())
+                # Detect if there's a preserved original (non-JSON) file
+                original_ext = None
+                for ext in USER_DATA_SUPPORTED_EXTENSIONS:
+                    if ext == "json":
+                        continue
+                    if proj_path(f"user_data.{ext}").exists():
+                        original_ext = ext
+                        break
+                origin = f" (auto-converted from .{original_ext})" if original_ext else ""
+                if err:
+                    st.caption(f"⚠ {err}")
+                elif isinstance(parsed, list):
+                    st.caption(
+                        f"✓ {len(parsed)} row(s) → Scenario Outline with Examples{origin}"
+                    )
+                elif isinstance(parsed, dict):
+                    keys = ", ".join(list(parsed.keys())[:5])
+                    more = "…" if len(parsed) > 5 else ""
+                    st.caption(f"✓ object with keys: {keys}{more}{origin}")
+            else:
+                st.caption("No test data — story will be used as-is.")
 
-        # Show parse status + a tiny preview if the project has test data.
-        if _read_user_data_text().strip():
-            parsed, err = parse_user_data(_read_user_data_text())
-            # Detect if there's a preserved original (non-JSON) file
-            original_ext = None
-            for ext in USER_DATA_SUPPORTED_EXTENSIONS:
-                if ext == "json":
-                    continue
-                if proj_path(f"user_data.{ext}").exists():
-                    original_ext = ext
-                    break
-            origin = f" (auto-converted from .{original_ext})" if original_ext else ""
-            if err:
-                st.caption(f"⚠ {err}")
-            elif isinstance(parsed, list):
-                st.caption(
-                    f"✓ {len(parsed)} row(s) → Scenario Outline with Examples{origin}"
-                )
-            elif isinstance(parsed, dict):
-                keys = ", ".join(list(parsed.keys())[:5])
-                more = "…" if len(parsed) > 5 else ""
-                st.caption(f"✓ object with keys: {keys}{more}{origin}")
-        else:
-            st.caption("No test data — story will be used as-is.")
-
-        st.markdown('<div class="section-heading">Pipeline (3 steps)</div>', unsafe_allow_html=True)
-
-        # Step gating is purely session-state driven. Refresh the page → all three
-        # locks reset; the user must always start from ①.
-        # ① is enabled whenever a story is present, even after it's been clicked
-        # (re-clicks just re-load the same files instantly).
-        # ② is locked until ① has been clicked in this session.
-        # ③ is locked until ② has been clicked in this session.
-        has_active_story = bool(current_project() and st.session_state.get("active_story"))
-        if not gherkin_done_session:
-            next_step = "gherkin"
-        elif not framework_done_session:
-            next_step = "framework"
-        else:
-            next_step = "run"
-
-        gen_clicked = st.button(
-            "① Generate Gherkin",
-            type="primary" if next_step == "gherkin" and has_active_story else "secondary",
-            disabled=not has_active_story,
-            help="Generate feature files from your user story. Re-click anytime — the same files re-load.",
-        )
-
-        fw_clicked = st.button(
-            "② Generate Test Framework",
-            type="primary" if next_step == "framework" else "secondary",
-            disabled=not gherkin_done_session,
-            help="Generate POMs, step defs, and pytest-bdd tests. Unlocked after ① is run in this session.",
-        )
-
-        run_clicked = st.button(
-            "③ Run All Tests (headed)",
-            type="primary" if next_step == "run" else "secondary",
-            disabled=not framework_done_session,
-            help="Headed pytest run of every test for this story. Run as many times as you like. "
-                 "Use the per-test ▶ Run buttons in Test results to run one at a time.",
-        )
+        # Pipeline action buttons (① Generate Gherkin / ② Generate Test Framework /
+        # ③ Run All Tests) now live in the main-panel stepper — see render_stepper().
 
         # Stop button — writes a signal file that the running subprocess polls
         # every ~10s and kills itself when it sees. Works mid-run if the user
@@ -2567,6 +2633,61 @@ def render_sidebar(stories_n: int, story_id: str,
                 st.session_state.log = []
             st.caption(f"Project · `{PROJECT_ROOT.name}`")
 
+
+def render_stepper(gherkin_done: bool, framework_done: bool) -> tuple[bool, bool, bool]:
+    """Horizontal 3-step pipeline stepper rendered in the main panel (above the
+    tabs). One real st.button per st.columns(3) cell; CUSTOM_CSS (scoped via the
+    `st-key-step_*` container classes) paints each as completed / active / locked.
+
+    Gating is identical to the old sidebar buttons — only the location changed:
+      * next_step = the first not-done step.
+      * ① enabled iff a story is active; ② locked until gherkin is done;
+        ③ locked until the framework is done.
+      * the active step is type="primary"; the rest are "secondary".
+      * disk-presence overrides flow in through the gherkin_done / framework_done
+        args the caller already computed (so a project with files on disk shows
+        ①/② completed without re-clicking).
+    Returns (gen_clicked, fw_clicked, run_clicked) for main() to consume exactly
+    as it consumed the old sidebar tuple."""
+    has_active_story = bool(current_project() and st.session_state.get("active_story"))
+    if not gherkin_done:
+        next_step = "gherkin"
+    elif not framework_done:
+        next_step = "framework"
+    else:
+        next_step = "run"
+
+    st.markdown('<div class="stepper-caption">Pipeline · 3 steps</div>',
+                unsafe_allow_html=True)
+    c1, c2, c3 = st.columns(3, gap="small")
+    with c1:
+        gen_clicked = st.button(
+            "Gherkin",
+            key="step_gherkin",
+            type="primary" if next_step == "gherkin" and has_active_story else "secondary",
+            disabled=not has_active_story,
+            use_container_width=True,
+            help="Generate feature files from your user story. Re-click anytime — the same files re-load.",
+        )
+    with c2:
+        fw_clicked = st.button(
+            "Framework",
+            key="step_framework",
+            type="primary" if next_step == "framework" else "secondary",
+            disabled=not gherkin_done,
+            use_container_width=True,
+            help="Generate POMs, step defs, and pytest-bdd tests. Unlocked after ① is run.",
+        )
+    with c3:
+        run_clicked = st.button(
+            "▶ Run Tests",
+            key="step_run",
+            type="primary" if next_step == "run" else "secondary",
+            disabled=not framework_done,
+            use_container_width=True,
+            help="Headed pytest run of every test for this story. Run as many times as you like. "
+                 "Use the per-test ▶ Run buttons in Test results to run one at a time.",
+        )
     return gen_clicked, fw_clicked, run_clicked
 
 
@@ -2591,9 +2712,7 @@ def main() -> None:
     gherkin_done = bool(st.session_state.get("gherkin_done"))
     framework_done = bool(st.session_state.get("framework_done"))
     story_id = current_project()
-    gen_clicked, fw_clicked, run_clicked = render_sidebar(
-        0, story_id, gherkin_done, framework_done,
-    )
+    render_sidebar(0, story_id)
     # Re-read the project after the sidebar (it may have changed it this run).
     story_id = current_project()
 
@@ -2622,6 +2741,11 @@ def main() -> None:
         framework_done = True
     if features > 0:
         gherkin_done = True
+
+    # Pipeline stepper (replaces the old sidebar buttons). Renders ABOVE the tabs
+    # and BEFORE the handlers below, so a click is captured on the same run and
+    # produces gen_clicked / fw_clicked / run_clicked exactly as before.
+    gen_clicked, fw_clicked, run_clicked = render_stepper(gherkin_done, framework_done)
 
     tab_features, tab_framework, tab_runner, tab_results = st.tabs(
         ["Feature files", "Framework code", "Run Tests", "Test results"]
