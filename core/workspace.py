@@ -4,10 +4,12 @@ import datetime as _dt
 import json
 import os
 import re
+import shutil
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 WORKSPACE_DIR = Path(os.environ.get("QA_WORKSPACE_DIR", PROJECT_ROOT.parent / "workspace"))
+TEMPLATES_DIR = PROJECT_ROOT / "templates"
 
 # Canonical subfolders of a project, per the design diagram (singular names).
 PROJECT_SUBDIRS = (
@@ -74,6 +76,35 @@ def ensure_project_dirs(project: str) -> Path:
     for sub in PROJECT_SUBDIRS:
         (pd / sub).mkdir(parents=True, exist_ok=True)
     return pd
+
+
+def copy_scaffolding(project: str) -> list[str]:
+    """Copy the canonical, project-agnostic scaffolding into the project,
+    overwriting any stale copy so harness fixes always propagate.
+
+    The LLM no longer authors these — it only generates the project-specific
+    locators / page objects / step defs / tests. `pytest_plugins` in the copied
+    conftest stays the empty tuple form; sync_pytest_plugins() fills it from the
+    step-def modules on disk after generation. Returns the project-relative paths
+    written (for logging)."""
+    ensure_project_dirs(project)
+    pd = project_dir(project)
+    written: list[str] = []
+    mapping = {
+        TEMPLATES_DIR / "conftest.py": pd / "conftest.py",
+        TEMPLATES_DIR / "base_page.py": pd / "pages" / "base_page.py",
+    }
+    for src, dst in mapping.items():
+        if src.exists():
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(src, dst)
+            written.append(str(dst.relative_to(pd)).replace("\\", "/"))
+    # Package markers so `pages` and `step_defs` import cleanly.
+    for pkg in ("pages", "step_defs"):
+        init = pd / pkg / "__init__.py"
+        if not init.exists():
+            init.write_text("", encoding="utf-8")
+    return written
 
 
 def story_exists(project: str, filename: str) -> bool:

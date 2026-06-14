@@ -1,0 +1,72 @@
+{
+  "story_id": "ResGate",
+  "run_timestamp": "2026-06-14_19-49-13",
+  "pytest_exit_code": 1,
+  "verdict": "FAIL",
+  "reasons": [
+    "pytest exited with code 1"
+  ],
+  "counts": {
+    "assertions": 1,
+    "values_captured": 5,
+    "components": 0,
+    "missing_items": 0,
+    "prerequisites": 2
+  },
+  "captures": [
+    {
+      "kind": "value",
+      "label": "Login page URL",
+      "value": "https://ra-demo.rlcatalyst.com/login",
+      "ts": "19:49:19"
+    },
+    {
+      "kind": "prerequisite",
+      "label": "Sign-in form reachable",
+      "passed": true,
+      "reason": "sign-in form (email field) not visible on the login page",
+      "evidence": "email selector=input[placeholder='Please enter your Email ID']",
+      "ts": "19:49:20"
+    },
+    {
+      "kind": "value",
+      "label": "Login email",
+      "value": "sundeep.mallya+a@relevancelab.com",
+      "ts": "19:49:20"
+    },
+    {
+      "kind": "prerequisite",
+      "label": "Redirected to My Organizations",
+      "passed": true,
+      "reason": "login did not land on the My Organizations page",
+      "evidence": "current_url=https://ra-demo.rlcatalyst.com/admin; heading=My Organizations",
+      "ts": "19:49:21"
+    },
+    {
+      "kind": "value",
+      "label": "Organization count before create",
+      "value": 3,
+      "ts": "19:49:21"
+    },
+    {
+      "kind": "assertion",
+      "label": "Create Organization form displayed",
+      "expected": "Create Organization",
+      "actual": "Create Organization",
+      "passed": true,
+      "ts": "19:49:21"
+    },
+    {
+      "kind": "value",
+      "label": "Organization name entered",
+      "value": "Anthropic Org",
+      "ts": "19:49:21"
+    },
+    {
+      "kind": "value",
+      "label": "Organization description entered",
+      "value": "Providing IT services globally",
+      "ts": "19:49:21"
+    }
+  ]
+}

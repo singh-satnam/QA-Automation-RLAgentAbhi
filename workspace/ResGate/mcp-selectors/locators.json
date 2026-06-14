@@ -1,0 +1,24 @@
+{
+  "login": {
+    "email_input": "input[placeholder='Please enter your Email ID']",
+    "password_input": "input[placeholder='Please enter your password']",
+    "sign_in_button": "button:has-text('Sign In')"
+  },
+  "my_organizations": {
+    "heading": "h1:has-text('My Organizations')",
+    "add_new_button": "div.create-organization-container[role='button']",
+    "org_card": ".organization-card",
+    "org_card_name": "h3.project-name"
+  },
+  "create_organization": {
+    "heading": "h3:has-text('Create Organization')",
+    "name_input": "#OrganizationName",
+    "description_input": "#Organizationdescription",
+    "create_button": "button.create-org-btn"
+  },
+  "toast": {
+    "error": ".toast-error",
+    "success": ".toast-success",
+    "message": ".toast-message"
+  }
+}

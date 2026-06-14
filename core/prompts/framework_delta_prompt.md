@@ -49,4 +49,6 @@ DELTA-ONLY MODE — NON-NEGOTIABLE
    - Files UNCHANGED  (existing files you intentionally left alone — proof you                       respected the fork instead of regenerating)
 
 All the FIDELITY rules from FRAMEWORK_PROMPT still apply: every step def must call captured_values, full row coverage on user_data.json, MCP-discovered selectors, no headed browser in this phase. Run `pytest -v` headless to validate, healing up to 3 cycles.
+
+`conftest.py` and `pages/base_page.py` are PROVIDED SCAFFOLDING (copied in by the harness) — never create, overwrite, edit, or delete them, and never touch `pytest_plugins`. They already provide the fixtures and the pytest-bdd step hooks that write `report/step_trace.json` and `report/captured_values.json`. Generate only the project-specific page objects, step defs, and tests.
 ═══════════════════════════════════════════════════════════════════

@@ -1,10 +1,10 @@
 You are operating inside the QE automation framework rooted at the current working directory. The feature/ folder already contains Gherkin files generated for the current run. Your job is to deliver runnable pytest-bdd code WITHOUT showing a visible browser.
 
-You operate with the current working directory set to a single project folder. Read EVERY `.feature` file in `feature/`. Build the framework into `pages/` (Page Object Model classes plus a shared `base_page.py`), `step_defs/` (pytest-bdd step definitions), and `test/` (pytest-bdd entrypoints).
+You operate with the current working directory set to a single project folder. Read EVERY `.feature` file in `feature/`. Build the framework into `pages/` (Page Object Model classes that inherit the provided `base_page.BasePage`), `step_defs/` (pytest-bdd step definitions), and `test/` (pytest-bdd entrypoints).
 
-Generate a `conftest.py` (browser setup/teardown fixtures, the `base_url` from pytest.ini, a `test_data` fixture, and screenshot capture) the FIRST time only — if `conftest.py` already exists, extend it rather than overwriting it.
+PROVIDED SCAFFOLDING — DO NOT CREATE, OVERWRITE, OR EDIT: `conftest.py` (project root) and `pages/base_page.py` are already in place (the harness copies them in). They provide the Playwright `browser`/`context`/`page` fixtures (headless unless `--headed`), `base_url`, `test_data`, the `captured_values` fixture, `tabs`, and the pytest-bdd step hooks that automatically write `report/step_trace.json` (per-step pass/fail/skip + failure screenshots) and `report/captured_values.json`. Do NOT write or modify `conftest.py` or `pages/base_page.py`, and do NOT touch `pytest_plugins` — the harness manages it. Your job is ONLY the project-specific files: `mcp-selectors/locators.json`, `pages/page_<slug>.py` (inherit `BasePage`), `step_defs/<slug>_steps.py`, and `test/test_<slug>.py`. Write these in that order (locators → page objects → step defs → tests) so the core deliverables land first.
 
-REPORT ARTIFACT PATHS (so the UI can read them): write `captured_values.json`, `step_trace.json`, and any per-step screenshots into the project's `report/` directory (i.e. `report/captured_values.json`, `report/step_trace.json`, `report/screenshots/`). The HTML report itself is produced by the test runner via `--html`; do not hardcode its path.
+REPORT ARTIFACTS: the provided `conftest.py` writes `report/captured_values.json` and `report/step_trace.json` for you — your step defs only need to call the `captured_values` fixture methods; failure screenshots are captured by the conftest hooks. The HTML report is produced by the test runner via `--html`; do not hardcode its path.
 
 ═══════════════════════════════════════════════════════════════════
 FIDELITY TO STORY + FRAMEWORK — NON-NEGOTIABLE
@@ -21,9 +21,9 @@ Pipeline (per .feature file in feature/):
 1. Use Playwright MCP (configured headless) to discover the live site for that feature. Walk every    action the feature requires.
 2. Capture real selectors into mcp-selectors/locators.json. Never guess.
 3. Generate Page Objects under /pages/page_<slug>.py, inheriting BasePage. All Playwright calls    live in the POM. Use selector keys from locators.json only.
-4. Generate ONE step-definition file PER feature file: /step_defs/<feature_slug>_steps.py.    Each step calls one POM method. Update conftest.py pytest_plugins to include the new modules.
+4. Generate ONE step-definition file PER feature file: /step_defs/<feature_slug>_steps.py.    Each step calls one POM method. Do NOT edit conftest.py pytest_plugins — the harness registers the step modules from disk after you finish.
 5. Generate ONE pytest-bdd test PER feature file: test/test_<feature_slug>.py.
-6. Before generating, delete stale files in /pages, /step_defs, test/ that don't correspond to    the current feature files — the final state must contain only the files for the current run.
+6. Before generating, delete stale files in /pages, /step_defs, test/ that don't correspond to    the current feature files — BUT never delete the provided scaffolding: keep `pages/base_page.py`, `conftest.py`, and any `__init__.py`. The final state must contain only the scaffolding plus the files for the current run.
 7. Run HEADLESS validation: `pytest -v` (no --headed). On failure, heal up to 3 cycles using    fresh MCP discovery, updated selectors, and explicit waits. Stop healing once green.
 8. Append a one-line summary of generated/healed files to generation_log.txt.
 

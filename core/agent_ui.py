@@ -20,6 +20,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 import workspace as ws
+import step_report
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 PROMPTS_DIR = PROJECT_ROOT / "prompts"
@@ -534,92 +535,6 @@ def _img_data_uri(rel_path: str) -> str:
     return "data:image/png;base64," + base64.b64encode(raw).decode("ascii")
 
 
-def _render_step_card(s: dict) -> str:
-    """One screenshot card for a single step (used only for the important
-    frames — failed steps, or the final frame of a clean run)."""
-    is_fail = s.get("status") == "failed"
-    cls = "step-fail" if is_fail else "step-pass"
-    badge = "✗ FAIL" if is_fail else "✓ PASS"
-    # Prefer a pre-embedded data URI (used by the suite report, captured before
-    # the next story's run overwrites reports/screenshots/); else read the file.
-    uri = s.get("_datauri") or _img_data_uri(s.get("screenshot", ""))
-    if not uri:
-        return ""
-    err = ""
-    if is_fail and s.get("error"):
-        err = (f"<div class='step-error'>"
-               f"{_esc(_shorten(s.get('error'), 300))}</div>")
-    return (
-        f"<div class='step-card {cls}'>"
-        f"<div class='step-head'>"
-        f"<span class='step-idx'>{_esc(s.get('index'))}</span>"
-        f"<span class='step-kw'>{_esc(s.get('keyword', ''))}</span> "
-        f"{_esc(s.get('name', ''))}"
-        f"<span class='step-badge {cls}'>{badge}</span>{err}</div>"
-        f"<a href='{uri}' target='_blank'>"
-        f"<img class='step-shot' src='{uri}' alt='step {_esc(s.get('index'))}'></a>"
-        f"</div>"
-    )
-
-
-def _render_step_timeline(steps: list[dict]) -> str:
-    """Render the step-by-step section.
-
-    Design (per user feedback): a screenshot on EVERY step is visual noise. So:
-      * Show a compact, image-free checklist of every step with a ✓/✗ — the
-        full flow and the exact failure point at a glance.
-      * Embed SCREENSHOTS only for the important frames: the failing step(s),
-        or — on a fully passing run — just the final end-state as proof.
-    Every per-step screenshot is still saved to disk under reports/screenshots/;
-    we just don't dump all of them into the report."""
-    if not steps:
-        return ""
-    failed = [s for s in steps if s.get("status") == "failed"]
-
-    # Top callout naming the breaking step.
-    callout = ""
-    if failed:
-        f0 = failed[0]
-        err = ""
-        if f0.get("error"):
-            err = (f"<div class='step-error'>"
-                   f"{_esc(_shorten(f0.get('error'), 400))}</div>")
-        callout = (
-            f"<div class='step-failcallout'>❌ Failed at step "
-            f"{_esc(f0.get('index'))}: <strong>{_esc(f0.get('keyword', ''))} "
-            f"{_esc(f0.get('name', ''))}</strong>{err}</div>"
-        )
-
-    # Compact checklist of every step (no images).
-    items = []
-    for s in steps:
-        is_fail = s.get("status") == "failed"
-        icon = ("<span class='fail-cell'>✗</span>" if is_fail
-                else "<span class='pass-cell'>✓</span>")
-        items.append(
-            f"<li class='{'step-li-fail' if is_fail else ''}'>{icon} "
-            f"<span class='step-kw'>{_esc(s.get('keyword', ''))}</span> "
-            f"{_esc(s.get('name', ''))}</li>"
-        )
-    checklist = f"<ol class='step-checklist'>{''.join(items)}</ol>"
-
-    # Curated screenshots: failures, else just the final frame.
-    if failed:
-        shots, shots_title = failed, "Failure screenshot"
-    else:
-        shots, shots_title = steps[-1:], "Final state"
-    cards = [c for c in (_render_step_card(s) for s in shots) if c]
-    gallery = ""
-    if cards:
-        gallery = (f"<div class='step-shot-title'>{shots_title}</div>"
-                   f"<div class='step-grid'>{''.join(cards)}</div>")
-
-    return (
-        "<section><h2>Step-by-step</h2>"
-        f"{callout}{checklist}{gallery}</section>"
-    )
-
-
 def _classify_captured(entries: list[dict]) -> dict:
     """Bucket captures by their kind so the renderer can emit each section."""
     buckets = {
@@ -755,45 +670,6 @@ def _coverage_css() -> str:
     .pytest-summary div { font-size: 0.9rem; }
     .pytest-summary strong { display: block; font-size: 1.4rem;
                               color: #0f172a; }
-    /* ---- Step-by-step visual timeline ---- */
-    .step-failcallout { background: #fee2e2; color: #991b1b;
-                        border-left: 5px solid #dc2626; border-radius: 6px;
-                        padding: 12px 16px; margin-bottom: 1rem;
-                        font-size: 0.95rem; }
-    .step-grid { display: grid;
-                 grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-                 gap: 16px; }
-    .step-checklist { margin: 0 0 1rem 0; padding-left: 1.4rem;
-                      font-size: 0.9rem; line-height: 1.9; color: #334155; }
-    .step-checklist li.step-li-fail { color: #991b1b; font-weight: 600; }
-    .step-checklist .step-kw { font-weight: 700; color: #1e293b; }
-    .step-shot-title { font-size: 0.78rem; text-transform: uppercase;
-                       letter-spacing: 0.04em; color: #64748b; font-weight: 600;
-                       margin-bottom: 8px; }
-    .step-card { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;
-                 background: #fff; display: flex; flex-direction: column;
-                 max-width: 560px; }
-    .step-card.step-pass { border-left: 4px solid #10b981; }
-    .step-card.step-fail { border-left: 4px solid #dc2626;
-                           box-shadow: 0 0 0 2px #fecaca; }
-    .step-head { padding: 9px 12px; font-size: 0.85rem; line-height: 1.35;
-                 border-bottom: 1px solid #f1f5f9; }
-    .step-idx { display: inline-block; min-width: 1.5rem; height: 1.5rem;
-                line-height: 1.5rem; text-align: center; border-radius: 50%;
-                background: #f1f5f9; color: #475569; font-size: 0.75rem;
-                font-weight: 700; margin-right: 6px; }
-    .step-kw { font-weight: 700; color: #1e293b; }
-    .step-badge { float: right; font-size: 0.72rem; font-weight: 700;
-                  padding: 2px 8px; border-radius: 999px; }
-    .step-badge.step-pass { background: #d1fae5; color: #065f46; }
-    .step-badge.step-fail { background: #fee2e2; color: #991b1b; }
-    .step-shot { width: 100%; display: block; background: #f8fafc;
-                 border-top: 1px solid #f1f5f9; cursor: zoom-in; }
-    .step-noshot { padding: 24px 12px; text-align: center; color: #94a3b8;
-                   font-size: 0.82rem; font-style: italic; }
-    .step-error { margin-top: 6px; font-family: ui-monospace, monospace;
-                  font-size: 0.78rem; color: #b91c1c;
-                  white-space: pre-wrap; word-break: break-word; }
     /* ---- Consolidated website-suite report ---- */
     .verdict-chip { padding: 2px 10px; border-radius: 999px; font-size: 0.74rem;
                     font-weight: 700; white-space: nowrap; }
@@ -960,11 +836,11 @@ def build_inline_coverage_report(
         f"</div></section>"
     )
 
-    # Step-by-step visual timeline (screenshots) — the headline visual: shows
-    # every step's pass/fail with a picture and points at the failing step.
-    step_timeline = _render_step_timeline(_load_step_trace())
-    if step_timeline:
-        sections_html.append(step_timeline)
+    # Step-by-step results (summary cards + filterable status table + failure
+    # gallery). Headline section, rendered first.
+    step_section = step_report.render_step_report(_load_step_trace(), _img_data_uri)
+    if step_section:
+        sections_html.insert(0, step_section)
 
     # Prerequisites
     if buckets["prerequisites"]:
@@ -1050,7 +926,7 @@ def build_inline_coverage_report(
     html_doc = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <title>Story coverage — {_esc(verdict)} — {_esc(run_timestamp)}</title>
-<style>{_coverage_css()}</style></head>
+<style>{_coverage_css()}{step_report.STEP_REPORT_CSS}</style></head>
 <body><div class="container">
   <h1>Story coverage report</h1>
   <div class="subtitle">Run: <code>{_esc(run_timestamp)}</code> ·
@@ -2180,30 +2056,11 @@ def render_test_runner(story_id: str, framework_ready: bool) -> str | None:
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="runner-actions">', unsafe_allow_html=True)
-    cols = st.columns([1, 1, 4])
+    cols = st.columns([1, 5])
     with cols[0]:
         if st.button("▶▶ Run All", key=f"runall_{story_id}", type="primary",
                      use_container_width=True, help="Run every test for this story (headed)"):
             clicked = "all"
-    with cols[1]:
-        runs = ws.report_runs(story_id)
-        html_report = (runs[0] / "report.html") if runs else Path()
-        if html_report.exists():
-            try:
-                st.download_button(
-                    "⬇ Download last report",
-                    data=html_report.read_bytes(),
-                    file_name=f"report_{story_id}.html",
-                    mime="text/html",
-                    key=f"dl_runner_{story_id}",
-                    use_container_width=True,
-                    help="Download. The full report is also embedded below in this tab.",
-                )
-            except OSError:
-                st.button("Open last report", disabled=True, use_container_width=True)
-        else:
-            st.button("⬇ Download last report", disabled=True, use_container_width=True,
-                      help="No report yet — run a test first.")
     st.markdown('</div>', unsafe_allow_html=True)
 
     return clicked
@@ -2224,6 +2081,21 @@ def render_test_results(story_id: str) -> None:
     coverage_json = latest / "story_coverage.json"
     coverage_html = latest / "story_coverage.html"
     captured_values = latest / "captured_values.json"
+
+    # Quick download of the most recent raw pytest report (moved here from the
+    # Run Tests tab — the report itself is embedded in this tab).
+    if html_report.exists():
+        try:
+            st.download_button(
+                "⬇ Download last report",
+                data=html_report.read_bytes(),
+                file_name=f"report_{story_id}.html",
+                mime="text/html",
+                key=f"dl_results_{story_id}",
+                help="Download the most recent pytest report.html.",
+            )
+        except OSError:
+            pass
 
     # ============================================================
     # RUN HISTORY — every ③ Run press snapshots its outputs into
@@ -2288,7 +2160,6 @@ def render_test_results(story_id: str) -> None:
                     st.session_state.pop(f"hist_view_{story_id}", None)
                     st.rerun()
                 try:
-                    import streamlit.components.v1 as components
                     components.html(
                         chosen["html_path"].read_text(encoding="utf-8", errors="replace"),
                         height=900, scrolling=True,
@@ -2338,7 +2209,6 @@ def render_test_results(story_id: str) -> None:
         if coverage_html.exists():
             try:
                 html_body = coverage_html.read_text(encoding="utf-8", errors="replace")
-                import streamlit.components.v1 as components
                 components.html(html_body, height=1100, scrolling=True)
                 st.download_button(
                     "⬇ Download story_coverage.html",
@@ -2745,8 +2615,16 @@ def main() -> None:
         gherkin_done = False
         framework_done = False
 
-    tab_features, tab_framework, tab_results = st.tabs(
-        ["Feature files", "Framework code", "Test results"]
+    # Trust the disk: a project generated in a previous session already has its
+    # tests/features on disk, so treat the framework as ready even before ② is
+    # clicked again. Otherwise the Run Tests tab wrongly says "generate first".
+    if tests_n > 0:
+        framework_done = True
+    if features > 0:
+        gherkin_done = True
+
+    tab_features, tab_framework, tab_runner, tab_results = st.tabs(
+        ["Feature files", "Framework code", "Run Tests", "Test results"]
     )
     no_story_msg = (
         '<div class="empty-state"><strong>No project selected.</strong><br>'
@@ -2763,11 +2641,15 @@ def main() -> None:
             st.markdown(no_story_msg, unsafe_allow_html=True)
         else:
             render_framework_files(story_id)
-    with tab_results:
+    with tab_runner:
         if not story_id:
             st.markdown(no_story_msg, unsafe_allow_html=True)
         else:
             runner_target = render_test_runner(story_id, framework_done)
+    with tab_results:
+        if not story_id:
+            st.markdown(no_story_msg, unsafe_allow_html=True)
+        else:
             render_test_results(story_id)
 
     # Sidebar "Run All" or per-test "▶ Run" both feed the same handler.
@@ -2832,6 +2714,12 @@ def main() -> None:
         log_event("Step ② clicked — Generate Test Framework")
         project = current_project()
         ws.ensure_project_dirs(project)
+        # Drop in the canonical scaffolding (conftest.py, pages/base_page.py) so
+        # the LLM never re-authors boilerplate — it only writes the project's
+        # locators / page objects / step defs / tests.
+        scaffold = ws.copy_scaffolding(project)
+        append_process_log(project,
+                           "Scaffolding copied: " + (", ".join(scaffold) or "(none)"))
         append_process_log(project, "Generate Test Framework clicked")
         has_framework = (
             any(proj_path("pages").glob("page_*.py"))

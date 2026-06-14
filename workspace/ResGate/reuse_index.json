@@ -1,0 +1,40 @@
+{
+  "flows": {},
+  "page_methods": {
+    "click_add_new": "page_create_organization.py",
+    "click_create_organization": "page_create_organization.py",
+    "click_login": "page_create_organization.py",
+    "create_form_heading_text": "page_create_organization.py",
+    "enter_credentials": "page_create_organization.py",
+    "enter_organization_details": "page_create_organization.py",
+    "is_create_form_displayed": "page_create_organization.py",
+    "is_on_my_organizations": "page_create_organization.py",
+    "latest_error_toast_text": "page_create_organization.py",
+    "my_organizations_heading_text": "page_create_organization.py",
+    "navigate_to_login": "page_create_organization.py",
+    "organization_card_text": "page_create_organization.py",
+    "organization_count": "page_create_organization.py",
+    "sign_in_form_is_displayed": "page_create_organization.py",
+    "success_toast_text": "page_create_organization.py",
+    "wait_for_organization_in_list": "page_create_organization.py"
+  },
+  "selectors": {
+    "create_organization": "locators.json",
+    "login": "locators.json",
+    "my_organizations": "locators.json",
+    "toast": "locators.json"
+  },
+  "step_defs": {
+    "click_add_new_button": "create_organization_steps.py",
+    "click_create_organization_button": "create_organization_steps.py",
+    "click_login_button": "create_organization_steps.py",
+    "click_sign_in_link": "create_organization_steps.py",
+    "create_form_displayed": "create_organization_steps.py",
+    "enter_organization_details": "create_organization_steps.py",
+    "enter_valid_credentials": "create_organization_steps.py",
+    "navigate_to_login": "create_organization_steps.py",
+    "organization_created_successfully": "create_organization_steps.py",
+    "organization_displayed_in_list": "create_organization_steps.py",
+    "redirected_to_my_organizations": "create_organization_steps.py"
+  }
+}

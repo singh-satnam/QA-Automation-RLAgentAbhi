@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Story coverage — PASS — 2026-06-14_19-53-41</title>
+<style>
+    body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+           color: #0f172a; background: #f8fafc; margin: 0; padding: 24px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    h1 { font-size: 1.75rem; margin: 0 0 0.5rem 0; }
+    .subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .verdict-banner { padding: 16px 20px; border-radius: 8px;
+                      margin-bottom: 1.5rem; font-weight: 600; }
+    .verdict-banner.pass    { background: #d1fae5; color: #065f46;
+                              border-left: 5px solid #10b981; }
+    .verdict-banner.partial { background: #fef3c7; color: #92400e;
+                              border-left: 5px solid #f59e0b; }
+    .verdict-banner.fail    { background: #fee2e2; color: #991b1b;
+                              border-left: 5px solid #dc2626; }
+    .verdict-banner.blocked { background: #fee2e2; color: #991b1b;
+                              border-left: 5px solid #b91c1c;
+                              font-size: 1.05rem; }
+    .verdict-banner .label  { font-size: 1.3rem; display: block;
+                              margin-bottom: 6px; }
+    .verdict-banner ul      { margin: 0; padding-left: 1.2rem; font-weight: 500; }
+    section { background: white; border-radius: 8px; padding: 18px 20px;
+              margin-bottom: 1rem; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+    section h2 { font-size: 1.05rem; margin: 0 0 0.75rem 0; color: #0f172a; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th, td { padding: 8px 10px; text-align: left;
+             border-bottom: 1px solid #e2e8f0; }
+    th { background: #f1f5f9; font-weight: 600; color: #475569;
+         font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    tr:last-child td { border-bottom: none; }
+    .pass-cell  { color: #047857; font-weight: 600; }
+    .fail-cell  { color: #b91c1c; font-weight: 600; }
+    .miss-cell  { color: #b45309; font-weight: 600; }
+    .ts         { color: #94a3b8; font-family: ui-monospace, monospace;
+                  font-size: 0.78rem; }
+    code.value  { background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+                  font-family: ui-monospace, monospace; font-size: 0.82rem; }
+    .empty      { color: #94a3b8; font-size: 0.9rem; font-style: italic; }
+    .pytest-summary { display: flex; gap: 24px; flex-wrap: wrap; }
+    .pytest-summary div { font-size: 0.9rem; }
+    .pytest-summary strong { display: block; font-size: 1.4rem;
+                              color: #0f172a; }
+    /* ---- Consolidated website-suite report ---- */
+    .verdict-chip { padding: 2px 10px; border-radius: 999px; font-size: 0.74rem;
+                    font-weight: 700; white-space: nowrap; }
+    .verdict-chip.pass    { background: #d1fae5; color: #065f46; }
+    .verdict-chip.fail,
+    .verdict-chip.blocked { background: #fee2e2; color: #991b1b; }
+    .verdict-chip.partial { background: #fef3c7; color: #92400e; }
+    .suite-story { border: 1px solid #e2e8f0; }
+    .suite-story-head { display: flex; align-items: center; gap: 10px;
+                        margin-bottom: 2px; }
+    .suite-num { display: inline-flex; align-items: center; justify-content: center;
+                 min-width: 1.7rem; height: 1.7rem; border-radius: 50%;
+                 background: #0f172a; color: #fff; font-size: 0.8rem;
+                 font-weight: 700; }
+    .suite-story-title { font-weight: 700; font-size: 1.05rem; flex: 1; }
+    .suite-story-meta { color: #64748b; font-size: 0.8rem; margin-bottom: 6px; }
+    .suite-story-meta code { background: #f1f5f9; padding: 1px 5px;
+                             border-radius: 4px; }
+    .suite-reasons { margin: 0 0 0.5rem 1.1rem; color: #475569;
+                     font-size: 0.85rem; }
+    
+.sr-section{margin-top:1.5rem}
+.sr-cards{display:flex;gap:0.75rem;flex-wrap:wrap;margin:0.5rem 0 1rem}
+.sr-card{flex:1;min-width:120px;border:1px solid #e2e8f0;border-radius:10px;
+  padding:0.75rem 1rem;background:#f8fafc;text-align:center}
+.sr-card .sr-num{font-size:1.6rem;font-weight:700;color:#0f172a}
+.sr-card .sr-lbl{font-size:0.8rem;color:#475569}
+.sr-card.sr-pass .sr-num{color:#16a34a}
+.sr-card.sr-fail .sr-num{color:#dc2626}
+.sr-card.sr-skip .sr-num{color:#1e3a8a}
+.sr-filters{margin:0.5rem 0}
+.sr-fbtn{border:1px solid #cbd5e1;background:#fff;border-radius:6px;
+  padding:0.25rem 0.7rem;margin-right:0.4rem;cursor:pointer;font-size:0.85rem}
+.sr-fbtn.active{background:#0f172a;color:#fff;border-color:#0f172a}
+.sr-table{width:100%;border-collapse:collapse;font-size:0.9rem}
+.sr-table th,.sr-table td{border-bottom:1px solid #eef2f7;padding:0.4rem 0.6rem;
+  text-align:left;vertical-align:top}
+.sr-table .sr-i{color:#94a3b8;width:2rem}
+.sr-table .sr-kw{font-weight:600;color:#334155;white-space:nowrap}
+.sr-pill{display:inline-block;border-radius:999px;padding:0.1rem 0.55rem;
+  font-size:0.78rem;font-weight:700;white-space:nowrap}
+.sr-pill.stp-pass{background:#dcfce7;color:#16a34a}
+.sr-pill.stp-fail{background:#fee2e2;color:#dc2626}
+.sr-pill.stp-skip{background:#dbeafe;color:#1e3a8a}
+.sr-gtitle{margin-top:1.25rem;font-size:1rem;color:#dc2626}
+.sr-gallery{display:flex;flex-direction:column;gap:0.75rem}
+.sr-fcard{border:1px solid #fecaca;border-radius:10px;overflow:hidden}
+.sr-fhead{background:#fef2f2;color:#991b1b;font-weight:600;padding:0.5rem 0.75rem}
+.sr-fbody{display:flex;gap:0.75rem;padding:0.75rem;align-items:flex-start}
+.sr-shot{max-width:360px;border:1px solid #e2e8f0;border-radius:6px}
+.sr-noshot{color:#94a3b8;font-style:italic;padding:1rem;border:1px dashed #e2e8f0;
+  border-radius:6px}
+.sr-err{flex:1;margin:0;background:#0f172a;color:#e2e8f0;border-radius:6px;
+  padding:0.6rem;font-size:0.8rem;white-space:pre-wrap;overflow:auto}
+</style></head>
+<body><div class="container">
+  <h1>Story coverage report</h1>
+  <div class="subtitle">Run: <code>2026-06-14_19-53-41</code> ·
+       Story: <code>ResGate</code></div>
+  <div class="verdict-banner pass">
+    <span class="label">✓ PASS</span>
+    <ul><li>All captured assertions passed</li></ul>
+  </div>
+  <section class="sr-section"><h2>Step-by-step results</h2><div class="sr-cards"><div class="sr-card"><div class="sr-num">1</div><div class="sr-lbl">Tests ran</div></div><div class="sr-card sr-pass"><div class="sr-num">11</div><div class="sr-lbl">Passed steps</div></div><div class="sr-card sr-fail"><div class="sr-num">0</div><div class="sr-lbl">Failed steps</div></div><div class="sr-card sr-skip"><div class="sr-num">0</div><div class="sr-lbl">Skipped steps</div></div></div><div class="sr-filters"><button class="sr-fbtn active" data-f="all" onclick="srFilter(this)">All</button><button class="sr-fbtn" data-f="failed" onclick="srFilter(this)">Failed</button><button class="sr-fbtn" data-f="skipped" onclick="srFilter(this)">Skipped</button></div><table class="sr-table"><thead><tr><th>#</th><th>Test</th><th>Keyword</th><th>Step</th><th>Status</th></tr></thead><tbody><tr class="sr-row stp-pass"><td class="sr-i">1</td><td class="sr-test">Successfully create a new organization</td><td class="sr-kw">Given</td><td>the user navigates to the login page &quot;https://ra-demo.rlcatalyst.com/login&quot;</td><td><span class="sr-pill stp-pass">✓ PASS</span></td></tr><tr class="sr-row stp-pass"><td class="sr-i">2</td><td class="sr-test">Successfully create a new organization</td><td class="sr-kw">And</td><td>the user clicks the Sign In link</td><td><span class="sr-pill stp-pass">✓ PASS</span></td></tr><tr class="sr-row stp-pass"><td class="sr-i">3</td><td class="sr-test">Successfully create a new organization</td><td class="sr-kw">And</td><td>the user enters valid credentials:</td><td><span class="sr-pill stp-pass">✓ PASS</span></td></tr><tr class="sr-row stp-pass"><td class="sr-i">4</td><td class="sr-test">Successfully create a new organization</td><td class="sr-kw">When</td><td>the user clicks the Login button</td><td><span class="sr-pill stp-pass">✓ PASS</span></td></tr><tr class="sr-row stp-pass"><td class="sr-i">5</td><td class="sr-test">Successfully create a new organization</td><td class="sr-kw">Then</td><td>the user should be redirected to the My Organizations page</td><td><span class="sr-pill stp-pass">✓ PASS</span></td></tr><tr class="sr-row stp-pass"><td class="sr-i">6</td><td class="sr-test">Successfully create a new organization</td><td class="sr-kw">When</td><td>the user clicks the Add New button</td><td><span class="sr-pill stp-pass">✓ PASS</span></td></tr><tr class="sr-row stp-pass"><td class="sr-i">7</td><td class="sr-test">Successfully create a new organization</td><td class="sr-kw">Then</td><td>the Create Organization form should be displayed</td><td><span class="sr-pill stp-pass">✓ PASS</span></td></tr><tr class="sr-row stp-pass"><td class="sr-i">8</td><td class="sr-test">Successfully create a new organization</td><td class="sr-kw">When</td><td>the user enters the organization details:</td><td><span class="sr-pill stp-pass">✓ PASS</span></td></tr><tr class="sr-row stp-pass"><td class="sr-i">9</td><td class="sr-test">Successfully create a new organization</td><td class="sr-kw">And</td><td>the user clicks the Create Organization button</td><td><span class="sr-pill stp-pass">✓ PASS</span></td></tr><tr class="sr-row stp-pass"><td class="sr-i">10</td><td class="sr-test">Successfully create a new organization</td><td class="sr-kw">Then</td><td>a new organization should be created successfully</td><td><span class="sr-pill stp-pass">✓ PASS</span></td></tr><tr class="sr-row stp-pass"><td class="sr-i">11</td><td class="sr-test">Successfully create a new organization</td><td class="sr-kw">And</td><td>the organization named &quot;Anthropic Org&quot; should be displayed in the list of organizations on the My Organizations page</td><td><span class="sr-pill stp-pass">✓ PASS</span></td></tr></tbody></table><script>function srFilter(b){var f=b.getAttribute('data-f');var btns=b.parentNode.querySelectorAll('.sr-fbtn');btns.forEach(function(x){x.classList.remove('active')});b.classList.add('active');document.querySelectorAll('.sr-row').forEach(function(r){var show=(f=='all')||r.classList.contains('stp-'+f.slice(0,4));r.style.display=show?'':'none';});}</script></section><section><h2>User story</h2><pre style='white-space:pre-wrap;font-family:inherit;margin:0;color:#334155'>#Successfully Create a New Organization
+
+Given the user navigates to the login page
+
+https://ra-demo.rlcatalyst.com/login
+
+And the user clicks the Sign In link
+
+And enters valid credentials:
+
+Email: sundeep.mallya+a@relevancelab.com
+Password: Relevance@123
+
+When the user clicks the Login button
+
+Then the user should be redirected to the My Organizations page
+
+When the user clicks the Add New button
+
+Then the Create Organization form should be displayed
+
+When the user enters:
+
+Organization Name: Anthropic Org
+Organization Description: Providing IT services globally
+
+And clicks the Create Organization button
+
+Then a new organization should be created successfully
+
+And the organization named &quot;Anthropic Org&quot; should be displayed in the list of organizations on the My Organizations page</pre></section><section><h2>pytest run</h2><div class='pytest-summary'>  <div><strong>0</strong>exit code</div>  <div><strong>yes</strong>report.html present</div>  <div><strong>3</strong>assertions recorded</div>  <div><strong>7</strong>values captured</div></div></section><section><h2>Prerequisites (blocking checks)</h2><table><thead><tr><th>Label</th><th>Reason</th><th>Evidence</th><th>Verdict</th><th>Time</th></tr></thead><tbody><tr><td>Sign-in form reachable</td><td>sign-in form (email field) not visible on the login page</td><td>email selector=input[placeholder=&#x27;Please enter your Email ID&#x27;]</td><td class="pass-cell">✓ PASS</td><td class="ts">19:53:47</td></tr><tr><td>Redirected to My Organizations</td><td>login did not land on the My Organizations page</td><td>current_url=https://ra-demo.rlcatalyst.com/admin; heading=My Organizations</td><td class="pass-cell">✓ PASS</td><td class="ts">19:53:50</td></tr></tbody></table></section><section><h2>Assertions</h2><table><thead><tr><th>Label</th><th>Expected</th><th>Actual</th><th>Verdict</th><th>Time</th></tr></thead><tbody><tr><td>Create Organization form displayed</td><td>Create Organization</td><td>Create Organization</td><td class="pass-cell">✓ PASS</td><td class="ts">19:53:52</td></tr><tr><td>Organization created</td><td>action succeeded (no error toast + positive signal)</td><td>error_toast=&lt;none&gt;; positive_signal=True</td><td class="pass-cell">✓ PASS</td><td class="ts">19:53:53</td></tr><tr><td>Organization &quot;Anthropic Org&quot; displayed in list</td><td>Anthropic Org</td><td>Anthropic Org</td><td class="pass-cell">✓ PASS</td><td class="ts">19:53:53</td></tr></tbody></table></section><section><h2>Values observed during the test</h2><table><thead><tr><th>Label</th><th>Value</th><th>Time</th></tr></thead><tbody><tr><td>Login page URL</td><td>https://ra-demo.rlcatalyst.com/login</td><td class="ts">19:53:46</td></tr><tr><td>Login email</td><td>sundeep.mallya+a@relevancelab.com</td><td class="ts">19:53:47</td></tr><tr><td>Organization count before create</td><td>2</td><td class="ts">19:53:50</td></tr><tr><td>Organization name entered</td><td>Anthropic Org</td><td class="ts">19:53:52</td></tr><tr><td>Organization description entered</td><td>Providing IT services globally</td><td class="ts">19:53:52</td></tr><tr><td>Create — success toast</td><td>×
+Organization saved successfully</td><td class="ts">19:53:53</td></tr><tr><td>Organization count after create</td><td>3</td><td class="ts">19:53:53</td></tr></tbody></table></section>
+</div></body></html>

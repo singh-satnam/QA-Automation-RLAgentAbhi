@@ -1,0 +1,90 @@
+[
+  {
+    "test": "Successfully create a new organization",
+    "feature": "Create a New Organization",
+    "index": 0,
+    "keyword": "Given",
+    "name": "the user navigates to the login page \"https://ra-demo.rlcatalyst.com/login\"",
+    "status": "passed"
+  },
+  {
+    "test": "Successfully create a new organization",
+    "feature": "Create a New Organization",
+    "index": 1,
+    "keyword": "And",
+    "name": "the user clicks the Sign In link",
+    "status": "passed"
+  },
+  {
+    "test": "Successfully create a new organization",
+    "feature": "Create a New Organization",
+    "index": 2,
+    "keyword": "And",
+    "name": "the user enters valid credentials:",
+    "status": "passed"
+  },
+  {
+    "test": "Successfully create a new organization",
+    "feature": "Create a New Organization",
+    "index": 3,
+    "keyword": "When",
+    "name": "the user clicks the Login button",
+    "status": "passed"
+  },
+  {
+    "test": "Successfully create a new organization",
+    "feature": "Create a New Organization",
+    "index": 4,
+    "keyword": "Then",
+    "name": "the user should be redirected to the My Organizations page",
+    "status": "passed"
+  },
+  {
+    "test": "Successfully create a new organization",
+    "feature": "Create a New Organization",
+    "index": 5,
+    "keyword": "When",
+    "name": "the user clicks the Add New button",
+    "status": "passed"
+  },
+  {
+    "test": "Successfully create a new organization",
+    "feature": "Create a New Organization",
+    "index": 6,
+    "keyword": "Then",
+    "name": "the Create Organization form should be displayed",
+    "status": "passed"
+  },
+  {
+    "test": "Successfully create a new organization",
+    "feature": "Create a New Organization",
+    "index": 7,
+    "keyword": "When",
+    "name": "the user enters the organization details:",
+    "status": "passed"
+  },
+  {
+    "test": "Successfully create a new organization",
+    "feature": "Create a New Organization",
+    "index": 8,
+    "keyword": "And",
+    "name": "the user clicks the Create Organization button",
+    "status": "passed"
+  },
+  {
+    "test": "Successfully create a new organization",
+    "feature": "Create a New Organization",
+    "index": 9,
+    "keyword": "Then",
+    "name": "a new organization should be created successfully",
+    "status": "passed"
+  },
+  {
+    "test": "Successfully create a new organization",
+    "feature": "Create a New Organization",
+    "index": 10,
+    "keyword": "And",
+    "name": "the organization named \"Anthropic Org\" should be displayed in the list of organizations on the My Organizations page",
+    "status": "passed"
+  }
+]
