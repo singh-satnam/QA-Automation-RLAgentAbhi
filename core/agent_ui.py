@@ -223,100 +223,60 @@ CUSTOM_CSS = """
     #MainMenu, footer { visibility: hidden; }
     header { background: transparent; }
 
-    /* ============ Pipeline stepper (main panel) ============================
-       Three real st.buttons (keys step_gherkin/step_framework/step_run) styled
-       into a stepper. Scoped to the `st-key-step_*` container classes so no
-       other button is affected. State -> look:
-         active    = type="primary"               -> indigo + 2px border
-         completed = type="secondary", enabled     -> green pill + check
-         locked    = disabled                      -> muted gray            */
+    /* ============ Pipeline stepper cards (main panel) ====================
+       Three bordered cards (one per st.columns cell). Each card's visual
+       state — to do / running / done / failed / locked — is driven by an
+       EXPLICIT state value (see render_stepper / _compute_step_states), NOT
+       inferred from Streamlit's button internals. The .step-card--* and
+       .step-chip--* classes below are fully under our control, so they can
+       express all five states and survive Streamlit upgrades.              */
     .stepper-caption { font-size: 0.78rem; color: #64748b; font-weight: 700;
         text-transform: uppercase; letter-spacing: 0.05em; margin: 0.25rem 0 0.5rem 0; }
 
-    .st-key-step_gherkin button,
-    .st-key-step_framework button,
-    .st-key-step_run button {
-        width: 100%; text-align: left; white-space: nowrap;
-        min-height: 2.7rem; border-radius: 10px;
-        padding: 0.5rem 0.9rem 0.5rem 2.9rem; position: relative;
-        font-weight: 600; font-size: 0.9rem; line-height: 1.1;
-        border: 1px solid #e2e8f0; background: #ffffff; color: #475569;
-        box-shadow: none; transition: none;
-    }
-    /* numbered circle */
-    .st-key-step_gherkin button::before,
-    .st-key-step_framework button::before,
-    .st-key-step_run button::before {
-        position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%);
-        width: 1.45rem; height: 1.45rem; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 0.78rem; font-weight: 700; background: #f1f5f9; color: #64748b;
-    }
-    .st-key-step_gherkin button::before  { content: "1"; }
-    .st-key-step_framework button::before { content: "2"; }
-    .st-key-step_run button::before       { content: "3"; }
+    /* card body (an HTML block inside each bordered container) */
+    .step-card { border-left: 3px solid #e2e8f0; padding-left: 0.7rem; margin: 0; }
+    .step-card--todo    { border-left-color: #6366f1; }
+    .step-card--running { border-left-color: #f59e0b; }
+    .step-card--done    { border-left-color: #16a34a; }
+    .step-card--failed  { border-left-color: #dc2626; }
+    .step-card--locked  { border-left-color: #e2e8f0; }
 
-    /* ACTIVE — type=primary -> solid indigo, the loudest cell */
-    .st-key-step_gherkin button[kind="primary"],
-    .st-key-step_framework button[kind="primary"],
+    .step-card-title { display: flex; align-items: center; gap: 0.5rem;
+        font-weight: 700; font-size: 0.95rem; color: #1e293b; margin: 0.45rem 0 0.15rem; }
+    .step-card--locked .step-card-title { color: #94a3b8; }
+    .step-card-num { display: inline-flex; align-items: center; justify-content: center;
+        width: 1.5rem; height: 1.5rem; border-radius: 50%; flex: 0 0 auto;
+        background: #eef2ff; color: #4338ca; font-size: 0.8rem; font-weight: 700; }
+    .step-card--done .step-card-num   { background: #dcfce7; color: #166534; }
+    .step-card--failed .step-card-num { background: #fee2e2; color: #b91c1c; }
+    .step-card--locked .step-card-num { background: #f1f5f9; color: #cbd5e1; }
+    .step-card-desc { font-size: 0.78rem; color: #64748b; line-height: 1.3;
+        margin-bottom: 0.45rem; min-height: 2.0rem; }
+
+    /* state chip */
+    .step-chip { display: inline-flex; align-items: center; gap: 0.3rem;
+        font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.03em; padding: 0.12rem 0.55rem; border-radius: 999px;
+        border: 1px solid transparent; }
+    .step-chip--todo    { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+    .step-chip--running { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+    .step-chip--done    { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+    .step-chip--failed  { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+    .step-chip--locked  { background: #f8fafc; color: #94a3b8; border-color: #eef2f7; }
+    .step-spin { display: inline-block; animation: stepspin 0.9s linear infinite; }
+    @keyframes stepspin { to { transform: rotate(360deg); } }
+
+    /* action buttons inside the cards (cosmetic only — state is no longer read
+       from these attributes, so a Streamlit rename just falls back to theme) */
+    .st-key-step_gherkin button, .st-key-step_framework button, .st-key-step_run button {
+        width: 100%; border-radius: 8px; font-weight: 600; font-size: 0.85rem;
+        min-height: 2.3rem; box-shadow: none; }
+    .st-key-step_gherkin button[kind="primary"], .st-key-step_framework button[kind="primary"],
     .st-key-step_run button[kind="primary"],
     .st-key-step_gherkin button[data-testid="stBaseButton-primary"],
     .st-key-step_framework button[data-testid="stBaseButton-primary"],
     .st-key-step_run button[data-testid="stBaseButton-primary"] {
-        background: #4f46e5; border: 2px solid #4338ca; color: #ffffff;
-    }
-    .st-key-step_gherkin button[kind="primary"]::before,
-    .st-key-step_framework button[kind="primary"]::before,
-    .st-key-step_run button[kind="primary"]::before,
-    .st-key-step_gherkin button[data-testid="stBaseButton-primary"]::before,
-    .st-key-step_framework button[data-testid="stBaseButton-primary"]::before,
-    .st-key-step_run button[data-testid="stBaseButton-primary"]::before {
-        background: #ffffff; color: #4338ca;
-    }
-
-    /* COMPLETED — type=secondary AND enabled -> quiet green */
-    .st-key-step_gherkin button[kind="secondary"]:not(:disabled),
-    .st-key-step_framework button[kind="secondary"]:not(:disabled),
-    .st-key-step_run button[kind="secondary"]:not(:disabled),
-    .st-key-step_gherkin button[data-testid="stBaseButton-secondary"]:not(:disabled),
-    .st-key-step_framework button[data-testid="stBaseButton-secondary"]:not(:disabled),
-    .st-key-step_run button[data-testid="stBaseButton-secondary"]:not(:disabled) {
-        background: #ffffff; border: 1px solid #bbf7d0;
-        border-left: 3px solid #16a34a; color: #166534;
-    }
-    .st-key-step_gherkin button[kind="secondary"]:not(:disabled)::before,
-    .st-key-step_framework button[kind="secondary"]:not(:disabled)::before,
-    .st-key-step_run button[kind="secondary"]:not(:disabled)::before,
-    .st-key-step_gherkin button[data-testid="stBaseButton-secondary"]:not(:disabled)::before,
-    .st-key-step_framework button[data-testid="stBaseButton-secondary"]:not(:disabled)::before,
-    .st-key-step_run button[data-testid="stBaseButton-secondary"]:not(:disabled)::before {
-        content: "✓"; background: #16a34a; color: #ffffff;
-    }
-
-    /* LOCKED — disabled -> gray */
-    .st-key-step_gherkin button:disabled,
-    .st-key-step_framework button:disabled,
-    .st-key-step_run button:disabled {
-        background: #f8fafc; border: 1.5px solid #eef2f7; color: #cbd5e1;
-        opacity: 1; cursor: not-allowed;
-    }
-    .st-key-step_gherkin button:disabled::before,
-    .st-key-step_framework button:disabled::before,
-    .st-key-step_run button:disabled::before { background: #eef2f7; color: #cbd5e1; }
-
-    /* connector lines between steps (green once the left step is completed) */
-    .st-key-step_gherkin, .st-key-step_framework { position: relative; }
-    .st-key-step_gherkin::after, .st-key-step_framework::after {
-        content: ""; position: absolute; top: 50%; right: -0.5rem;
-        transform: translateY(-50%); width: 1rem; height: 2px;
-        background: #e2e8f0; z-index: 0;
-    }
-    .st-key-step_gherkin:has(button[kind="secondary"]:not(:disabled))::after,
-    .st-key-step_framework:has(button[kind="secondary"]:not(:disabled))::after,
-    .st-key-step_gherkin:has(button[data-testid="stBaseButton-secondary"]:not(:disabled))::after,
-    .st-key-step_framework:has(button[data-testid="stBaseButton-secondary"]:not(:disabled))::after {
-        background: #16a34a;
-    }
+        background: #4f46e5; border: 1px solid #4338ca; color: #ffffff; }
 </style>
 """
 
@@ -2004,6 +1964,10 @@ def initialize_session() -> None:
     st.session_state.last_run = "never"
     st.session_state.gherkin_done = False
     st.session_state.framework_done = False
+    # Explicit per-step state overrides for the pipeline cards. Keys: gherkin /
+    # framework / run -> one of running|failed (locked/todo/done are derived).
+    # Error-condition logic will populate "failed" here later.
+    st.session_state.step_status = {}
     log_event("Session initialized — awaiting user story")
 
 
@@ -2616,61 +2580,122 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
             st.caption(f"Project · `{PROJECT_ROOT.name}`")
 
 
-def render_stepper(gherkin_done: bool, framework_done: bool) -> tuple[bool, bool, bool]:
-    """Horizontal 3-step pipeline stepper rendered in the main panel (above the
-    tabs). One real st.button per st.columns(3) cell; CUSTOM_CSS (scoped via the
-    `st-key-step_*` container classes) paints each as completed / active / locked.
+# Pipeline steps in order. Each entry: (key, circle-number, title, one-line desc,
+# action-button label when the step is the next actionable one, help tooltip).
+_STEPS: tuple[tuple[str, str, str, str, str, str], ...] = (
+    ("gherkin", "1", "Gherkin", "Feature files from your user story", "Generate",
+     "Generate feature files from your user story. Re-click anytime — the same files re-load."),
+    ("framework", "2", "Framework", "POMs, step defs & pytest-bdd tests", "Generate",
+     "Generate POMs, step defs, and pytest-bdd tests. Unlocked after ① is run."),
+    ("run", "3", "Run Tests", "Headed pytest run of every test", "▶ Run Tests",
+     "Headed pytest run of every test for this story. Run as many times as you like. "
+     "Use the per-test ▶ Run buttons in Test results to run one at a time."),
+)
 
-    Gating is identical to the old sidebar buttons — only the location changed:
-      * next_step = the first not-done step.
-      * ① enabled iff a story is active; ② locked until gherkin is done;
-        ③ locked until the framework is done.
-      * the active step is type="primary"; the rest are "secondary".
-      * disk-presence overrides flow in through the gherkin_done / framework_done
-        args the caller already computed (so a project with files on disk shows
-        ①/② completed without re-clicking).
-    Returns (gen_clicked, fw_clicked, run_clicked) for main() to consume exactly
-    as it consumed the old sidebar tuple."""
-    has_active_story = bool(current_project() and st.session_state.get("active_story"))
+# state -> (chip css-suffix, chip label HTML)
+_STEP_CHIPS: dict[str, tuple[str, str]] = {
+    "todo":    ("todo",    "○ To do"),
+    "running": ("running", '<span class="step-spin">⟳</span> Running…'),
+    "done":    ("done",    "✓ Done"),
+    "failed":  ("failed",  "✕ Failed"),
+    "locked":  ("locked",  "🔒 Locked"),
+}
+
+
+def _compute_step_states(gherkin_done: bool, framework_done: bool,
+                         has_active_story: bool) -> dict[str, str]:
+    """Derive the visual state of each pipeline step, then apply explicit
+    overrides from st.session_state.step_status (where error-handling logic will
+    later set "failed", and where a click transiently sets "running").
+
+    Derived states: the first not-done step is the actionable one ("todo"); steps
+    before it are "done"; steps after it are "locked". ① additionally needs an
+    active story before it leaves "locked"."""
     if not gherkin_done:
-        next_step = "gherkin"
+        nxt = "gherkin"
     elif not framework_done:
-        next_step = "framework"
+        nxt = "framework"
     else:
-        next_step = "run"
+        nxt = "run"
+    done = {"gherkin": gherkin_done, "framework": framework_done, "run": False}
+
+    states: dict[str, str] = {}
+    for key, *_ in _STEPS:
+        if done[key]:
+            states[key] = "done"
+        elif key == nxt:
+            states[key] = "todo" if (key != "gherkin" or has_active_story) else "locked"
+        else:
+            states[key] = "locked"
+
+    for key, override in st.session_state.get("step_status", {}).items():
+        if override in ("running", "failed", "done", "todo", "locked"):
+            states[key] = override
+    return states
+
+
+def _render_step_card(key: str, num: str, title: str, desc: str,
+                      action_label: str, help_text: str, state: str) -> bool:
+    """Render one bordered status-chip card and (unless running) its action
+    button. Returns True iff the button was clicked this run. The running state
+    deliberately renders NO button so a same-run repaint can't collide with the
+    button's stable key."""
+    chip_suffix, chip_label = _STEP_CHIPS[state]
+    st.markdown(
+        f'<div class="step-card step-card--{chip_suffix}">'
+        f'<span class="step-chip step-chip--{chip_suffix}">{chip_label}</span>'
+        f'<div class="step-card-title"><span class="step-card-num">{num}</span>{title}</div>'
+        f'<div class="step-card-desc">{desc}</div>'
+        "</div>",
+        unsafe_allow_html=True,
+    )
+    if state == "running":
+        return False
+    if state == "locked":
+        st.button("Locked", key=f"step_{key}", disabled=True, use_container_width=True)
+        return False
+    label = action_label if state == "todo" else ("Retry" if state == "failed" else "Re-run")
+    btype = "primary" if state == "todo" else "secondary"
+    return st.button(label, key=f"step_{key}", type=btype,
+                     use_container_width=True, help=help_text)
+
+
+def render_stepper(gherkin_done: bool, framework_done: bool) -> tuple[bool, bool, bool]:
+    """3-step pipeline rendered as bordered status-chip cards in the main panel
+    (above the tabs). Each card shows an explicit state — to do / running / done
+    / failed / locked — computed by _compute_step_states(), so the visual is no
+    longer reverse-engineered from Streamlit's button internals.
+
+    Each card lives in its own st.empty() placeholder: when its action is
+    clicked, we immediately repaint that card into the "running" state so the
+    user sees the step start before the (synchronous) work runs below.
+
+    Returns (gen_clicked, fw_clicked, run_clicked) — same tuple main() consumed
+    from the old sidebar/stepper, so downstream handling is unchanged."""
+    has_active_story = bool(current_project() and st.session_state.get("active_story"))
+    states = _compute_step_states(gherkin_done, framework_done, has_active_story)
 
     st.markdown('<div class="stepper-caption">Pipeline · 3 steps</div>',
                 unsafe_allow_html=True)
-    c1, c2, c3 = st.columns(3, gap="small")
-    with c1:
-        gen_clicked = st.button(
-            "Gherkin",
-            key="step_gherkin",
-            type="primary" if next_step == "gherkin" and has_active_story else "secondary",
-            disabled=not has_active_story,
-            use_container_width=True,
-            help="Generate feature files from your user story. Re-click anytime — the same files re-load.",
-        )
-    with c2:
-        fw_clicked = st.button(
-            "Framework",
-            key="step_framework",
-            type="primary" if next_step == "framework" else "secondary",
-            disabled=not gherkin_done,
-            use_container_width=True,
-            help="Generate POMs, step defs, and pytest-bdd tests. Unlocked after ① is run.",
-        )
-    with c3:
-        run_clicked = st.button(
-            "▶ Run Tests",
-            key="step_run",
-            type="primary" if next_step == "run" else "secondary",
-            disabled=not framework_done,
-            use_container_width=True,
-            help="Headed pytest run of every test for this story. Run as many times as you like. "
-                 "Use the per-test ▶ Run buttons in Test results to run one at a time.",
-        )
-    return gen_clicked, fw_clicked, run_clicked
+    cols = st.columns(len(_STEPS), gap="small")
+    placeholders: dict[str, object] = {}
+    clicks: dict[str, bool] = {}
+    for col, spec in zip(cols, _STEPS):
+        key, num, title, desc, action_label, help_text = spec
+        with col:
+            placeholders[key] = st.empty()
+        with placeholders[key].container(border=True):
+            clicks[key] = _render_step_card(key, num, title, desc,
+                                            action_label, help_text, states[key])
+
+    # Live feedback: flip a just-clicked card to "running" right away. The repaint
+    # renders no button, so reusing the placeholder can't duplicate a widget key.
+    for key, num, title, desc, action_label, help_text in _STEPS:
+        if clicks[key]:
+            with placeholders[key].container(border=True):
+                _render_step_card(key, num, title, desc, action_label, help_text, "running")
+
+    return clicks["gherkin"], clicks["framework"], clicks["run"]
 
 
 def main() -> None:
@@ -2710,6 +2735,7 @@ def main() -> None:
     if st.session_state.get("flags_for_story") != story_id:
         st.session_state.gherkin_done = False
         st.session_state.framework_done = False
+        st.session_state.step_status = {}
         st.session_state.flags_for_story = story_id
         gherkin_done = False
         framework_done = False
