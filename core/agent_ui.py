@@ -2007,23 +2007,6 @@ def initialize_session() -> None:
     log_event("Session initialized — awaiting user story")
 
 
-def render_status_pills() -> None:
-    cli = claude_path() is not None
-    java = java_available()
-    pills = [
-        ("Claude CLI", "Connected" if cli else "Not installed", "ok" if cli else "bad"),
-        ("Playwright MCP", "Headless", "ok"),
-        ("Allure", "Available" if java else "Disabled", "ok" if java else "warn"),
-    ]
-    html = "".join(
-        f'<span class="status-pill {klass}">'
-        f'<span class="dot"></span><span><strong>{label}</strong> · {value}</span>'
-        f"</span>"
-        for label, value, klass in pills
-    )
-    st.markdown(html, unsafe_allow_html=True)
-
-
 def render_summary_line(stories: int, features: int, tests: int) -> None:
     parts = [
         f'<span><span class="num">{stories}</span> stor{"y" if stories == 1 else "ies"}</span>',
@@ -2400,11 +2383,9 @@ def test_count() -> int:
 def render_sidebar(stories_n: int, story_id: str) -> None:
     with st.sidebar:
         st.markdown(
-            '<div style="font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0.25rem 0 1rem 0;">Workflow</div>',
+            '<div style="font-size: 1.85rem; font-weight: 700; color: #0f172a; letter-spacing: -0.02em; margin: 0.25rem 0 1rem 0;">Workflow</div>',
             unsafe_allow_html=True,
         )
-
-        st.markdown('<div class="section-heading" style="margin-top:0;">User stories</div>', unsafe_allow_html=True)
 
         # ----- Project / story selector (switch between existing stories) -----
         projects = ws.list_projects()
@@ -2415,6 +2396,7 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
                        if current_project() in projects else 0),
             )
             st.session_state.project = sel_proj
+            st.markdown('<div class="section-heading" style="margin-top:0.75rem;">User stories</div>', unsafe_allow_html=True)
             stories = ws.list_stories(sel_proj)
             if stories:
                 names = [p.name for p in stories]
@@ -2704,8 +2686,6 @@ def main() -> None:
         "</div>",
         unsafe_allow_html=True,
     )
-
-    render_status_pills()
 
     # The active project + story are set by the sidebar (upload/paste/selector).
     # Render the sidebar first so a just-selected project is reflected this run.
