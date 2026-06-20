@@ -100,7 +100,7 @@ For an executive-grade write-up of the architecture, see
 ### Install
 ```bash
 git clone <this-repo-url>
-cd QA-Automation-RLAgentAbhi/core
+cd RL-Agentic-QEAutomation/core
 pip install -r requirements.txt
 python -m playwright install chromium
 ```
@@ -111,7 +111,7 @@ into and run from. It ships as pure code with no app-specific data.
 ### Where your data goes — `QA_WORKSPACE_DIR`
 
 On first run, the engine creates a **sibling `workspace/` directory** next to
-`core/` (i.e. `QA-Automation-RLAgentAbhi/workspace/projects/`) and stores every
+`core/` (i.e. `RL-Agentic-QEAutomation/workspace/projects/`) and stores every
 application's automation framework there — POMs, step defs, selectors, and
 reports, one isolated project per application (see
 [AGENT_FLOW.md](AGENT_FLOW.md) for exactly how that isolation works).
@@ -164,7 +164,7 @@ app data) and a sibling **`workspace/`** (the per-client knowledge base,
 created on first run and relocatable via `QA_WORKSPACE_DIR`):
 
 ```
-QA-Automation-RLAgentAbhi/
+RL-Agentic-QEAutomation/
 ├── ARCHITECTURE.md
 ├── README.md
 │
