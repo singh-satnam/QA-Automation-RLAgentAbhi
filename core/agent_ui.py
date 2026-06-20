@@ -38,7 +38,8 @@ def current_project() -> str:
 
 def proj_path(*parts: str) -> Path:
     """Resolve a path inside the active project's folder."""
-    return ws.project_dir(current_project()).joinpath(*parts)
+    staging = st.session_state.get("staging_active", True)
+    return ws.project_dir(current_project(), staging=staging).joinpath(*parts)
 
 
 JRE_HOME = Path(os.environ.get("USERPROFILE", "")) / "tools" / "jdk-21.0.10+7-jre"
@@ -361,7 +362,7 @@ def story_label(text: str) -> str:
 def append_process_log(project: str, msg: str) -> None:
     if not project:
         return
-    proj = ws.project_dir(project)
+    proj = ws.project_dir(project, staging=st.session_state.get("staging_active", True))
     proj.mkdir(parents=True, exist_ok=True)
     stamp = _dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with (proj / "process_log.txt").open("a", encoding="utf-8") as f:
@@ -371,14 +372,14 @@ def append_process_log(project: str, msg: str) -> None:
 def story_feature_count(project: str) -> int:
     if not project:
         return 0
-    p = ws.subdir(project, "feature")
+    p = ws.subdir(project, "feature", staging=st.session_state.get("staging_active", True))
     return len(list(p.glob("*.feature"))) if p.exists() else 0
 
 
 def story_test_count(project: str) -> int:
     if not project:
         return 0
-    p = ws.subdir(project, "test")
+    p = ws.subdir(project, "test", staging=st.session_state.get("staging_active", True))
     return len(list(p.glob("test_*.py"))) if p.exists() else 0
 
 
@@ -423,8 +424,8 @@ def discover_tests(project: str) -> list[dict]:
     Each row: {file: Path, rel: str, name: str, title: str, feature: Path|None}."""
     if not project:
         return []
-    tests_dir = ws.subdir(project, "test")
-    features_dir = ws.subdir(project, "feature")
+    tests_dir = ws.subdir(project, "test", staging=st.session_state.get("staging_active", True))
+    features_dir = ws.subdir(project, "feature", staging=st.session_state.get("staging_active", True))
     if not tests_dir.exists():
         return []
     rows: list[dict] = []
@@ -1115,7 +1116,7 @@ def syntax_check_generated() -> tuple[bool, list[str]]:
     targets.extend([p for p in pages.glob("*.py") if p.name not in ("__init__.py",)])
     targets.extend([p for p in steps.glob("*.py") if p.name != "__init__.py"])
     targets.extend(tests.glob("test_*.py"))
-    proj_root = ws.project_dir(current_project())
+    proj_root = ws.project_dir(current_project(), staging=st.session_state.get("staging_active", True))
     for f in targets:
         try:
             ast.parse(f.read_text(encoding="utf-8"))
@@ -1564,7 +1565,7 @@ def stream_command(cmd, placeholder, log: list[str], story_id: str = "",
     if isinstance(cmd, tuple) and len(cmd) == 2 and isinstance(cmd[1], str):
         cmd, stdin_text = list(cmd[0]), cmd[1]
 
-    proc_cwd = str(cwd or ws.project_dir(current_project()))
+    proc_cwd = str(cwd or ws.project_dir(current_project(), staging=st.session_state.get("staging_active", True)))
     display = _redact_command(cmd)
     log.append(f"$ {display}")
     if story_id:
@@ -1964,6 +1965,7 @@ def initialize_session() -> None:
     st.session_state.last_run = "never"
     st.session_state.gherkin_done = False
     st.session_state.framework_done = False
+    st.session_state.staging_active = True
     # Explicit per-step state overrides for the pipeline cards. Keys: gherkin /
     # framework / run -> one of running|failed (locked/todo/done are derived).
     # Error-condition logic will populate "failed" here later.
@@ -1984,7 +1986,7 @@ def render_summary_line(stories: int, features: int, tests: int) -> None:
 
 
 def render_feature_files(story_id: str) -> None:
-    proj = ws.project_dir(story_id)
+    proj = ws.project_dir(story_id, staging=st.session_state.get("staging_active", True))
     feat_dir = proj / "feature"
     files = sorted(feat_dir.glob("*.feature")) if feat_dir.exists() else []
     if not files:
@@ -2005,7 +2007,7 @@ def render_feature_files(story_id: str) -> None:
 
 
 def render_framework_files(story_id: str) -> None:
-    proj = ws.project_dir(story_id)
+    proj = ws.project_dir(story_id, staging=st.session_state.get("staging_active", True))
     pages_dir = proj / "pages"
     step_dir = proj / "step_defs"
     tests_dir = proj / "test"
@@ -2907,7 +2909,7 @@ def main() -> None:
             log_event(f"Invoking pytest --headed (target={target or 'all'})")
             rc = stream_command(
                 cmd, log_placeholder, st.session_state.log,
-                story_id=project, cwd=ws.project_dir(project),
+                story_id=project, cwd=ws.project_dir(project, staging=st.session_state.get("staging_active", True)),
             )
             log_event(f"Pytest finished — exit code {rc}")
             status.update(label=f"{label} finished (exit {rc})",
