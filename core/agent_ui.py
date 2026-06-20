@@ -2362,6 +2362,7 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
                        if current_project() in projects else 0),
             )
             st.session_state.project = sel_proj
+            st.session_state.staging_active = ws.is_staged(sel_proj)
             st.markdown('<div class="section-heading" style="margin-top:0.75rem;">User stories</div>', unsafe_allow_html=True)
             stories = ws.list_stories(sel_proj)
             if stories:
@@ -2372,6 +2373,7 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
                            if st.session_state.get("active_story") in names else 0),
                 )
                 st.session_state.active_story = sel_story
+                st.session_state.staging_active = ws.is_staged(sel_proj)
 
         # ----- Add a new story (upload OR paste) — one collapsible block. Auto-
         # opens for first-time users (no active story), collapsed once one exists.
@@ -2397,11 +2399,13 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
                         st.error("same user story exists. Proceed to execute the test")
                         st.session_state.project = project
                         st.session_state.active_story = filename
+                        st.session_state.staging_active = False
                     else:
-                        ws.add_story(project, filename, content)
-                        ws.write_pytest_ini(project, ws.extract_base_url(content))
+                        ws.add_story(project, filename, content, staging=True)
+                        ws.write_pytest_ini(project, ws.extract_base_url(content), staging=True)
                         st.session_state.project = project
                         st.session_state.active_story = filename
+                        st.session_state.staging_active = True
                         st.session_state.log = []
                         st.session_state.last_run = "never"
                         st.session_state.last_upload_info = (
@@ -2434,11 +2438,13 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
                         st.error("same user story exists. Proceed to execute the test")
                         st.session_state.project = project
                         st.session_state.active_story = filename
+                        st.session_state.staging_active = False
                     else:
-                        ws.add_story(project, filename, content)
-                        ws.write_pytest_ini(project, ws.extract_base_url(content))
+                        ws.add_story(project, filename, content, staging=True)
+                        ws.write_pytest_ini(project, ws.extract_base_url(content), staging=True)
                         st.session_state.project = project
                         st.session_state.active_story = filename
+                        st.session_state.staging_active = True
                         st.session_state.log = []
                         st.session_state.last_run = "never"
                         st.rerun()
@@ -2824,7 +2830,7 @@ def main() -> None:
     if gen_clicked:
         log_event("Step ① clicked — Generate Gherkin")
         project = current_project()
-        ws.ensure_project_dirs(project)
+        ws.ensure_project_dirs(project, staging=st.session_state.get("staging_active", True))
         story_file = st.session_state.get("active_story", "")
         append_process_log(project, f"Generate Gherkin clicked for {story_file}")
         with st.status("Generating Gherkin…", expanded=False) as status:
@@ -2845,11 +2851,11 @@ def main() -> None:
     if fw_clicked:
         log_event("Step ② clicked — Generate Test Framework")
         project = current_project()
-        ws.ensure_project_dirs(project)
+        ws.ensure_project_dirs(project, staging=st.session_state.get("staging_active", True))
         # Drop in the canonical scaffolding (conftest.py, pages/base_page.py) so
         # the LLM never re-authors boilerplate — it only writes the project's
         # locators / page objects / step defs / tests.
-        scaffold = ws.copy_scaffolding(project)
+        scaffold = ws.copy_scaffolding(project, staging=st.session_state.get("staging_active", True))
         append_process_log(project,
                            "Scaffolding copied: " + (", ".join(scaffold) or "(none)"))
         append_process_log(project, "Generate Test Framework clicked")
@@ -2858,7 +2864,7 @@ def main() -> None:
             or any(proj_path("step_defs").glob("*_steps.py"))
         )
         story_file = st.session_state.get("active_story", "")
-        reuse_idx = ws.load_reuse_index(project)
+        reuse_idx = ws.load_reuse_index(project, staging=st.session_state.get("staging_active", True))
         prompt_base = FRAMEWORK_DELTA_PROMPT if has_framework else FRAMEWORK_PROMPT
         prompt = (prompt_base
                   .replace("{{STORY_FILE}}", story_file)
@@ -2874,7 +2880,7 @@ def main() -> None:
             append_process_log(project, "pytest_plugins: "
                                + (", ".join(registered) if registered else "(none)"))
             ok, errs = syntax_check_generated()
-            ws.rebuild_reuse_index(project)   # refresh reuse map after generation
+            ws.rebuild_reuse_index(project, staging=st.session_state.get("staging_active", True))   # refresh reuse map after generation
             n_tests = len(list(proj_path("test").glob("test_*.py")))
             log_event(f"Framework done — {n_tests} test file(s) written, exit {rc}")
             status.update(label=f"Framework ready — {n_tests} test(s)",
@@ -2895,7 +2901,7 @@ def main() -> None:
         log_event(f"{label} clicked — project {project}")
         append_process_log(project, f"{label} clicked")
         # Fresh timestamped report dir for this run.
-        run_dir = ws.new_report_run_dir(project)
+        run_dir = ws.new_report_run_dir(project, staging=st.session_state.get("staging_active", True))
         # Deterministically register the project's step-def modules. Never rely on
         # the LLM to have populated pytest_plugins — if it didn't, pytest-bdd
         # finds zero steps and every scenario fails with StepDefinitionNotFound.
