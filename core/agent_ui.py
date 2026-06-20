@@ -278,6 +278,30 @@ CUSTOM_CSS = """
     .st-key-step_framework button[data-testid="stBaseButton-primary"],
     .st-key-step_run button[data-testid="stBaseButton-primary"] {
         background: #4f46e5; border: 1px solid #4338ca; color: #ffffff; }
+
+    /* Staging badge */
+    .staging-badge {
+        display: inline-flex; align-items: center; gap: 0.35rem;
+        padding: 0.2rem 0.6rem; border-radius: 999px;
+        font-size: 0.78rem; font-weight: 600;
+    }
+    .staging-badge.staging {
+        background: #fef3c7; color: #92400e; border: 1px solid #fde68a;
+    }
+    .staging-badge.workspace {
+        background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0;
+    }
+
+    /* Promotion dialog */
+    .promotion-card {
+        background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px;
+        padding: 1.2rem 1.4rem; margin: 1rem 0;
+    }
+    .promotion-card .promotion-title {
+        font-size: 1rem; font-weight: 700; color: #92400e; margin-bottom: 0.5rem;
+    }
+    .promotion-card .promotion-msg { color: #78350f; font-size: 0.9rem; margin-bottom: 0.75rem; }
+    .promotion-card .promotion-summary { color: #a16207; font-size: 0.82rem; margin-top: 0.5rem; }
 </style>
 """
 
@@ -2455,7 +2479,16 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
                if st.session_state.get("active_story") else "")
             if current_project() else "Upload or paste a story to begin."
         )
-        st.caption(story_caption)
+        if current_project():
+            staging = st.session_state.get("staging_active", True)
+            badge_class = "staging" if staging else "workspace"
+            badge_label = "Staging" if staging else "Workspace"
+            st.markdown(
+                f'{story_caption} <span class="staging-badge {badge_class}">{badge_label}</span>',
+                unsafe_allow_html=True,
+            )
+        else:
+            st.caption(story_caption)
 
         # ----- Optional test data (JSON / CSV / TSV / Excel) — collapsible -----
         # Auto-opens only when the project already has test data.
@@ -2578,10 +2611,14 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
 
         with st.expander("More", expanded=False):
             if st.button("Reset workspace (delete all generated files)"):
-                clean_artifacts(scope="gherkin")
+                if st.session_state.get("staging_active", True):
+                    ws.discard_staging(current_project())
+                    log_event("Staging workspace reset — all staged files deleted")
+                else:
+                    clean_artifacts(scope="gherkin")
+                    log_event("Workspace reset — all generated files deleted")
                 st.session_state.log = []
                 st.session_state.last_run = "never"
-                log_event("Workspace reset — all generated files deleted")
                 st.rerun()
             if st.button("Clear log"):
                 st.session_state.log = []
@@ -2706,6 +2743,47 @@ def render_stepper(gherkin_done: bool, framework_done: bool) -> tuple[bool, bool
     return clicks["gherkin"], clicks["framework"], clicks["run"]
 
 
+def render_promotion_dialog() -> None:
+    if not st.session_state.get("staging_active", False):
+        return
+    project = current_project()
+    if not project or not ws.is_staged(project):
+        return
+    summary = ws.staging_file_summary(project)
+    if not summary:
+        return
+    summary_parts = [f"{count} {folder}" for folder, count in sorted(summary.items())]
+    summary_text = ", ".join(summary_parts)
+    st.markdown(
+        '<div class="promotion-card">'
+        '<div class="promotion-title">Staging workspace</div>'
+        '<div class="promotion-msg">'
+        "Test completed from staging workspace.<br>"
+        "Move the created project files to workspace. Please confirm."
+        "</div>"
+        f'<div class="promotion-summary">Files to move: {summary_text}</div>'
+        "</div>",
+        unsafe_allow_html=True,
+    )
+    col1, col2, _ = st.columns([1, 1, 3])
+    with col1:
+        if st.button("Yes, promote", key="promote_yes", type="primary"):
+            result = ws.promote_to_workspace(project)
+            st.session_state.staging_active = False
+            copied_n = len(result["copied"])
+            skipped_n = len(result["skipped"])
+            msg = f"Promoted {copied_n} file(s) to workspace/{project}. Staging cleared."
+            if result["skipped"]:
+                msg += f" Skipped {skipped_n} file(s) (already in workspace): " + ", ".join(result["skipped"][:5])
+            st.session_state["promotion_result"] = msg
+            st.rerun()
+    with col2:
+        if st.button("No, keep staging", key="promote_no"):
+            st.info("Files remain in staging. You can re-run tests or promote later.")
+    if "promotion_result" in st.session_state:
+        st.success(st.session_state.pop("promotion_result"))
+
+
 def main() -> None:
     st.set_page_config(page_title="QE Agent", layout="wide", initial_sidebar_state="expanded")
     st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
@@ -2789,6 +2867,7 @@ def main() -> None:
             st.markdown(no_story_msg, unsafe_allow_html=True)
         else:
             render_test_results(story_id)
+            render_promotion_dialog()
 
     # Sidebar "Run All" or per-test "▶ Run" both feed the same handler.
     pytest_target = "all" if run_clicked else runner_target
@@ -2910,6 +2989,8 @@ def main() -> None:
             "Step-def modules registered in conftest pytest_plugins: "
             + (", ".join(registered) if registered else "(none found)")
         )
+        if st.session_state.get("staging_active", True):
+            st.info("Running tests from staging workspace")
         with st.status(f"Running pytest in headed mode — {label} ...", expanded=True) as status:
             cmd = pytest_headed_cmd(project, run_dir, target)
             log_event(f"Invoking pytest --headed (target={target or 'all'})")
