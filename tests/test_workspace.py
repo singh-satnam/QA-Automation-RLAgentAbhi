@@ -214,6 +214,7 @@ def test_promote_to_workspace_additive_merge(tmp_path, monkeypatch):
     assert "pages/page_dashboard.py" in result["copied"]
     assert "feature/login.feature" in result["copied"]
     assert "pages/page_login.py" in result["skipped"]
+    assert result["failed"] == []
     # Workspace file was NOT overwritten
     assert (tmp_path / "workspace" / "RLRG" / "pages" / "page_login.py").read_text(encoding="utf-8") == "existing"
     # New file was copied
@@ -248,6 +249,38 @@ def test_list_staged_projects(tmp_path, monkeypatch):
     workspace.add_story("RLRG", "RLRG_a.txt", "a", staging=True)
     workspace.add_story("saucedemo", "saucedemo_x.txt", "x", staging=True)
     assert workspace.list_staged_projects() == ["RLRG", "saucedemo"]
+
+
+def test_list_projects_includes_staging(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    workspace.add_story("RLRG", "RLRG_a.txt", "a", staging=False)
+    workspace.add_story("NewProj", "NewProj_b.txt", "b", staging=True)
+    projects = workspace.list_projects()
+    assert "RLRG" in projects
+    assert "NewProj" in projects
+
+
+def test_list_stories_includes_staging(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    workspace.add_story("RLRG", "RLRG_a.txt", "a", staging=False)
+    workspace.add_story("RLRG", "RLRG_b.txt", "b", staging=True)
+    stories = workspace.list_stories("RLRG")
+    names = [p.name for p in stories]
+    assert "RLRG_a.txt" in names
+    assert "RLRG_b.txt" in names
+
+
+def test_promote_to_workspace_failed_key_present(tmp_path, monkeypatch):
+    """promote_to_workspace result always contains a 'failed' key."""
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    workspace.ensure_project_dirs("RLRG", staging=True)
+    (tmp_path / "temp_workspace" / "RLRG" / "feature" / "login.feature").write_text("Feature: login", encoding="utf-8")
+    result = workspace.promote_to_workspace("RLRG")
+    assert "failed" in result
+    assert result["failed"] == []
 
 
 def test_staging_file_summary(tmp_path, monkeypatch):

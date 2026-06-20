@@ -1093,7 +1093,7 @@ def discover_run_history(project: str) -> list[dict]:
     if not project:
         return []
     results: list[dict] = []
-    for d in ws.report_runs(project):
+    for d in ws.report_runs(project, staging=st.session_state.get("staging_active", True)):
         verdict = "?"
         cv_json = d / "story_coverage.json"
         if cv_json.exists():
@@ -2136,11 +2136,11 @@ def render_test_runner(story_id: str, framework_ready: bool) -> str | None:
 
 def _runs_with_report(project: str) -> list[Path]:
     """Report run dirs that actually produced a report.html, newest first."""
-    return [d for d in ws.report_runs(project) if (d / "report.html").exists()]
+    return [d for d in ws.report_runs(project, staging=st.session_state.get("staging_active", True)) if (d / "report.html").exists()]
 
 
 def render_test_results(story_id: str) -> None:
-    runs = ws.report_runs(story_id)
+    runs = ws.report_runs(story_id, staging=st.session_state.get("staging_active", True))
     latest = runs[0] if runs else Path()
     html_report = latest / "report.html"
     allure = latest / "allure-results"
@@ -2424,6 +2424,11 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
                         st.session_state.project = project
                         st.session_state.active_story = filename
                         st.session_state.staging_active = False
+                    elif ws.story_exists(project, filename, staging=True):
+                        st.error("same user story exists in staging. Proceed to execute the test")
+                        st.session_state.project = project
+                        st.session_state.active_story = filename
+                        st.session_state.staging_active = True
                     else:
                         ws.add_story(project, filename, content, staging=True)
                         ws.write_pytest_ini(project, ws.extract_base_url(content), staging=True)
@@ -2463,6 +2468,11 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
                         st.session_state.project = project
                         st.session_state.active_story = filename
                         st.session_state.staging_active = False
+                    elif ws.story_exists(project, filename, staging=True):
+                        st.error("same user story exists in staging. Proceed to execute the test")
+                        st.session_state.project = project
+                        st.session_state.active_story = filename
+                        st.session_state.staging_active = True
                     else:
                         ws.add_story(project, filename, content, staging=True)
                         ws.write_pytest_ini(project, ws.extract_base_url(content), staging=True)
@@ -2768,7 +2778,14 @@ def render_promotion_dialog() -> None:
     col1, col2, _ = st.columns([1, 1, 3])
     with col1:
         if st.button("Yes, promote", key="promote_yes", type="primary"):
-            result = ws.promote_to_workspace(project)
+            try:
+                result = ws.promote_to_workspace(project)
+            except OSError as exc:
+                st.error(f"Promotion failed: {exc}")
+                return
+            if result.get("failed"):
+                st.warning(f"Partial promotion: {len(result['failed'])} file(s) failed to copy. Staging preserved.")
+                return
             st.session_state.staging_active = False
             copied_n = len(result["copied"])
             skipped_n = len(result["skipped"])

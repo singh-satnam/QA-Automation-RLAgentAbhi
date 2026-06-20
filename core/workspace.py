@@ -126,17 +126,27 @@ def add_story(project: str, filename: str, content: str, staging: bool = False) 
 
 
 def list_projects() -> list[str]:
-    if not WORKSPACE_DIR.exists():
-        return []
-    return sorted(
-        p.name for p in WORKSPACE_DIR.iterdir()
-        if p.is_dir() and not p.name.startswith((".", "_"))
-    )
+    names: set[str] = set()
+    for root in (WORKSPACE_DIR, TEMP_WORKSPACE_DIR):
+        if root.exists():
+            names.update(
+                p.name for p in root.iterdir()
+                if p.is_dir() and not p.name.startswith((".", "_"))
+            )
+    return sorted(names)
 
 
 def list_stories(project: str) -> list[Path]:
-    us = subdir(project, "user_story")
-    return sorted(us.glob("*.txt")) if us.exists() else []
+    seen: set[str] = set()
+    result: list[Path] = []
+    for staging in (False, True):
+        us = subdir(project, "user_story", staging=staging)
+        if us.exists():
+            for p in sorted(us.glob("*.txt")):
+                if p.name not in seen:
+                    seen.add(p.name)
+                    result.append(p)
+    return sorted(result, key=lambda p: p.name)
 
 
 def extract_base_url(text: str) -> str:
@@ -266,7 +276,7 @@ def promote_to_workspace(project: str) -> dict:
     Removes the staging folder after promotion."""
     staging_pd = project_dir(project, staging=True)
     workspace_pd = project_dir(project, staging=False)
-    result: dict[str, list[str]] = {"copied": [], "skipped": []}
+    result: dict[str, list[str]] = {"copied": [], "skipped": [], "failed": []}
     if not staging_pd.exists():
         return result
     ensure_project_dirs(project, staging=False)
@@ -279,10 +289,14 @@ def promote_to_workspace(project: str) -> dict:
         if dst_file.exists():
             result["skipped"].append(rel_str)
         else:
-            dst_file.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src_file, dst_file)
-            result["copied"].append(rel_str)
-    shutil.rmtree(staging_pd)
+            try:
+                dst_file.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src_file, dst_file)
+                result["copied"].append(rel_str)
+            except OSError:
+                result["failed"].append(rel_str)
+    if not result["failed"]:
+        shutil.rmtree(staging_pd)
     return result
 
 
