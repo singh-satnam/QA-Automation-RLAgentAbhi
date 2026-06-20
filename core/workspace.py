@@ -248,3 +248,74 @@ def rebuild_reuse_index(project: str, staging: bool = False) -> dict:
         json.dumps(index, indent=2, sort_keys=True), encoding="utf-8"
     )
     return index
+
+
+def is_staged(project: str) -> bool:
+    """Check if a project has any staged content in temp_workspace."""
+    pd = project_dir(project, staging=True)
+    if not pd.exists():
+        return False
+    return any(pd.rglob("*"))
+
+
+def promote_to_workspace(project: str) -> dict:
+    """Promote staged files from temp_workspace to workspace.
+
+    Returns dict with "copied" and "skipped" lists (relative paths with forward slashes).
+    Uses additive merge: never overwrites existing files in workspace.
+    Removes the staging folder after promotion."""
+    staging_pd = project_dir(project, staging=True)
+    workspace_pd = project_dir(project, staging=False)
+    result: dict[str, list[str]] = {"copied": [], "skipped": []}
+    if not staging_pd.exists():
+        return result
+    ensure_project_dirs(project, staging=False)
+    for src_file in sorted(staging_pd.rglob("*")):
+        if not src_file.is_file():
+            continue
+        rel = src_file.relative_to(staging_pd)
+        dst_file = workspace_pd / rel
+        rel_str = str(rel).replace("\\", "/")
+        if dst_file.exists():
+            result["skipped"].append(rel_str)
+        else:
+            dst_file.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src_file, dst_file)
+            result["copied"].append(rel_str)
+    shutil.rmtree(staging_pd)
+    return result
+
+
+def discard_staging(project: str) -> None:
+    """Remove all staged content for a project (delete temp_workspace/<project>/)."""
+    pd = project_dir(project, staging=True)
+    if pd.exists():
+        shutil.rmtree(pd)
+
+
+def list_staged_projects() -> list[str]:
+    """Return a sorted list of project names that have staged content."""
+    if not TEMP_WORKSPACE_DIR.exists():
+        return []
+    return sorted(
+        p.name for p in TEMP_WORKSPACE_DIR.iterdir()
+        if p.is_dir() and not p.name.startswith((".", "_"))
+    )
+
+
+def staging_file_summary(project: str) -> dict[str, int]:
+    """Count files in each subdirectory of a staged project.
+
+    Returns dict mapping subdirectory names to file counts.
+    Omits empty subdirectories."""
+    pd = project_dir(project, staging=True)
+    summary: dict[str, int] = {}
+    if not pd.exists():
+        return summary
+    for sub in PROJECT_SUBDIRS:
+        d = pd / sub
+        if d.exists():
+            count = sum(1 for f in d.iterdir() if f.is_file())
+            if count > 0:
+                summary[sub] = count
+    return summary

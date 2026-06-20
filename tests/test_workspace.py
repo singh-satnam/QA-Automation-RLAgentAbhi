@@ -182,3 +182,82 @@ def test_write_pytest_ini_staging(tmp_path, monkeypatch):
     assert "temp_workspace" in str(ini)
     assert ini.exists()
     assert "base_url = https://example.com" in ini.read_text(encoding="utf-8")
+
+
+def test_is_staged_detects_temp_workspace_content(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    assert workspace.is_staged("RLRG") is False
+    workspace.add_story("RLRG", "RLRG_login.txt", "body", staging=True)
+    assert workspace.is_staged("RLRG") is True
+
+
+def test_is_staged_false_for_empty_dir(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    (tmp_path / "temp_workspace" / "RLRG").mkdir(parents=True)
+    assert workspace.is_staged("RLRG") is False
+
+
+def test_promote_to_workspace_additive_merge(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    # Create a file in workspace that already exists
+    workspace.ensure_project_dirs("RLRG", staging=False)
+    (tmp_path / "workspace" / "RLRG" / "pages" / "page_login.py").write_text("existing", encoding="utf-8")
+    # Create staging files — one overlapping, one new
+    workspace.ensure_project_dirs("RLRG", staging=True)
+    (tmp_path / "temp_workspace" / "RLRG" / "pages" / "page_login.py").write_text("staged", encoding="utf-8")
+    (tmp_path / "temp_workspace" / "RLRG" / "pages" / "page_dashboard.py").write_text("new", encoding="utf-8")
+    (tmp_path / "temp_workspace" / "RLRG" / "feature" / "login.feature").write_text("Feature: login", encoding="utf-8")
+    result = workspace.promote_to_workspace("RLRG")
+    # page_login.py was skipped (already exists), page_dashboard.py and login.feature were copied
+    assert "pages/page_dashboard.py" in result["copied"]
+    assert "feature/login.feature" in result["copied"]
+    assert "pages/page_login.py" in result["skipped"]
+    # Workspace file was NOT overwritten
+    assert (tmp_path / "workspace" / "RLRG" / "pages" / "page_login.py").read_text(encoding="utf-8") == "existing"
+    # New file was copied
+    assert (tmp_path / "workspace" / "RLRG" / "pages" / "page_dashboard.py").read_text(encoding="utf-8") == "new"
+    # Staging folder is gone
+    assert not (tmp_path / "temp_workspace" / "RLRG").exists()
+
+
+def test_promote_creates_workspace_dirs_if_missing(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    workspace.ensure_project_dirs("RLRG", staging=True)
+    (tmp_path / "temp_workspace" / "RLRG" / "feature" / "login.feature").write_text("Feature: login", encoding="utf-8")
+    result = workspace.promote_to_workspace("RLRG")
+    assert "feature/login.feature" in result["copied"]
+    assert (tmp_path / "workspace" / "RLRG" / "feature" / "login.feature").exists()
+
+
+def test_discard_staging_removes_temp_folder(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    workspace.add_story("RLRG", "RLRG_login.txt", "body", staging=True)
+    assert workspace.is_staged("RLRG") is True
+    workspace.discard_staging("RLRG")
+    assert workspace.is_staged("RLRG") is False
+    assert not (tmp_path / "temp_workspace" / "RLRG").exists()
+
+
+def test_list_staged_projects(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    workspace.add_story("RLRG", "RLRG_a.txt", "a", staging=True)
+    workspace.add_story("saucedemo", "saucedemo_x.txt", "x", staging=True)
+    assert workspace.list_staged_projects() == ["RLRG", "saucedemo"]
+
+
+def test_staging_file_summary(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    workspace.ensure_project_dirs("RLRG", staging=True)
+    pd = tmp_path / "temp_workspace" / "RLRG"
+    (pd / "feature" / "login.feature").write_text("Feature: login", encoding="utf-8")
+    (pd / "feature" / "signup.feature").write_text("Feature: signup", encoding="utf-8")
+    (pd / "pages" / "page_login.py").write_text("class LoginPage: ...", encoding="utf-8")
+    summary = workspace.staging_file_summary("RLRG")
+    assert summary["feature"] == 2
+    assert summary["pages"] == 1
