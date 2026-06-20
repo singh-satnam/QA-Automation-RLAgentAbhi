@@ -128,3 +128,57 @@ def test_load_reuse_index_default_when_missing(tmp_path, monkeypatch):
     workspace.ensure_project_dirs("RLRG")
     idx = workspace.load_reuse_index("RLRG")
     assert idx == {"page_methods": {}, "step_defs": {}, "selectors": {}, "flows": {}}
+
+
+def test_project_dir_staging_resolves_to_temp_workspace(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    assert workspace.project_dir("RLRG") == tmp_path / "workspace" / "RLRG"
+    assert workspace.project_dir("RLRG", staging=True) == tmp_path / "temp_workspace" / "RLRG"
+
+
+def test_ensure_project_dirs_staging_creates_in_temp(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    pd = workspace.ensure_project_dirs("RLRG", staging=True)
+    assert pd == tmp_path / "temp_workspace" / "RLRG"
+    for sub in workspace.PROJECT_SUBDIRS:
+        assert (pd / sub).is_dir()
+    assert not (tmp_path / "workspace" / "RLRG").exists()
+
+
+def test_add_story_staging_writes_to_temp(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    created, path = workspace.add_story("RLRG", "RLRG_login.txt", "story body", staging=True)
+    assert created is True
+    assert "temp_workspace" in str(path)
+    assert path.read_text(encoding="utf-8") == "story body"
+    assert not (tmp_path / "workspace" / "RLRG" / "user_story" / "RLRG_login.txt").exists()
+
+
+def test_story_exists_staging_checks_temp(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    workspace.add_story("RLRG", "RLRG_login.txt", "body", staging=True)
+    assert workspace.story_exists("RLRG", "RLRG_login.txt", staging=True) is True
+    assert workspace.story_exists("RLRG", "RLRG_login.txt", staging=False) is False
+
+
+def test_copy_scaffolding_staging(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    written = workspace.copy_scaffolding("RLRG", staging=True)
+    assert len(written) > 0
+    assert (tmp_path / "temp_workspace" / "RLRG" / "conftest.py").exists()
+    assert not (tmp_path / "workspace" / "RLRG" / "conftest.py").exists()
+
+
+def test_write_pytest_ini_staging(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    workspace.ensure_project_dirs("RLRG", staging=True)
+    ini = workspace.write_pytest_ini("RLRG", "https://example.com", staging=True)
+    assert "temp_workspace" in str(ini)
+    assert ini.exists()
+    assert "base_url = https://example.com" in ini.read_text(encoding="utf-8")

@@ -9,6 +9,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 WORKSPACE_DIR = Path(os.environ.get("QA_WORKSPACE_DIR", PROJECT_ROOT.parent / "workspace"))
+TEMP_WORKSPACE_DIR = Path(os.environ.get("QA_TEMP_WORKSPACE_DIR", PROJECT_ROOT.parent / "temp_workspace"))
 TEMPLATES_DIR = PROJECT_ROOT / "templates"
 
 # Canonical subfolders of a project, per the design diagram (singular names).
@@ -61,24 +62,25 @@ def sanitize_filename(name: str) -> str:
     return base
 
 
-def project_dir(project: str) -> Path:
-    return WORKSPACE_DIR / project
+def project_dir(project: str, staging: bool = False) -> Path:
+    root = TEMP_WORKSPACE_DIR if staging else WORKSPACE_DIR
+    return root / project
 
 
-def subdir(project: str, name: str) -> Path:
-    return project_dir(project) / name
+def subdir(project: str, name: str, staging: bool = False) -> Path:
+    return project_dir(project, staging=staging) / name
 
 
-def ensure_project_dirs(project: str) -> Path:
+def ensure_project_dirs(project: str, staging: bool = False) -> Path:
     """Create only the missing canonical subfolders. Idempotent; never clears
     an existing folder. Returns the project dir."""
-    pd = project_dir(project)
+    pd = project_dir(project, staging=staging)
     for sub in PROJECT_SUBDIRS:
         (pd / sub).mkdir(parents=True, exist_ok=True)
     return pd
 
 
-def copy_scaffolding(project: str) -> list[str]:
+def copy_scaffolding(project: str, staging: bool = False) -> list[str]:
     """Copy the canonical, project-agnostic scaffolding into the project,
     overwriting any stale copy so harness fixes always propagate.
 
@@ -87,8 +89,8 @@ def copy_scaffolding(project: str) -> list[str]:
     conftest stays the empty tuple form; sync_pytest_plugins() fills it from the
     step-def modules on disk after generation. Returns the project-relative paths
     written (for logging)."""
-    ensure_project_dirs(project)
-    pd = project_dir(project)
+    ensure_project_dirs(project, staging=staging)
+    pd = project_dir(project, staging=staging)
     written: list[str] = []
     mapping = {
         TEMPLATES_DIR / "conftest.py": pd / "conftest.py",
@@ -107,16 +109,16 @@ def copy_scaffolding(project: str) -> list[str]:
     return written
 
 
-def story_exists(project: str, filename: str) -> bool:
+def story_exists(project: str, filename: str, staging: bool = False) -> bool:
     """Duplicate check: True if a story with this filename already exists."""
-    return (subdir(project, "user_story") / filename).exists()
+    return (subdir(project, "user_story", staging=staging) / filename).exists()
 
 
-def add_story(project: str, filename: str, content: str) -> tuple[bool, Path]:
+def add_story(project: str, filename: str, content: str, staging: bool = False) -> tuple[bool, Path]:
     """Write a NEW story file. Returns (created, path). If the file already
     exists it is left untouched and (False, path) is returned."""
-    ensure_project_dirs(project)
-    path = subdir(project, "user_story") / filename
+    ensure_project_dirs(project, staging=staging)
+    path = subdir(project, "user_story", staging=staging) / filename
     if path.exists():
         return False, path
     path.write_text(content, encoding="utf-8")
@@ -145,10 +147,10 @@ def extract_base_url(text: str) -> str:
     return m.group(0) if m else ""
 
 
-def write_pytest_ini(project: str, base_url: str) -> Path:
+def write_pytest_ini(project: str, base_url: str, staging: bool = False) -> Path:
     """Ensure workspace/<project>/pytest.ini exists with base_url + testpaths=test.
     Updates base_url in place if the file already exists; never duplicates keys."""
-    ini = project_dir(project) / "pytest.ini"
+    ini = project_dir(project, staging=staging) / "pytest.ini"
     if ini.exists():
         text = ini.read_text(encoding="utf-8")
         new_text, n = re.subn(r"(?m)^base_url\s*=.*$", f"base_url = {base_url}", text, count=1)
@@ -161,34 +163,34 @@ def write_pytest_ini(project: str, base_url: str) -> Path:
     return ini
 
 
-def new_report_run_dir(project: str, run_id: str | None = None) -> Path:
+def new_report_run_dir(project: str, run_id: str | None = None, staging: bool = False) -> Path:
     """Create and return report/<timestamp>/ for a fresh run.
     run_id is overridable for deterministic tests."""
     stamp = run_id or _dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    d = subdir(project, "report") / stamp
+    d = subdir(project, "report", staging=staging) / stamp
     d.mkdir(parents=True, exist_ok=True)
     return d
 
 
-def report_runs(project: str) -> list[Path]:
+def report_runs(project: str, staging: bool = False) -> list[Path]:
     """All report run folders for the project, newest first."""
-    rep = subdir(project, "report")
+    rep = subdir(project, "report", staging=staging)
     if not rep.exists():
         return []
     return sorted((d for d in rep.iterdir() if d.is_dir()),
                   key=lambda p: p.name, reverse=True)
 
 
-def reuse_index_path(project: str) -> Path:
-    return project_dir(project) / REUSE_INDEX_NAME
+def reuse_index_path(project: str, staging: bool = False) -> Path:
+    return project_dir(project, staging=staging) / REUSE_INDEX_NAME
 
 
 def _empty_reuse_index() -> dict:
     return {"page_methods": {}, "step_defs": {}, "selectors": {}, "flows": {}}
 
 
-def load_reuse_index(project: str) -> dict:
-    p = reuse_index_path(project)
+def load_reuse_index(project: str, staging: bool = False) -> dict:
+    p = reuse_index_path(project, staging=staging)
     if not p.exists():
         return _empty_reuse_index()
     try:
@@ -200,11 +202,11 @@ def load_reuse_index(project: str) -> dict:
         return _empty_reuse_index()
 
 
-def rebuild_reuse_index(project: str) -> dict:
+def rebuild_reuse_index(project: str, staging: bool = False) -> dict:
     """Scan pages/, step_defs/, mcp-selectors/ and write reuse_index.json.
     Best-effort and tolerant of parse errors. Existing files always win on
     first-seen so the index is stable across rebuilds."""
-    pd = project_dir(project)
+    pd = project_dir(project, staging=staging)
     index = _empty_reuse_index()
 
     pages = pd / "pages"
@@ -242,7 +244,7 @@ def rebuild_reuse_index(project: str) -> dict:
                 for key in data:
                     index["selectors"].setdefault(str(key), f.name)
 
-    reuse_index_path(project).write_text(
+    reuse_index_path(project, staging=staging).write_text(
         json.dumps(index, indent=2, sort_keys=True), encoding="utf-8"
     )
     return index
