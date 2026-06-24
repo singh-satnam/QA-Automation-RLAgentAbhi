@@ -1,0 +1,1 @@
+{"uuid": "1d4b3ddb-9587-4020-a0ed-94adf440e655", "befores": [{"name": "pytestbdd_stepdef_when_the user clicks on \"(?P<product_name>[^\"]+)\"$", "status": "passed", "start": 1782122340154, "stop": 1782122340154}], "start": 1782122340154, "stop": 1782122365451}

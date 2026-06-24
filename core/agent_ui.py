@@ -17,7 +17,6 @@ import time
 from pathlib import Path
 
 import streamlit as st
-import streamlit.components.v1 as components
 
 import workspace as ws
 import step_report
@@ -36,10 +35,19 @@ def current_project() -> str:
     return st.session_state.get("project", "")
 
 
+def _is_staging() -> bool:
+    """Whether the current project is in staging mode. Falls back to checking
+    the filesystem when session state has no explicit flag."""
+    val = st.session_state.get("staging_active")
+    if val is not None:
+        return val
+    project = current_project()
+    return ws.is_staged(project) if project else False
+
+
 def proj_path(*parts: str) -> Path:
     """Resolve a path inside the active project's folder."""
-    staging = st.session_state.get("staging_active", True)
-    return ws.project_dir(current_project(), staging=staging).joinpath(*parts)
+    return ws.project_dir(current_project(), staging=_is_staging()).joinpath(*parts)
 
 
 JRE_HOME = Path(os.environ.get("USERPROFILE", "")) / "tools" / "jdk-21.0.10+7-jre"
@@ -386,7 +394,7 @@ def story_label(text: str) -> str:
 def append_process_log(project: str, msg: str) -> None:
     if not project:
         return
-    proj = ws.project_dir(project, staging=st.session_state.get("staging_active", True))
+    proj = ws.project_dir(project, staging=_is_staging())
     proj.mkdir(parents=True, exist_ok=True)
     stamp = _dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with (proj / "process_log.txt").open("a", encoding="utf-8") as f:
@@ -396,14 +404,14 @@ def append_process_log(project: str, msg: str) -> None:
 def story_feature_count(project: str) -> int:
     if not project:
         return 0
-    p = ws.subdir(project, "feature", staging=st.session_state.get("staging_active", True))
+    p = ws.subdir(project, "feature", staging=_is_staging())
     return len(list(p.glob("*.feature"))) if p.exists() else 0
 
 
 def story_test_count(project: str) -> int:
     if not project:
         return 0
-    p = ws.subdir(project, "test", staging=st.session_state.get("staging_active", True))
+    p = ws.subdir(project, "test", staging=_is_staging())
     return len(list(p.glob("test_*.py"))) if p.exists() else 0
 
 
@@ -448,8 +456,8 @@ def discover_tests(project: str) -> list[dict]:
     Each row: {file: Path, rel: str, name: str, title: str, feature: Path|None}."""
     if not project:
         return []
-    tests_dir = ws.subdir(project, "test", staging=st.session_state.get("staging_active", True))
-    features_dir = ws.subdir(project, "feature", staging=st.session_state.get("staging_active", True))
+    tests_dir = ws.subdir(project, "test", staging=_is_staging())
+    features_dir = ws.subdir(project, "feature", staging=_is_staging())
     if not tests_dir.exists():
         return []
     rows: list[dict] = []
@@ -675,14 +683,20 @@ def _compute_verdict(
             e for e in buckets[key] if e.get("passed") is False
         )
 
-    if failed_assertions or pytest_exit_code != 0:
+    if pytest_exit_code != 0:
         if failed_assertions:
             reasons.append(
                 f"{len(failed_assertions)} assertion(s) failed"
             )
-        if pytest_exit_code != 0:
-            reasons.append(f"pytest exited with code {pytest_exit_code}")
+        reasons.append(f"pytest exited with code {pytest_exit_code}")
         return ("FAIL", "fail", reasons)
+
+    if failed_assertions:
+        reasons.append(
+            f"{len(failed_assertions)} soft assertion(s) did not match "
+            f"(test still passed)"
+        )
+        return ("PARTIAL", "partial", reasons)
 
     # NOTE: we deliberately do NOT auto-fail on a backend-error string appearing
     # in the captured output. Whether a message like "already exists" means PASS
@@ -849,17 +863,17 @@ def build_inline_coverage_report(
     buckets = _classify_captured(entries)
     verdict, css_class, reasons = _compute_verdict(buckets, pytest_exit_code)
 
-    story_text = ""
-    stories = ws.list_stories(story_id) if story_id else []
-    if stories:
-        try:
-            story_text = stories[0].read_text(encoding="utf-8")
-        except OSError:
-            story_text = ""
-
-    pytest_html_exists = (
-        proj_path("report", run_timestamp, "report.html").exists() if story_id else False
-    )
+    # Extract feature/scenario from the step trace (authoritative source)
+    steps = _load_step_trace()
+    feature_name = ""
+    scenario_name = ""
+    for s in steps:
+        if not feature_name and s.get("feature"):
+            feature_name = s["feature"]
+        if not scenario_name and s.get("test"):
+            scenario_name = s["test"]
+        if feature_name and scenario_name:
+            break
 
     # ---- JSON ----
     summary = {
@@ -894,45 +908,22 @@ def build_inline_coverage_report(
 
     sections_html = []
 
-    # Story snippet
-    if story_text.strip():
-        sections_html.append(
-            f"<section><h2>User story</h2>"
-            f"<pre style='white-space:pre-wrap;font-family:inherit;"
-            f"margin:0;color:#334155'>{_esc(story_text.strip())}</pre></section>"
+    # Feature / Scenario from the test run
+    if feature_name or scenario_name:
+        scenario_html = (
+            f"<section><h2>Scenario</h2>"
+            f"<div style='margin:0;color:#334155;font-size:0.95rem'>"
+            f"<strong>Feature:</strong> {_esc(feature_name)}<br>"
+            f"<strong>Scenario:</strong> {_esc(scenario_name)}"
+            f"</div></section>"
         )
-
-    # Pytest summary
-    sections_html.append(
-        f"<section><h2>pytest run</h2>"
-        f"<div class='pytest-summary'>"
-        f"  <div><strong>{pytest_exit_code}</strong>exit code</div>"
-        f"  <div><strong>{'yes' if pytest_html_exists else 'no'}</strong>"
-        f"report.html present</div>"
-        f"  <div><strong>{summary['counts']['assertions']}</strong>"
-        f"assertions recorded</div>"
-        f"  <div><strong>{summary['counts']['values_captured']}</strong>"
-        f"values captured</div>"
-        f"</div></section>"
-    )
+        sections_html.append(scenario_html)
 
     # Step-by-step results (summary cards + filterable status table + failure
     # gallery). Headline section, rendered first.
     step_section = step_report.render_step_report(_load_step_trace(), _img_data_uri)
     if step_section:
         sections_html.insert(0, step_section)
-
-    # Prerequisites
-    if buckets["prerequisites"]:
-        sections_html.append(
-            "<section><h2>Prerequisites (blocking checks)</h2>" +
-            _render_assertion_table(
-                buckets["prerequisites"],
-                [("Label", "label"), ("Reason", "reason"),
-                 ("Evidence", "evidence"), ("Verdict", "verdict"),
-                 ("Time", "ts")],
-            ) + "</section>"
-        )
 
     # Missing items
     if buckets["missing"]:
@@ -1010,7 +1001,7 @@ def build_inline_coverage_report(
 <body><div class="container">
   <h1>Story coverage report</h1>
   <div class="subtitle">Run: <code>{_esc(run_timestamp)}</code> ·
-       Story: <code>{_esc(story_id)}</code></div>
+       Scenario: <code>{_esc(scenario_name or story_id)}</code></div>
   <div class="verdict-banner {css_class}">
     <span class="label">{verdict_label}</span>
     <ul>{reasons_html}</ul>
@@ -1021,7 +1012,7 @@ def build_inline_coverage_report(
     # ---- Markdown ----
     md_lines = [
         f"# Story coverage — {verdict}",
-        f"_Run: `{run_timestamp}` · Story: `{story_id}`_",
+        f"_Run: `{run_timestamp}` · Scenario: `{scenario_name or story_id}`_",
         "",
         f"**Verdict:** {verdict_label}",
         "",
@@ -1093,7 +1084,7 @@ def discover_run_history(project: str) -> list[dict]:
     if not project:
         return []
     results: list[dict] = []
-    for d in ws.report_runs(project, staging=st.session_state.get("staging_active", True)):
+    for d in ws.report_runs(project, staging=_is_staging()):
         verdict = "?"
         cv_json = d / "story_coverage.json"
         if cv_json.exists():
@@ -1140,7 +1131,7 @@ def syntax_check_generated() -> tuple[bool, list[str]]:
     targets.extend([p for p in pages.glob("*.py") if p.name not in ("__init__.py",)])
     targets.extend([p for p in steps.glob("*.py") if p.name != "__init__.py"])
     targets.extend(tests.glob("test_*.py"))
-    proj_root = ws.project_dir(current_project(), staging=st.session_state.get("staging_active", True))
+    proj_root = ws.project_dir(current_project(), staging=_is_staging())
     for f in targets:
         try:
             ast.parse(f.read_text(encoding="utf-8"))
@@ -1589,7 +1580,7 @@ def stream_command(cmd, placeholder, log: list[str], story_id: str = "",
     if isinstance(cmd, tuple) and len(cmd) == 2 and isinstance(cmd[1], str):
         cmd, stdin_text = list(cmd[0]), cmd[1]
 
-    proc_cwd = str(cwd or ws.project_dir(current_project(), staging=st.session_state.get("staging_active", True)))
+    proc_cwd = str(cwd or ws.project_dir(current_project(), staging=_is_staging()))
     display = _redact_command(cmd)
     log.append(f"$ {display}")
     if story_id:
@@ -2010,7 +2001,7 @@ def render_summary_line(stories: int, features: int, tests: int) -> None:
 
 
 def render_feature_files(story_id: str) -> None:
-    proj = ws.project_dir(story_id, staging=st.session_state.get("staging_active", True))
+    proj = ws.project_dir(story_id, staging=_is_staging())
     feat_dir = proj / "feature"
     files = sorted(feat_dir.glob("*.feature")) if feat_dir.exists() else []
     if not files:
@@ -2031,7 +2022,7 @@ def render_feature_files(story_id: str) -> None:
 
 
 def render_framework_files(story_id: str) -> None:
-    proj = ws.project_dir(story_id, staging=st.session_state.get("staging_active", True))
+    proj = ws.project_dir(story_id, staging=_is_staging())
     pages_dir = proj / "pages"
     step_dir = proj / "step_defs"
     tests_dir = proj / "test"
@@ -2118,8 +2109,8 @@ def render_test_runner(story_id: str, framework_ready: bool) -> str | None:
                 unsafe_allow_html=True,
             )
         with cols[2]:
-            if st.button("▶ Run", key=f"runtest_{story_id}_{idx}", use_container_width=True,
-                         help=f"Run only {row['name']} (headed)"):
+            if st.button("▶ Run", key=f"runtest_{story_id}_{idx}", type="primary",
+                         use_container_width=True, help=f"Run only {row['name']} (headed)"):
                 clicked = row["rel"]
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -2136,11 +2127,11 @@ def render_test_runner(story_id: str, framework_ready: bool) -> str | None:
 
 def _runs_with_report(project: str) -> list[Path]:
     """Report run dirs that actually produced a report.html, newest first."""
-    return [d for d in ws.report_runs(project, staging=st.session_state.get("staging_active", True)) if (d / "report.html").exists()]
+    return [d for d in ws.report_runs(project, staging=_is_staging()) if (d / "report.html").exists()]
 
 
 def render_test_results(story_id: str) -> None:
-    runs = ws.report_runs(story_id, staging=st.session_state.get("staging_active", True))
+    runs = ws.report_runs(story_id, staging=_is_staging())
     latest = runs[0] if runs else Path()
     html_report = latest / "report.html"
     allure = latest / "allure-results"
@@ -2164,6 +2155,9 @@ def render_test_results(story_id: str) -> None:
             )
         except OSError:
             pass
+
+    # Staging promotion — top of tab so it's always visible
+    render_promotion_dialog()
 
     # ============================================================
     # RUN HISTORY — every ③ Run press snapshots its outputs into
@@ -2228,9 +2222,9 @@ def render_test_results(story_id: str) -> None:
                     st.session_state.pop(f"hist_view_{story_id}", None)
                     st.rerun()
                 try:
-                    components.html(
+                    st.iframe(
                         chosen["html_path"].read_text(encoding="utf-8", errors="replace"),
-                        height=900, scrolling=True,
+                        height=900,
                     )
                     # When viewing a historical run, skip the "latest" render below.
                     return
@@ -2253,15 +2247,17 @@ def render_test_results(story_id: str) -> None:
             try:
                 import json as _json
                 verdict_data = _json.loads(coverage_json.read_text(encoding="utf-8"))
-                verdict = verdict_data.get("overall_verdict", "")
-                summary = verdict_data.get("test_summary") or {}
+                verdict = verdict_data.get("verdict", "")
+                counts = verdict_data.get("counts") or {}
+                reasons = verdict_data.get("reasons") or []
                 badge_class = {"PASS": "ok", "FAIL": "bad", "PARTIAL": "warn"}.get(verdict, "warn")
                 summary_line = (
-                    f"{summary.get('passed', '?')} passed · "
-                    f"{summary.get('failed', '?')} failed · "
-                    f"{summary.get('skipped', '?')} skipped"
-                    if summary else ""
+                    f"{counts.get('assertions', '?')} assertions · "
+                    f"{counts.get('values_captured', '?')} values captured"
+                    if counts else ""
                 )
+                if reasons:
+                    summary_line = reasons[0]
                 st.markdown(
                     f'<div class="status-pill {badge_class}" '
                     f'style="font-size:0.95rem;padding:0.5rem 1rem;margin-bottom:0.75rem;">'
@@ -2277,7 +2273,7 @@ def render_test_results(story_id: str) -> None:
         if coverage_html.exists():
             try:
                 html_body = coverage_html.read_text(encoding="utf-8", errors="replace")
-                components.html(html_body, height=1100, scrolling=True)
+                st.iframe(html_body, height=1100)
                 st.download_button(
                     "⬇ Download story_coverage.html",
                     data=coverage_html.read_bytes(),
@@ -2334,7 +2330,7 @@ def render_test_results(story_id: str) -> None:
                 except OSError as exc:
                     st.error(f"Could not read report.html: {exc}")
                     continue
-                components.html(run_html, height=700, scrolling=True)
+                st.iframe(run_html, height=700)
                 st.download_button(
                     "⬇ Download report.html",
                     data=run_html,
@@ -2343,13 +2339,6 @@ def render_test_results(story_id: str) -> None:
                     key=f"dl_{run.name}",
                 )
 
-    if allure.exists():
-        st.markdown('<div class="section-heading">Serve the Allure dashboard</div>', unsafe_allow_html=True)
-        java_prefix = "" if shutil.which("java") else (
-            "$env:JAVA_HOME = \"$env:USERPROFILE\\tools\\jdk-21.0.10+7-jre\"; "
-            "$env:PATH = \"$env:JAVA_HOME\\bin;$env:PATH\"; "
-        )
-        st.code(f"{java_prefix}npx allure-commandline serve {allure}", language="powershell")
     if screenshots.exists():
         shots = sorted(screenshots.glob("*.png"))[-6:]
         if shots:
@@ -2358,6 +2347,14 @@ def render_test_results(story_id: str) -> None:
             for idx, shot in enumerate(shots):
                 with cols[idx % len(cols)]:
                     st.image(str(shot), caption=shot.name, use_container_width=True)
+
+    if allure.exists():
+        st.markdown('<div class="section-heading">Serve the Allure dashboard</div>', unsafe_allow_html=True)
+        java_prefix = "" if shutil.which("java") else (
+            "$env:JAVA_HOME = \"$env:USERPROFILE\\tools\\jdk-21.0.10+7-jre\"; "
+            "$env:PATH = \"$env:JAVA_HOME\\bin;$env:PATH\"; "
+        )
+        st.code(f"{java_prefix}npx allure-commandline serve {allure}", language="powershell")
 
 
 def feature_count() -> int:
@@ -2490,7 +2487,7 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
             if current_project() else "Upload or paste a story to begin."
         )
         if current_project():
-            staging = st.session_state.get("staging_active", True)
+            staging = _is_staging()
             badge_class = "staging" if staging else "workspace"
             badge_label = "Staging" if staging else "Workspace"
             st.markdown(
@@ -2621,7 +2618,7 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
 
         with st.expander("More", expanded=False):
             if st.button("Reset workspace (delete all generated files)"):
-                if st.session_state.get("staging_active", True):
+                if _is_staging():
                     ws.discard_staging(current_project())
                     log_event("Staging workspace reset — all staged files deleted")
                 else:
@@ -2754,10 +2751,11 @@ def render_stepper(gherkin_done: bool, framework_done: bool) -> tuple[bool, bool
 
 
 def render_promotion_dialog() -> None:
-    if not st.session_state.get("staging_active", False):
-        return
     project = current_project()
-    if not project or not ws.is_staged(project):
+    if not project:
+        return
+    staging = _is_staging()
+    if not staging or not ws.is_staged(project):
         return
     summary = ws.staging_file_summary(project)
     if not summary:
@@ -2777,7 +2775,7 @@ def render_promotion_dialog() -> None:
     )
     col1, col2, _ = st.columns([1, 1, 3])
     with col1:
-        if st.button("Yes, promote", key="promote_yes", type="primary"):
+        if st.button("Yes, promote", key=f"promote_yes_{project}", type="primary"):
             try:
                 result = ws.promote_to_workspace(project)
             except OSError as exc:
@@ -2795,7 +2793,7 @@ def render_promotion_dialog() -> None:
             st.session_state["promotion_result"] = msg
             st.rerun()
     with col2:
-        if st.button("No, keep staging", key="promote_no"):
+        if st.button("No, keep staging", key=f"promote_no_{project}"):
             st.info("Files remain in staging. You can re-run tests or promote later.")
     if "promotion_result" in st.session_state:
         st.success(st.session_state.pop("promotion_result"))
@@ -2857,7 +2855,7 @@ def main() -> None:
     gen_clicked, fw_clicked, run_clicked = render_stepper(gherkin_done, framework_done)
 
     tab_features, tab_framework, tab_runner, tab_results = st.tabs(
-        ["Feature files", "Framework code", "Run Tests", "Test results"]
+        ["Feature files", "Framework code", "Run Tests", "Test Results"]
     )
     no_story_msg = (
         '<div class="empty-state"><strong>No project selected.</strong><br>'
@@ -2884,10 +2882,27 @@ def main() -> None:
             st.markdown(no_story_msg, unsafe_allow_html=True)
         else:
             render_test_results(story_id)
-            render_promotion_dialog()
 
-    # Sidebar "Run All" or per-test "▶ Run" both feed the same handler.
-    pytest_target = "all" if run_clicked else runner_target
+    # Stepper "Run Tests" button navigates to the Run Tests tab
+    if run_clicked:
+        st.session_state["active_tab"] = "Run Tests"
+        st.rerun()
+
+    # Programmatic tab switch via JS after all tabs are rendered
+    if st.session_state.pop("active_tab", None) == "Run Tests":
+        st.html(
+            "<script>"
+            "const tabs = window.parent.document.querySelectorAll("
+            "'button[role=tab]');"
+            "tabs.forEach(function(t){"
+            "  if(t.textContent.trim()==='Run Tests') t.click();"
+            "});"
+            "</script>",
+            unsafe_allow_javascript=True,
+        )
+
+    # Per-test "▶ Run" or "▶▶ Run All" from the Run Tests tab.
+    pytest_target = runner_target
 
     # Double-click guard: if the same Run target fired less than 5 seconds ago,
     # ignore the second click. Prevents two parallel pytest processes from
@@ -2926,7 +2941,7 @@ def main() -> None:
     if gen_clicked:
         log_event("Step ① clicked — Generate Gherkin")
         project = current_project()
-        ws.ensure_project_dirs(project, staging=st.session_state.get("staging_active", True))
+        ws.ensure_project_dirs(project, staging=_is_staging())
         story_file = st.session_state.get("active_story", "")
         append_process_log(project, f"Generate Gherkin clicked for {story_file}")
         with st.status("Generating Gherkin…", expanded=False) as status:
@@ -2947,11 +2962,11 @@ def main() -> None:
     if fw_clicked:
         log_event("Step ② clicked — Generate Test Framework")
         project = current_project()
-        ws.ensure_project_dirs(project, staging=st.session_state.get("staging_active", True))
+        ws.ensure_project_dirs(project, staging=_is_staging())
         # Drop in the canonical scaffolding (conftest.py, pages/base_page.py) so
         # the LLM never re-authors boilerplate — it only writes the project's
         # locators / page objects / step defs / tests.
-        scaffold = ws.copy_scaffolding(project, staging=st.session_state.get("staging_active", True))
+        scaffold = ws.copy_scaffolding(project, staging=_is_staging())
         append_process_log(project,
                            "Scaffolding copied: " + (", ".join(scaffold) or "(none)"))
         append_process_log(project, "Generate Test Framework clicked")
@@ -2960,7 +2975,7 @@ def main() -> None:
             or any(proj_path("step_defs").glob("*_steps.py"))
         )
         story_file = st.session_state.get("active_story", "")
-        reuse_idx = ws.load_reuse_index(project, staging=st.session_state.get("staging_active", True))
+        reuse_idx = ws.load_reuse_index(project, staging=_is_staging())
         prompt_base = FRAMEWORK_DELTA_PROMPT if has_framework else FRAMEWORK_PROMPT
         prompt = (prompt_base
                   .replace("{{STORY_FILE}}", story_file)
@@ -2976,7 +2991,7 @@ def main() -> None:
             append_process_log(project, "pytest_plugins: "
                                + (", ".join(registered) if registered else "(none)"))
             ok, errs = syntax_check_generated()
-            ws.rebuild_reuse_index(project, staging=st.session_state.get("staging_active", True))   # refresh reuse map after generation
+            ws.rebuild_reuse_index(project, staging=_is_staging())   # refresh reuse map after generation
             n_tests = len(list(proj_path("test").glob("test_*.py")))
             log_event(f"Framework done — {n_tests} test file(s) written, exit {rc}")
             status.update(label=f"Framework ready — {n_tests} test(s)",
@@ -2996,8 +3011,32 @@ def main() -> None:
         label = "Run All Tests" if is_all else f"Run {Path(pytest_target).name}"
         log_event(f"{label} clicked — project {project}")
         append_process_log(project, f"{label} clicked")
+
+        # Pre-run check: verify project directory and test files exist
+        staging = _is_staging()
+        project_root = ws.project_dir(project, staging=staging)
+        if not project_root.exists():
+            # Staging dir gone (promoted) — try workspace
+            ws_root = ws.project_dir(project, staging=False)
+            if ws_root.exists():
+                staging = False
+                st.session_state.staging_active = False
+                project_root = ws_root
+                log_event(f"Staging dir not found — switched to workspace: {ws_root}")
+            else:
+                st.error(f"Project directory not found in staging or workspace. "
+                         f"Please re-generate the framework.")
+                pytest_target = None
+        if pytest_target:
+            test_dir = project_root / "test"
+            if not test_dir.exists() or not list(test_dir.glob("test_*.py")):
+                st.error(f"No test files found in {test_dir}. "
+                         f"Please generate the test framework first.")
+                pytest_target = None
+
+    if pytest_target:
         # Fresh timestamped report dir for this run.
-        run_dir = ws.new_report_run_dir(project, staging=st.session_state.get("staging_active", True))
+        run_dir = ws.new_report_run_dir(project, staging=staging)
         # Deterministically register the project's step-def modules. Never rely on
         # the LLM to have populated pytest_plugins — if it didn't, pytest-bdd
         # finds zero steps and every scenario fails with StepDefinitionNotFound.
@@ -3006,14 +3045,14 @@ def main() -> None:
             "Step-def modules registered in conftest pytest_plugins: "
             + (", ".join(registered) if registered else "(none found)")
         )
-        if st.session_state.get("staging_active", True):
+        if staging:
             st.info("Running tests from staging workspace")
         with st.status(f"Running pytest in headed mode — {label} ...", expanded=True) as status:
             cmd = pytest_headed_cmd(project, run_dir, target)
             log_event(f"Invoking pytest --headed (target={target or 'all'})")
             rc = stream_command(
                 cmd, log_placeholder, st.session_state.log,
-                story_id=project, cwd=ws.project_dir(project, staging=st.session_state.get("staging_active", True)),
+                story_id=project, cwd=ws.project_dir(project, staging=staging),
             )
             log_event(f"Pytest finished — exit code {rc}")
             status.update(label=f"{label} finished (exit {rc})",

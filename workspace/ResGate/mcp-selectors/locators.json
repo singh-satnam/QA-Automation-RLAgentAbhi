@@ -1,24 +1,49 @@
 {
   "login": {
-    "email_input": "input[placeholder='Please enter your Email ID']",
-    "password_input": "input[placeholder='Please enter your password']",
-    "sign_in_button": "button:has-text('Sign In')"
+    "email_input": "role=textbox[name='Email *']",
+    "password_input": "role=textbox[name='Password *']",
+    "sign_in_button": "role=button[name='Sign In']",
+    "session_expired_alert": "role=alert",
+    "session_expired_close": "role=button[name='Close']"
   },
-  "my_organizations": {
-    "heading": "h1:has-text('My Organizations')",
-    "add_new_button": "div.create-organization-container[role='button']",
-    "org_card": ".organization-card",
-    "org_card_name": "h3.project-name"
+  "my_projects": {
+    "page_heading": "role=heading[name=/My Projects/]",
+    "all_project_cards": "div:has(> div img[alt='regular Project'])",
+    "project_card_name": "h3"
   },
-  "create_organization": {
-    "heading": "h3:has-text('Create Organization')",
-    "name_input": "#OrganizationName",
-    "description_input": "#Organizationdescription",
-    "create_button": "button.create-org-btn"
+  "project_page": {
+    "page_heading": "h3:has-text('{project_name}')",
+    "breadcrumb_project": "text='> {project_name}'",
+    "tab_my_products": "role=tab[name='My Products']",
+    "tab_available_products": "role=tab[name='Available Products']",
+    "tab_project_details": "role=tab[name='Project Details']",
+    "tab_by_name": "role=tab[name='{tab_name}']",
+    "my_products_tab": "role=tab[name='My Products']",
+    "my_products_heading": "h3:has-text('My Products'), div:has-text('My Products')",
+    "product_card_name": "div[class] >> text='{product_name}'",
+    "product_card_status": "div:has(div:text-is('{product_name}')) >> div:text-is('{status}')"
   },
-  "toast": {
-    "error": ".toast-error",
-    "success": ".toast-success",
-    "message": ".toast-message"
+  "product_details": {
+    "product_heading": "role=heading[name='{product_name}'][level=4]",
+    "product_status": "div:has-text('{status}')",
+    "connect_remote_desktop": "img[alt='Remote Desktop Product']",
+    "connect_section": "text='CONNECT'"
+  },
+  "create_instance": {
+    "page_heading": "h3:has-text('Product Name')",
+    "product_name_input": "role=textbox[name='product name']",
+    "study_selection_item": "text='{study_name}'",
+    "availability_zone_dropdown": "select[aria-label='dropdownForParamObj']",
+    "ebs_volume_size_input": "input[aria-label='KmsArnKeyInputField']",
+    "instance_type_dropdown": "select[aria-label='dropdownForInstanceType']",
+    "launch_now_button": "button:has-text('LAUNCH NOW')"
+  },
+  "common": {
+    "success_toast": ".toast-success, .toast-message, div[role='alert']"
+  },
+  "amazon_dcv": {
+    "ip_button": "button:has-text('ip-')",
+    "disconnect_menuitem": "role=menuitem[name='Disconnect']",
+    "connection_closed_message": "text='The connection has been closed.'"
   }
 }

@@ -1,90 +1,130 @@
 [
   {
-    "test": "Successfully create a new organization",
-    "feature": "Create a New Organization",
+    "test": "Launch a Standard Linux Remote Desktop instance with project configuration",
+    "feature": "Create New Standard Linux Remote Desktop Instance",
     "index": 0,
     "keyword": "Given",
     "name": "the user navigates to the login page \"https://ra-demo.rlcatalyst.com/login\"",
     "status": "passed"
   },
   {
-    "test": "Successfully create a new organization",
-    "feature": "Create a New Organization",
+    "test": "Launch a Standard Linux Remote Desktop instance with project configuration",
+    "feature": "Create New Standard Linux Remote Desktop Instance",
     "index": 1,
-    "keyword": "And",
-    "name": "the user clicks the Sign In link",
-    "status": "passed"
-  },
-  {
-    "test": "Successfully create a new organization",
-    "feature": "Create a New Organization",
-    "index": 2,
     "keyword": "And",
     "name": "the user enters valid credentials:",
     "status": "passed"
   },
   {
-    "test": "Successfully create a new organization",
-    "feature": "Create a New Organization",
-    "index": 3,
-    "keyword": "When",
-    "name": "the user clicks the Login button",
-    "status": "passed"
-  },
-  {
-    "test": "Successfully create a new organization",
-    "feature": "Create a New Organization",
-    "index": 4,
+    "test": "Launch a Standard Linux Remote Desktop instance with project configuration",
+    "feature": "Create New Standard Linux Remote Desktop Instance",
+    "index": 2,
     "keyword": "Then",
-    "name": "the user should be redirected to the My Organizations page",
+    "name": "the user clicks on the Sign In button",
     "status": "passed"
   },
   {
-    "test": "Successfully create a new organization",
-    "feature": "Create a New Organization",
+    "test": "Launch a Standard Linux Remote Desktop instance with project configuration",
+    "feature": "Create New Standard Linux Remote Desktop Instance",
+    "index": 3,
+    "keyword": "Then",
+    "name": "the user should be landing on the \"My Projects\" page",
+    "status": "passed"
+  },
+  {
+    "test": "Launch a Standard Linux Remote Desktop instance with project configuration",
+    "feature": "Create New Standard Linux Remote Desktop Instance",
+    "index": 4,
+    "keyword": "And",
+    "name": "the user verifies the \"Automation Testing\" card is present",
+    "status": "passed"
+  },
+  {
+    "test": "Launch a Standard Linux Remote Desktop instance with project configuration",
+    "feature": "Create New Standard Linux Remote Desktop Instance",
     "index": 5,
     "keyword": "When",
-    "name": "the user clicks the Add New button",
+    "name": "the user clicks on the \"Automation Testing\" project",
     "status": "passed"
   },
   {
-    "test": "Successfully create a new organization",
-    "feature": "Create a New Organization",
+    "test": "Launch a Standard Linux Remote Desktop instance with project configuration",
+    "feature": "Create New Standard Linux Remote Desktop Instance",
     "index": 6,
     "keyword": "Then",
-    "name": "the Create Organization form should be displayed",
+    "name": "the \"Automation Testing\" page is displayed",
     "status": "passed"
   },
   {
-    "test": "Successfully create a new organization",
-    "feature": "Create a New Organization",
+    "test": "Launch a Standard Linux Remote Desktop instance with project configuration",
+    "feature": "Create New Standard Linux Remote Desktop Instance",
     "index": 7,
-    "keyword": "When",
-    "name": "the user enters the organization details:",
+    "keyword": "And",
+    "name": "the page should have the following tabs:",
     "status": "passed"
   },
   {
-    "test": "Successfully create a new organization",
-    "feature": "Create a New Organization",
+    "test": "Launch a Standard Linux Remote Desktop instance with project configuration",
+    "feature": "Create New Standard Linux Remote Desktop Instance",
     "index": 8,
     "keyword": "And",
-    "name": "the user clicks the Create Organization button",
+    "name": "the user clicks on \"LAUNCH NOW\" under \"Standard Linux Remote Desktop\"",
     "status": "passed"
   },
   {
-    "test": "Successfully create a new organization",
-    "feature": "Create a New Organization",
+    "test": "Launch a Standard Linux Remote Desktop instance with project configuration",
+    "feature": "Create New Standard Linux Remote Desktop Instance",
     "index": 9,
     "keyword": "Then",
-    "name": "a new organization should be created successfully",
+    "name": "the create new instance page is displayed",
     "status": "passed"
   },
   {
-    "test": "Successfully create a new organization",
-    "feature": "Create a New Organization",
+    "test": "Launch a Standard Linux Remote Desktop instance with project configuration",
+    "feature": "Create New Standard Linux Remote Desktop Instance",
     "index": 10,
     "keyword": "And",
-    "name": "the organization named \"Anthropic Org\" should be displayed in the list of organizations on the My Organizations page",
+    "name": "the user fills the Product Name as \"Demo-RD+<random_number>\"",
+    "status": "passed"
+  },
+  {
+    "test": "Launch a Standard Linux Remote Desktop instance with project configuration",
+    "feature": "Create New Standard Linux Remote Desktop Instance",
+    "index": 11,
+    "keyword": "And",
+    "name": "the user selects the below option under Study Selection:",
+    "status": "passed"
+  },
+  {
+    "test": "Launch a Standard Linux Remote Desktop instance with project configuration",
+    "feature": "Create New Standard Linux Remote Desktop Instance",
+    "index": 12,
+    "keyword": "And",
+    "name": "the user fills the below details under project configuration:",
+    "status": "passed"
+  },
+  {
+    "test": "Launch a Standard Linux Remote Desktop instance with project configuration",
+    "feature": "Create New Standard Linux Remote Desktop Instance",
+    "index": 13,
+    "keyword": "And",
+    "name": "the user clicks on \"LAUNCH NOW\" at the top right side of the page",
+    "status": "passed"
+  },
+  {
+    "test": "Launch a Standard Linux Remote Desktop instance with project configuration",
+    "feature": "Create New Standard Linux Remote Desktop Instance",
+    "index": 14,
+    "keyword": "Then",
+    "name": "the user lands on the \"My Products\" tab with the message \"Standard Linux Remote Desktop launched successfully!\"",
+    "status": "passed"
+  },
+  {
+    "test": "Launch a Standard Linux Remote Desktop instance with project configuration",
+    "feature": "Create New Standard Linux Remote Desktop Instance",
+    "index": 15,
+    "keyword": "And",
+    "name": "the \"My Products\" tab should have the entered Product Name as one of the Product containers",
     "status": "passed"
   }
 ]

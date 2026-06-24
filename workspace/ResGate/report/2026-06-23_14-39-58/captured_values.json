@@ -1,0 +1,94 @@
+[
+  {
+    "kind": "value",
+    "label": "Login URL",
+    "value": "https://ra-demo.rlcatalyst.com/login",
+    "ts": "14:40:06"
+  },
+  {
+    "kind": "value",
+    "label": "Login Email",
+    "value": "piyusha.varshney+r@relevancelab.com",
+    "ts": "14:40:06"
+  },
+  {
+    "kind": "value",
+    "label": "Login Password",
+    "value": "***",
+    "ts": "14:40:06"
+  },
+  {
+    "kind": "value",
+    "label": "Sign In clicked",
+    "value": "Yes",
+    "ts": "14:40:06"
+  },
+  {
+    "kind": "prerequisite",
+    "label": "Landing on My Projects",
+    "passed": true,
+    "reason": "Expected to land on 'My Projects' page after login",
+    "evidence": "Current URL: https://ra-demo.rlcatalyst.com/researcher",
+    "ts": "14:40:07"
+  },
+  {
+    "kind": "assertion",
+    "label": "Project card 'Automation Testing' is present",
+    "expected": "visible",
+    "actual": "visible",
+    "passed": true,
+    "ts": "14:40:07"
+  },
+  {
+    "kind": "value",
+    "label": "Clicked project",
+    "value": "Automation Testing",
+    "ts": "14:40:08"
+  },
+  {
+    "kind": "assertion",
+    "label": "Project page 'Automation Testing' displayed",
+    "expected": "displayed",
+    "actual": "displayed",
+    "passed": true,
+    "ts": "14:40:08"
+  },
+  {
+    "kind": "assertion",
+    "label": "Tab 'Project Details' is visible",
+    "expected": "visible",
+    "actual": "visible",
+    "passed": true,
+    "ts": "14:40:08"
+  },
+  {
+    "kind": "assertion",
+    "label": "Tab 'Available Products' is visible",
+    "expected": "visible",
+    "actual": "visible",
+    "passed": true,
+    "ts": "14:40:08"
+  },
+  {
+    "kind": "assertion",
+    "label": "Tab 'My Products' is visible",
+    "expected": "visible",
+    "actual": "visible",
+    "passed": true,
+    "ts": "14:40:08"
+  },
+  {
+    "kind": "assertion",
+    "label": "Tab 'Shared Services' is visible",
+    "expected": "visible",
+    "actual": "visible",
+    "passed": true,
+    "ts": "14:40:08"
+  },
+  {
+    "kind": "value",
+    "label": "LAUNCH NOW clicked for",
+    "value": "Standard Linux Remote Desktop",
+    "ts": "14:40:08"
+  }
+]

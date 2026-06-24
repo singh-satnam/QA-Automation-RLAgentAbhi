@@ -182,12 +182,16 @@ def new_report_run_dir(project: str, run_id: str | None = None, staging: bool = 
     return d
 
 
+_RUN_DIR_RE = re.compile(r"^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}$")
+
+
 def report_runs(project: str, staging: bool = False) -> list[Path]:
-    """All report run folders for the project, newest first."""
+    """All report run folders for the project, newest first.
+    Only returns directories matching the YYYY-MM-DD_HH-MM-SS naming convention."""
     rep = subdir(project, "report", staging=staging)
     if not rep.exists():
         return []
-    return sorted((d for d in rep.iterdir() if d.is_dir()),
+    return sorted((d for d in rep.iterdir() if d.is_dir() and _RUN_DIR_RE.match(d.name)),
                   key=lambda p: p.name, reverse=True)
 
 
@@ -268,20 +272,27 @@ def is_staged(project: str) -> bool:
     return any(pd.rglob("*"))
 
 
-def promote_to_workspace(project: str) -> dict:
+def promote_to_workspace(project: str, max_retries: int = 3) -> dict:
     """Promote staged files from temp_workspace to workspace.
 
-    Returns dict with "copied" and "skipped" lists (relative paths with forward slashes).
+    Returns dict with "copied", "skipped", and "failed" lists (relative paths).
     Uses additive merge: never overwrites existing files in workspace.
-    Removes the staging folder after promotion."""
+    Retries failed copies up to max_retries times before giving up.
+    Removes the staging folder only when all files are moved successfully."""
     staging_pd = project_dir(project, staging=True)
     workspace_pd = project_dir(project, staging=False)
     result: dict[str, list[str]] = {"copied": [], "skipped": [], "failed": []}
     if not staging_pd.exists():
         return result
     ensure_project_dirs(project, staging=False)
+
+    pending = []
     for src_file in sorted(staging_pd.rglob("*")):
         if not src_file.is_file():
+            continue
+        # Skip __pycache__ — .pyc files embed the original source path
+        # and will cause FileNotFoundError after promotion
+        if "__pycache__" in src_file.parts:
             continue
         rel = src_file.relative_to(staging_pd)
         dst_file = workspace_pd / rel
@@ -289,14 +300,28 @@ def promote_to_workspace(project: str) -> dict:
         if dst_file.exists():
             result["skipped"].append(rel_str)
         else:
+            pending.append((src_file, dst_file, rel_str))
+
+    for attempt in range(max_retries):
+        still_failing = []
+        for src_file, dst_file, rel_str in pending:
             try:
                 dst_file.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(src_file, dst_file)
                 result["copied"].append(rel_str)
             except OSError:
-                result["failed"].append(rel_str)
+                still_failing.append((src_file, dst_file, rel_str))
+        pending = still_failing
+        if not pending:
+            break
+
+    result["failed"] = [rel_str for _, _, rel_str in pending]
     if not result["failed"]:
         shutil.rmtree(staging_pd)
+        # Clean __pycache__ in workspace so Python recompiles with correct paths
+        for cache_dir in workspace_pd.rglob("__pycache__"):
+            if cache_dir.is_dir():
+                shutil.rmtree(cache_dir, ignore_errors=True)
     return result
 
 

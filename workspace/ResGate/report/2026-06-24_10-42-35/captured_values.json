@@ -1,0 +1,146 @@
+[
+  {
+    "kind": "value",
+    "label": "Login URL",
+    "value": "https://ra-demo.rlcatalyst.com/login",
+    "ts": "10:42:41"
+  },
+  {
+    "kind": "value",
+    "label": "Email entered",
+    "value": "piyusha.varshney+r@relevancelab.com",
+    "ts": "10:42:41"
+  },
+  {
+    "kind": "value",
+    "label": "Password entered",
+    "value": "***",
+    "ts": "10:42:41"
+  },
+  {
+    "kind": "value",
+    "label": "Sign In clicked",
+    "value": true,
+    "ts": "10:42:42"
+  },
+  {
+    "kind": "prerequisite",
+    "label": "Landing on My Projects",
+    "passed": true,
+    "reason": "Did not land on My Projects page after login",
+    "evidence": "current_url=https://ra-demo.rlcatalyst.com/researcher",
+    "ts": "10:42:42"
+  },
+  {
+    "kind": "value",
+    "label": "Landed on page",
+    "value": "My Projects",
+    "ts": "10:42:42"
+  },
+  {
+    "kind": "assertion",
+    "label": "Project card 'Automation Testing' is present",
+    "expected": "True",
+    "actual": "True",
+    "passed": true,
+    "ts": "10:42:43"
+  },
+  {
+    "kind": "value",
+    "label": "Clicked project",
+    "value": "Automation Testing",
+    "ts": "10:42:43"
+  },
+  {
+    "kind": "assertion",
+    "label": "Project page 'Automation Testing' displayed",
+    "expected": "True",
+    "actual": "True",
+    "passed": true,
+    "ts": "10:42:46"
+  },
+  {
+    "kind": "value",
+    "label": "Clicked tab",
+    "value": "My Products",
+    "ts": "10:42:46"
+  },
+  {
+    "kind": "assertion",
+    "label": "Product 'Demo-RD-1096' is available",
+    "expected": "True",
+    "actual": "True",
+    "passed": true,
+    "ts": "10:42:46"
+  },
+  {
+    "kind": "value",
+    "label": "Product 'Demo-RD-1096' actual status",
+    "value": "Active",
+    "ts": "10:42:46"
+  },
+  {
+    "kind": "assertion",
+    "label": "Product 'Demo-RD-1096' status",
+    "expected": "Active",
+    "actual": "Active",
+    "passed": true,
+    "ts": "10:42:46"
+  },
+  {
+    "kind": "value",
+    "label": "Clicked product",
+    "value": "Demo-RD-1096",
+    "ts": "10:42:46"
+  },
+  {
+    "kind": "prerequisite",
+    "label": "Product details page for 'Demo-RD-1096'",
+    "passed": true,
+    "reason": "Did not land on product details page for Demo-RD-1096",
+    "evidence": "current_url=https://ra-demo.rlcatalyst.com/product/Automation%2520Testing/Demo-RD-1096;ppId=pp-krpuul3hqjvvi?projectStatus=Active",
+    "ts": "10:42:47"
+  },
+  {
+    "kind": "value",
+    "label": "Product details heading",
+    "value": "Demo-RD-1096",
+    "ts": "10:42:47"
+  },
+  {
+    "kind": "prerequisite",
+    "label": "'Stop' button available",
+    "passed": true,
+    "reason": "'Stop' button not found \u2014 instance may already be stopped",
+    "evidence": "current_url=https://ra-demo.rlcatalyst.com/product/Automation%2520Testing/Demo-RD-1096;ppId=pp-krpuul3hqjvvi?projectStatus=Active",
+    "ts": "10:42:47"
+  },
+  {
+    "kind": "value",
+    "label": "Clicked 'Stop' under 'CONNECT'",
+    "value": true,
+    "ts": "10:42:48"
+  },
+  {
+    "kind": "value",
+    "label": "Stop toast message",
+    "value": "Demo-RD-1096 : stop process initiated successfully",
+    "ts": "10:42:48"
+  },
+  {
+    "kind": "assertion",
+    "label": "Stop process initiated successfully",
+    "expected": "True",
+    "actual": "True",
+    "passed": true,
+    "ts": "10:42:48"
+  },
+  {
+    "kind": "assertion",
+    "label": "'Start' option available under 'CONNECT'",
+    "expected": "True",
+    "actual": "True",
+    "passed": true,
+    "ts": "10:43:06"
+  }
+]

@@ -24,7 +24,7 @@ import pytest
 from playwright.sync_api import sync_playwright
 
 # --- per-feature step modules (filled by the harness, not by hand) -----------
-pytest_plugins = ('step_defs.create_organization_steps',)
+pytest_plugins = ('step_defs.create_new_instance_steps', 'step_defs.login_and_launch_machine_steps')
 
 # --- project paths -----------------------------------------------------------
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -253,7 +253,7 @@ class TabRegistry:
         with self._context.expect_page() as info:
             yield holder
         new_page = info.value
-        new_page.wait_for_load_state("domcontentloaded")
+        new_page.wait_for_load_state("domcontentloaded", timeout=60000)
         self._tabs[label] = new_page
         self._active = new_page
         holder.page = new_page

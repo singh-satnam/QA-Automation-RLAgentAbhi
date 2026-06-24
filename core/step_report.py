@@ -132,8 +132,12 @@ def render_step_report(steps: list[dict], img_resolver=None) -> str:
         for s in failures:
             uri = img_resolver(s.get("screenshot", "")) if img_resolver else ""
             shot = (
-                f'<a href="{uri}" target="_blank">'
-                f'<img class="sr-shot" src="{uri}" alt="failure screenshot"></a>'
+                f'<img class="sr-shot" src="{uri}" alt="failure screenshot"'
+                f' style="cursor:pointer" title="Click to open full screenshot"'
+                f" onclick=\"(function(img){{var w=window.open('','_blank');"
+                f"w.document.write('<html><body style=\\\"margin:0;background:#111\\\">"
+                f"<img src=\\\"'+img.src+'\\\" style=\\\"max-width:100%;height:auto\\\">"
+                f"</body></html>');w.document.close()}})(this)\">"
                 if uri else '<div class="sr-noshot">(no screenshot)</div>'
             )
             err = _esc(s.get("error", "")) or "(no error captured)"

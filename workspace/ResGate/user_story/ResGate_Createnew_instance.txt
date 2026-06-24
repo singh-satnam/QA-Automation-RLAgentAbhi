@@ -1,0 +1,27 @@
+Given the user navigates to the login page
+	 https://ra-demo.rlcatalyst.com/login
+And enters valid credentials:
+	Email: piyusha.varshney+r@relevancelab.com
+	Password: Pass@123
+Then the user click on the Sign In button
+Then the user should be landing on the 'My Projects' page
+And verify 'Automation Testing' card is present 
+When user clicks on the 'Automation Testing' project
+Then 'Automation Testing' page is displayed
+This page should have following tabs 
+	'Project Details','Available Products','My Products','Shared Services'
+And now click on 'LAUNCH NOW' under 'Standard Linux Remote Desktop'
+On Next Page fill all the details for create new instance
+	Product Name :- Demo-RD+<random number>
+Select below option under Study Selection
+	GenomicsStudyData(read-only, Internal)
+
+Now user will fill the below details under project configuration
+
+User will select the  AvailabilityZone from the list
+	AvailabilityZone:- us-east-2a
+	EBSVolumeSize: 80
+	InstanceType: t3.small
+After fill all the details user will click on LAUNCH NOW top of the right side on page.
+After creating the instance user land on My Products tab with the message of Standard Linux Remote Desktop successfully launched.
+Then 'My Products' tab should have entered Product Name as one of the Product containers

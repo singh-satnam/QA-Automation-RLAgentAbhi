@@ -1,0 +1,56 @@
+[
+  {
+    "kind": "value",
+    "label": "Login URL",
+    "value": "https://ra-demo.rlcatalyst.com/login",
+    "ts": "14:25:11"
+  },
+  {
+    "kind": "value",
+    "label": "Login Email",
+    "value": "piyusha.varshney+r@relevancelab.com",
+    "ts": "14:25:11"
+  },
+  {
+    "kind": "value",
+    "label": "Login Password",
+    "value": "***",
+    "ts": "14:25:11"
+  },
+  {
+    "kind": "value",
+    "label": "Sign In clicked",
+    "value": "Yes",
+    "ts": "14:25:12"
+  },
+  {
+    "kind": "prerequisite",
+    "label": "Landing on My Projects",
+    "passed": true,
+    "reason": "Expected to land on 'My Projects' page after login",
+    "evidence": "Current URL: https://ra-demo.rlcatalyst.com/researcher",
+    "ts": "14:25:12"
+  },
+  {
+    "kind": "assertion",
+    "label": "Project card 'Automation Testing' is present",
+    "expected": "visible",
+    "actual": "visible",
+    "passed": true,
+    "ts": "14:25:13"
+  },
+  {
+    "kind": "value",
+    "label": "Clicked project",
+    "value": "Automation Testing",
+    "ts": "14:25:13"
+  },
+  {
+    "kind": "assertion",
+    "label": "Project page 'Automation Testing' displayed",
+    "expected": "displayed",
+    "actual": "not displayed",
+    "passed": false,
+    "ts": "14:25:28"
+  }
+]

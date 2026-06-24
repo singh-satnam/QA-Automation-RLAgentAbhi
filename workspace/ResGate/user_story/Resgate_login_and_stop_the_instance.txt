@@ -1,0 +1,23 @@
+Given the user navigates to the login page
+	 https://ra-demo.rlcatalyst.com/login
+And enters valid credentials:
+	Email: piyusha.varshney+r@relevancelab.com
+	Password: Pass@123
+Then the user click on the Sign In button
+Then the user should be landing on the 'My Projects' page
+And verify 'Automation Testing' card is present 
+When user clicks on the 'Automation Testing' project
+Then 'Automation Testing' page is displayed
+ Now user click on 'My Products' tab
+
+verify 'Demo-RD-1096' is available
+And the 'Demo-RD-1096' is in green'Active'status
+Then click on 'Demo-RD-1096'
+
+After that user land on product details of 'Demo-RD-1096'product
+
+Now click on 'Stop'under 'CONNECT'
+
+Now user will  land on product details page with message of stop process initiated successfully.
+
+And now validate the 'start' option is available under Connect

@@ -1,0 +1,22 @@
+Given the user navigates to the login page
+	 https://ra-demo.rlcatalyst.com/login
+And enters valid credentials:
+	Email: piyusha.varshney+r@relevancelab.com
+	Password: Pass@123
+Then the user click on the Sign In button
+Then the user should be landing on the 'My Projects' page
+And verify 'Automation Testing' card is present 
+When user clicks on the 'Automation Testing' project
+Then 'Automation Testing' page is displayed
+ Now user click on My Products tab
+verify 'Demo-RD-04' is available
+And the 'Demo-RD-04' is in green'Active'status
+Then click on 'Demo-RD-04'
+
+After that user land on product details of 'Demo-RD-04'
+
+Now click on 'Remote Desktop' under 'CONNECT'
+And a new browser tab is opened with the new Amazon instance
+And on the new tab click on the option with text starting with 'ip-'
+And a menuitem will be displayed, Click on the 'Disconnect' option
+And now user will see the 'The connection has been closed' message on the page.
