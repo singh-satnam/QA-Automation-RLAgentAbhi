@@ -1616,3 +1616,114 @@
 [2026-06-24 09:39:24] - Generated html report: file:///D:/D_WS/QE_Agent_Abhi_SS_A/QA-Automation/QA-Automation-RLAgentAbhi/workspace/Resgate/report/2026-06-24_09-39-08/report.html -
 [2026-06-24 09:39:24] ============================= 1 passed in 15.37s ==============================
 [2026-06-24 09:39:25] exit 0 after 16s
+[2026-06-25 07:32:10] Run test_create_new_instance.py clicked
+[2026-06-25 07:32:10] exec: 'C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe' -m pytest -v --headed '--html=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_07-32-10\report.html' --self-contained-html '--alluredir=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_07-32-10\allure-results' test/test_create_new_instance.py
+[2026-06-25 07:32:10] pid 4652 started
+[2026-06-25 07:32:11] ============================= test session starts =============================
+[2026-06-25 07:32:11] platform win32 -- Python 3.14.4, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe
+[2026-06-25 07:32:11] cachedir: .pytest_cache
+[2026-06-25 07:32:11] baseurl: https://ra-demo.rlcatalyst.com/login
+[2026-06-25 07:32:11] metadata: {'Python': '3.14.4', 'Platform': 'Windows-11-10.0.26200-SP0', 'Packages': {'pytest': '9.0.3', 'pluggy': '1.6.0'}, 'Plugins': {'allure-pytest': '2.16.0', 'anyio': '4.13.0', 'base-url': '2.1.0', 'bdd': '8.1.0', 'html': '4.2.0', 'metadata': '3.1.1', 'playwright': '0.8.0', 'xdist': '3.8.0'}, 'AWS_REGION': 'us-east-1', 'JAVA_HOME': 'C:\\Program Files\\OpenLogic\\jdk-8.0.482.08-hotspot\\', 'Base URL': 'https://ra-demo.rlcatalyst.com/login'}
+[2026-06-25 07:32:11] rootdir: D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate
+[2026-06-25 07:32:11] configfile: pytest.ini
+[2026-06-25 07:32:11] plugins: allure-pytest-2.16.0, anyio-4.13.0, base-url-2.1.0, bdd-8.1.0, html-4.2.0, metadata-3.1.1, playwright-0.8.0, xdist-3.8.0
+[2026-06-25 07:32:11] collecting ... collected 1 item
+[2026-06-25 07:32:11] 
+[2026-06-25 07:32:25] test/test_create_new_instance.py::test_launch_standard_linux_remote_desktop PASSED [100%]
+[2026-06-25 07:32:25] 
+[2026-06-25 07:32:25] - Generated html report: file:///D:/D_WS/QE_Agent_Abhi_SS_A/QA-Automation/QA-Automation-RLAgentAbhi/workspace/Resgate/report/2026-06-25_07-32-10/report.html -
+[2026-06-25 07:32:25] ============================= 1 passed in 13.47s ==============================
+[2026-06-25 07:32:25] exit 0 after 14s
+[2026-06-25 08:30:40] Run test_login_and_launch_machine.py clicked
+[2026-06-25 08:30:40] exec: 'C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe' -m pytest -v --headed '--html=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_08-30-40\report.html' --self-contained-html '--alluredir=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_08-30-40\allure-results' test/test_login_and_launch_machine.py
+[2026-06-25 08:30:40] pid 33500 started
+[2026-06-25 08:30:41] ============================= test session starts =============================
+[2026-06-25 08:30:41] platform win32 -- Python 3.14.4, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe
+[2026-06-25 08:30:41] cachedir: .pytest_cache
+[2026-06-25 08:30:41] baseurl: https://ra-demo.rlcatalyst.com/login
+[2026-06-25 08:30:41] metadata: {'Python': '3.14.4', 'Platform': 'Windows-11-10.0.26200-SP0', 'Packages': {'pytest': '9.0.3', 'pluggy': '1.6.0'}, 'Plugins': {'allure-pytest': '2.16.0', 'anyio': '4.13.0', 'base-url': '2.1.0', 'bdd': '8.1.0', 'html': '4.2.0', 'metadata': '3.1.1', 'playwright': '0.8.0', 'xdist': '3.8.0'}, 'AWS_REGION': 'us-east-1', 'JAVA_HOME': 'C:\\Program Files\\OpenLogic\\jdk-8.0.482.08-hotspot\\', 'Base URL': 'https://ra-demo.rlcatalyst.com/login'}
+[2026-06-25 08:30:41] rootdir: D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate
+[2026-06-25 08:30:41] configfile: pytest.ini
+[2026-06-25 08:30:41] plugins: allure-pytest-2.16.0, anyio-4.13.0, base-url-2.1.0, bdd-8.1.0, html-4.2.0, metadata-3.1.1, playwright-0.8.0, xdist-3.8.0
+[2026-06-25 08:30:41] collecting ... collected 1 item
+[2026-06-25 08:30:41] 
+[2026-06-25 08:31:11] pytest still running — waiting on a Playwright action · pid 33500 · 31s elapsed (last update 08:31:11)
+[2026-06-25 08:31:27] test/test_login_and_launch_machine.py::test_login_navigate_to_project_product_and_launch_remote_desktop PASSED [100%]
+[2026-06-25 08:31:27] 
+[2026-06-25 08:31:27] ============================== warnings summary ===============================
+[2026-06-25 08:31:27] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\gherkin\gherkin_line.py:79
+[2026-06-25 08:31:27]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\gherkin\gherkin_line.py:79: DeprecationWarning: 'maxsplit' is passed as positional argument
+[2026-06-25 08:31:27]     uncommented_line = re.split(r"\s#", self._trimmed_line_text.strip(), 2)[0]
+[2026-06-25 08:31:27] 
+[2026-06-25 08:31:27] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137
+[2026-06-25 08:31:27]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.login - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+[2026-06-25 08:31:27]     mark = getattr(pytest.mark, tag)
+[2026-06-25 08:31:27] 
+[2026-06-25 08:31:27] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137
+[2026-06-25 08:31:27]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.resgate - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+[2026-06-25 08:31:27]     mark = getattr(pytest.mark, tag)
+[2026-06-25 08:31:27] 
+[2026-06-25 08:31:27] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137
+[2026-06-25 08:31:27]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.remote_desktop - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+[2026-06-25 08:31:27]     mark = getattr(pytest.mark, tag)
+[2026-06-25 08:31:27] 
+[2026-06-25 08:31:27] -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+[2026-06-25 08:31:27] - Generated html report: file:///D:/D_WS/QE_Agent_Abhi_SS_A/QA-Automation/QA-Automation-RLAgentAbhi/workspace/Resgate/report/2026-06-25_08-30-40/report.html -
+[2026-06-25 08:31:27] ======================= 1 passed, 4 warnings in 45.85s ========================
+[2026-06-25 08:31:27] exit 0 after 47s
+[2026-06-25 08:32:05] Run test_login_and_stop_instance.py clicked
+[2026-06-25 08:32:05] exec: 'C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe' -m pytest -v --headed '--html=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_08-32-05\report.html' --self-contained-html '--alluredir=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_08-32-05\allure-results' test/test_login_and_stop_instance.py
+[2026-06-25 08:32:05] pid 32608 started
+[2026-06-25 08:32:06] ============================= test session starts =============================
+[2026-06-25 08:32:06] platform win32 -- Python 3.14.4, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe
+[2026-06-25 08:32:06] cachedir: .pytest_cache
+[2026-06-25 08:32:06] baseurl: https://ra-demo.rlcatalyst.com/login
+[2026-06-25 08:32:06] metadata: {'Python': '3.14.4', 'Platform': 'Windows-11-10.0.26200-SP0', 'Packages': {'pytest': '9.0.3', 'pluggy': '1.6.0'}, 'Plugins': {'allure-pytest': '2.16.0', 'anyio': '4.13.0', 'base-url': '2.1.0', 'bdd': '8.1.0', 'html': '4.2.0', 'metadata': '3.1.1', 'playwright': '0.8.0', 'xdist': '3.8.0'}, 'AWS_REGION': 'us-east-1', 'JAVA_HOME': 'C:\\Program Files\\OpenLogic\\jdk-8.0.482.08-hotspot\\', 'Base URL': 'https://ra-demo.rlcatalyst.com/login'}
+[2026-06-25 08:32:06] rootdir: D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate
+[2026-06-25 08:32:06] configfile: pytest.ini
+[2026-06-25 08:32:06] plugins: allure-pytest-2.16.0, anyio-4.13.0, base-url-2.1.0, bdd-8.1.0, html-4.2.0, metadata-3.1.1, playwright-0.8.0, xdist-3.8.0
+[2026-06-25 08:32:06] collecting ... collected 0 items / 1 error
+[2026-06-25 08:32:06] 
+[2026-06-25 08:32:06] =================================== ERRORS ====================================
+[2026-06-25 08:32:06] ____________ ERROR collecting test/test_login_and_stop_instance.py ____________
+[2026-06-25 08:32:06] E   KeyError: 'Login and stop the Demo-RD-1096 instance'
+[2026-06-25 08:32:06] All traceback entries are hidden. Pass `--full-trace` to see hidden and internal frames.
+[2026-06-25 08:32:06] 
+[2026-06-25 08:32:06] During handling of the above exception, another exception occurred:
+[2026-06-25 08:32:06] test\test_login_and_stop_instance.py:6: in <module>
+[2026-06-25 08:32:06]     @scenario(
+[2026-06-25 08:32:06] E   pytest_bdd.exceptions.ScenarioNotFound: Scenario "Login and stop the Demo-RD-1096 instance" in feature "Login and stop the instance" in D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\feature\login_and_stop_instance.feature is not found.
+[2026-06-25 08:32:06] - Generated html report: file:///D:/D_WS/QE_Agent_Abhi_SS_A/QA-Automation/QA-Automation-RLAgentAbhi/workspace/Resgate/report/2026-06-25_08-32-05/report.html -
+[2026-06-25 08:32:06] =========================== short test summary info ===========================
+[2026-06-25 08:32:06] ERROR test/test_login_and_stop_instance.py - pytest_bdd.exceptions.ScenarioNo...
+[2026-06-25 08:32:06] !!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+[2026-06-25 08:32:06] ============================== 1 error in 0.25s ===============================
+[2026-06-25 08:32:06] exit 2 after 1s
+[2026-06-25 08:32:27] Run test_login_and_stop_instance.py clicked
+[2026-06-25 08:32:27] exec: 'C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe' -m pytest -v --headed '--html=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_08-32-27\report.html' --self-contained-html '--alluredir=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_08-32-27\allure-results' test/test_login_and_stop_instance.py
+[2026-06-25 08:32:27] pid 29808 started
+[2026-06-25 08:32:28] ============================= test session starts =============================
+[2026-06-25 08:32:28] platform win32 -- Python 3.14.4, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe
+[2026-06-25 08:32:28] cachedir: .pytest_cache
+[2026-06-25 08:32:28] baseurl: https://ra-demo.rlcatalyst.com/login
+[2026-06-25 08:32:28] metadata: {'Python': '3.14.4', 'Platform': 'Windows-11-10.0.26200-SP0', 'Packages': {'pytest': '9.0.3', 'pluggy': '1.6.0'}, 'Plugins': {'allure-pytest': '2.16.0', 'anyio': '4.13.0', 'base-url': '2.1.0', 'bdd': '8.1.0', 'html': '4.2.0', 'metadata': '3.1.1', 'playwright': '0.8.0', 'xdist': '3.8.0'}, 'AWS_REGION': 'us-east-1', 'JAVA_HOME': 'C:\\Program Files\\OpenLogic\\jdk-8.0.482.08-hotspot\\', 'Base URL': 'https://ra-demo.rlcatalyst.com/login'}
+[2026-06-25 08:32:28] rootdir: D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate
+[2026-06-25 08:32:28] configfile: pytest.ini
+[2026-06-25 08:32:28] plugins: allure-pytest-2.16.0, anyio-4.13.0, base-url-2.1.0, bdd-8.1.0, html-4.2.0, metadata-3.1.1, playwright-0.8.0, xdist-3.8.0
+[2026-06-25 08:32:28] collecting ... collected 0 items / 1 error
+[2026-06-25 08:32:28] 
+[2026-06-25 08:32:28] =================================== ERRORS ====================================
+[2026-06-25 08:32:28] ____________ ERROR collecting test/test_login_and_stop_instance.py ____________
+[2026-06-25 08:32:28] E   KeyError: 'Login and stop the Demo-RD-1096 instance'
+[2026-06-25 08:32:28] All traceback entries are hidden. Pass `--full-trace` to see hidden and internal frames.
+[2026-06-25 08:32:28] 
+[2026-06-25 08:32:28] During handling of the above exception, another exception occurred:
+[2026-06-25 08:32:28] test\test_login_and_stop_instance.py:6: in <module>
+[2026-06-25 08:32:28]     @scenario(
+[2026-06-25 08:32:28] E   pytest_bdd.exceptions.ScenarioNotFound: Scenario "Login and stop the Demo-RD-1096 instance" in feature "Login and stop the instance" in D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\feature\login_and_stop_instance.feature is not found.
+[2026-06-25 08:32:28] - Generated html report: file:///D:/D_WS/QE_Agent_Abhi_SS_A/QA-Automation/QA-Automation-RLAgentAbhi/workspace/Resgate/report/2026-06-25_08-32-27/report.html -
+[2026-06-25 08:32:28] =========================== short test summary info ===========================
+[2026-06-25 08:32:28] ERROR test/test_login_and_stop_instance.py - pytest_bdd.exceptions.ScenarioNo...
+[2026-06-25 08:32:28] !!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+[2026-06-25 08:32:28] ============================== 1 error in 0.16s ===============================
+[2026-06-25 08:32:29] exit 2 after 1s

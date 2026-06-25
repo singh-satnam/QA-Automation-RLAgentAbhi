@@ -23,9 +23,10 @@ generation_log.txt
 
 # ---------------------------------------------------------------------------
 # Per-run snapshots — accumulate without bound, not useful in git
-# (user explicitly chose to exclude these)
 # ---------------------------------------------------------------------------
 workspace/projects/*/*/reports/runs/
+workspace/*/report/
+workspace/**/report/
 
 # ---------------------------------------------------------------------------
 # Local-only stash for the demo replay (not for shared use)

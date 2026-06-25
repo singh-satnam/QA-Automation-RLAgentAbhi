@@ -24,7 +24,7 @@ import pytest
 from playwright.sync_api import sync_playwright
 
 # --- per-feature step modules (filled by the harness, not by hand) -----------
-pytest_plugins = ('step_defs.create_new_instance_steps', 'step_defs.login_and_launch_machine_steps')
+pytest_plugins = ('step_defs.create_new_instance_steps', 'step_defs.login_and_launch_machine_steps', 'step_defs.login_and_stop_instance_steps')
 
 # --- project paths -----------------------------------------------------------
 PROJECT_ROOT = Path(__file__).resolve().parent
