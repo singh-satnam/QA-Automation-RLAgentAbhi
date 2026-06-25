@@ -54,6 +54,7 @@ def test_add_story_writes_new_and_refuses_duplicate(tmp_path, monkeypatch):
 
 def test_list_projects_and_stories(tmp_path, monkeypatch):
     monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path)
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
     workspace.add_story("RLRG", "RLRG_a.txt", "a")
     workspace.add_story("RLRG", "RLRG_b.txt", "b")
     workspace.add_story("saucedemo", "saucedemo_x.txt", "x")
@@ -294,3 +295,272 @@ def test_staging_file_summary(tmp_path, monkeypatch):
     summary = workspace.staging_file_summary("RLRG")
     assert summary["feature"] == 2
     assert summary["pages"] == 1
+
+
+# ---------------------------------------------------------------------------
+# Duplicate story detection
+# ---------------------------------------------------------------------------
+
+STORY_LOGIN_LAUNCH = """\
+Navigate to the login page "https://example.com/login"
+Enter valid credentials:
+  Email: user@example.com
+  Password: Pass@123
+Click on the Sign In button
+Verify landing on the "My Projects" page
+Click on the "Automation Testing" project
+Verify the "Automation Testing" page is displayed
+Click on the My Products tab
+Verify "Demo-RD-001" is available
+Click on "Demo-RD-001"
+Click on "Remote Desktop" under "CONNECT"
+Verify a new browser tab is opened
+"""
+
+STORY_LOGIN_STOP = """\
+Navigate to the login page "https://example.com/login"
+Enter valid credentials:
+  Email: user@example.com
+  Password: Pass@123
+Click on the Sign In button
+Verify landing on the "My Projects" page
+Click on the "Automation Testing" project
+Verify the "Automation Testing" page is displayed
+Click on the "My Products" tab
+Verify "Demo-RD-001" is available
+Click on "Demo-RD-001"
+Verify the product details page is displayed
+Click on "Stop" under "CONNECT"
+Verify the stop process initiated successfully
+Verify the "Start" option is available under "CONNECT"
+Click on the refresh button to update status
+Verify the instance status changes to "Stopped"
+"""
+
+STORY_COMPLETELY_DIFFERENT = """\
+Navigate to the admin dashboard "https://example.com/admin"
+Click on the "Users" section
+Search for user "john@example.com"
+Verify user details are displayed
+Delete the user
+Verify the user is removed from the list
+"""
+
+STORY_EXACT_DUPLICATE = """\
+Navigate to the login page "https://example.com/login"
+Enter valid credentials:
+  Email: user@example.com
+  Password: Pass@123
+Click on the Sign In button
+Verify landing on the "My Projects" page
+Click on the "Automation Testing" project
+Verify the "Automation Testing" page is displayed
+Click on the My Products tab
+Verify "Demo-RD-001" is available
+Click on "Demo-RD-001"
+Click on "Remote Desktop" under "CONNECT"
+Verify a new browser tab is opened
+"""
+
+
+def test_extract_action_lines_filters_and_normalises():
+    lines = workspace._extract_action_lines(STORY_LOGIN_LAUNCH)
+    assert len(lines) > 0
+    assert all(isinstance(l, str) for l in lines)
+    assert all(l == l.lower() for l in lines)
+    for line in lines:
+        assert "https://" not in line
+
+
+def test_extract_action_lines_skips_comments_and_short_lines():
+    text = "# this is a comment\nHello\nClick on the Sign In button\n"
+    lines = workspace._extract_action_lines(text)
+    assert len(lines) == 1
+    assert "sign in" in lines[0]
+
+
+def test_extract_action_lines_empty_input():
+    assert workspace._extract_action_lines("") == []
+    assert workspace._extract_action_lines("# only comments\n") == []
+
+
+def test_step_similarity_identical_stories():
+    lines = workspace._extract_action_lines(STORY_LOGIN_LAUNCH)
+    ratio = workspace._step_similarity(lines, lines)
+    assert ratio == 1.0
+
+
+def test_step_similarity_completely_different():
+    lines_a = workspace._extract_action_lines(STORY_LOGIN_LAUNCH)
+    lines_b = workspace._extract_action_lines(STORY_COMPLETELY_DIFFERENT)
+    ratio = workspace._step_similarity(lines_a, lines_b)
+    assert ratio < 0.50
+
+
+def test_step_similarity_partial_overlap():
+    lines_a = workspace._extract_action_lines(STORY_LOGIN_LAUNCH)
+    lines_b = workspace._extract_action_lines(STORY_LOGIN_STOP)
+    ratio = workspace._step_similarity(lines_a, lines_b)
+    assert 0.50 <= ratio < 1.0
+
+
+def test_step_similarity_empty_input():
+    assert workspace._step_similarity([], ["click sign in"]) == 0.0
+    assert workspace._step_similarity(["click sign in"], []) == 0.0
+    assert workspace._step_similarity([], []) == 0.0
+
+
+def test_matching_steps_returns_common_steps():
+    lines_a = workspace._extract_action_lines(STORY_LOGIN_LAUNCH)
+    lines_b = workspace._extract_action_lines(STORY_LOGIN_STOP)
+    matched = workspace._matching_steps(lines_a, lines_b)
+    assert len(matched) > 0
+    assert len(matched) < len(lines_a)
+
+
+def test_new_steps_returns_delta():
+    lines_new = workspace._extract_action_lines(STORY_LOGIN_STOP)
+    lines_existing = workspace._extract_action_lines(STORY_LOGIN_LAUNCH)
+    delta = workspace._new_steps(lines_new, lines_existing)
+    assert len(delta) > 0
+    assert any("stop" in s for s in delta)
+
+
+def test_new_steps_empty_when_identical():
+    lines = workspace._extract_action_lines(STORY_LOGIN_LAUNCH)
+    delta = workspace._new_steps(lines, lines)
+    assert delta == []
+
+
+def _setup_project(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path)
+    workspace.ensure_project_dirs("RLRG")
+    return tmp_path / "RLRG"
+
+
+def test_check_duplicate_story_full_match(tmp_path, monkeypatch):
+    pd = _setup_project(tmp_path, monkeypatch)
+    (pd / "user_story" / "RLRG_login_launch.txt").write_text(
+        STORY_LOGIN_LAUNCH, encoding="utf-8")
+    (pd / "user_story" / "RLRG_login_launch_v2.txt").write_text(
+        STORY_EXACT_DUPLICATE, encoding="utf-8")
+    (pd / "feature" / "login_launch.feature").write_text(
+        "Feature: Login and Launch\n  Scenario: Login\n    Given something",
+        encoding="utf-8")
+
+    result = workspace.check_duplicate_story("RLRG", "RLRG_login_launch_v2.txt")
+    assert result is not None
+    assert result["match_type"] == "full"
+    assert result["ratio"] >= 0.80
+    assert result["matched_story_file"] == "RLRG_login_launch.txt"
+    assert len(result["matching_steps"]) > 0
+    assert result["feature_content"] != ""
+
+
+def test_check_duplicate_story_partial_match(tmp_path, monkeypatch):
+    pd = _setup_project(tmp_path, monkeypatch)
+    (pd / "user_story" / "RLRG_login_launch.txt").write_text(
+        STORY_LOGIN_LAUNCH, encoding="utf-8")
+    (pd / "user_story" / "RLRG_login_stop.txt").write_text(
+        STORY_LOGIN_STOP, encoding="utf-8")
+
+    result = workspace.check_duplicate_story("RLRG", "RLRG_login_stop.txt")
+    assert result is not None
+    assert result["match_type"] == "partial"
+    assert 0.50 <= result["ratio"] < 0.80
+    assert len(result["new_steps"]) > 0
+
+
+def test_check_duplicate_story_no_match(tmp_path, monkeypatch):
+    pd = _setup_project(tmp_path, monkeypatch)
+    (pd / "user_story" / "RLRG_login_launch.txt").write_text(
+        STORY_LOGIN_LAUNCH, encoding="utf-8")
+    (pd / "user_story" / "RLRG_admin.txt").write_text(
+        STORY_COMPLETELY_DIFFERENT, encoding="utf-8")
+
+    result = workspace.check_duplicate_story("RLRG", "RLRG_admin.txt")
+    assert result is None
+
+
+def test_check_duplicate_story_single_story(tmp_path, monkeypatch):
+    pd = _setup_project(tmp_path, monkeypatch)
+    (pd / "user_story" / "RLRG_login.txt").write_text(
+        STORY_LOGIN_LAUNCH, encoding="utf-8")
+
+    result = workspace.check_duplicate_story("RLRG", "RLRG_login.txt")
+    assert result is None
+
+
+def test_check_duplicate_story_nonexistent_file(tmp_path, monkeypatch):
+    _setup_project(tmp_path, monkeypatch)
+    result = workspace.check_duplicate_story("RLRG", "RLRG_nonexistent.txt")
+    assert result is None
+
+
+def test_check_duplicate_story_finds_feature_file(tmp_path, monkeypatch):
+    pd = _setup_project(tmp_path, monkeypatch)
+    (pd / "user_story" / "RLRG_login_launch.txt").write_text(
+        STORY_LOGIN_LAUNCH, encoding="utf-8")
+    (pd / "user_story" / "RLRG_login_dup.txt").write_text(
+        STORY_EXACT_DUPLICATE, encoding="utf-8")
+    feature_text = "Feature: Login\n  Scenario: Login flow\n    Given the user logs in"
+    (pd / "feature" / "login_launch.feature").write_text(
+        feature_text, encoding="utf-8")
+
+    result = workspace.check_duplicate_story("RLRG", "RLRG_login_dup.txt")
+    assert result is not None
+    assert result["feature_file"] is not None
+    assert result["feature_file"].name == "login_launch.feature"
+    assert result["feature_content"] == feature_text
+
+
+def test_check_duplicate_story_no_feature_file(tmp_path, monkeypatch):
+    pd = _setup_project(tmp_path, monkeypatch)
+    (pd / "user_story" / "RLRG_login_launch.txt").write_text(
+        STORY_LOGIN_LAUNCH, encoding="utf-8")
+    (pd / "user_story" / "RLRG_login_dup.txt").write_text(
+        STORY_EXACT_DUPLICATE, encoding="utf-8")
+
+    result = workspace.check_duplicate_story("RLRG", "RLRG_login_dup.txt")
+    assert result is not None
+    assert result["feature_content"] == ""
+
+
+def test_check_duplicate_story_staging(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    workspace.ensure_project_dirs("RLRG", staging=True)
+    pd = tmp_path / "temp_workspace" / "RLRG"
+    (pd / "user_story" / "RLRG_login_launch.txt").write_text(
+        STORY_LOGIN_LAUNCH, encoding="utf-8")
+    (pd / "user_story" / "RLRG_login_dup.txt").write_text(
+        STORY_EXACT_DUPLICATE, encoding="utf-8")
+
+    result = workspace.check_duplicate_story("RLRG", "RLRG_login_dup.txt", staging=True)
+    assert result is not None
+    assert result["match_type"] == "full"
+
+
+def test_check_duplicate_story_across_workspace_and_staging(tmp_path, monkeypatch):
+    """New story in staging should detect duplicate in workspace (same project)."""
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    # Existing story in workspace
+    workspace.ensure_project_dirs("RLRG", staging=False)
+    ws_pd = tmp_path / "workspace" / "RLRG"
+    (ws_pd / "user_story" / "RLRG_login.txt").write_text(
+        STORY_LOGIN_LAUNCH, encoding="utf-8")
+    (ws_pd / "feature" / "login.feature").write_text(
+        "Feature: Login\n  Scenario: Login\n    Given something",
+        encoding="utf-8")
+    # New story in staging (same project)
+    workspace.ensure_project_dirs("RLRG", staging=True)
+    stg_pd = tmp_path / "temp_workspace" / "RLRG"
+    (stg_pd / "user_story" / "RLRG_login_v2.txt").write_text(
+        STORY_EXACT_DUPLICATE, encoding="utf-8")
+
+    result = workspace.check_duplicate_story("RLRG", "RLRG_login_v2.txt", staging=True)
+    assert result is not None
+    assert result["match_type"] == "full"
+    assert result["matched_story_file"] == "RLRG_login.txt"
+    assert result["feature_content"] != ""

@@ -1,14 +1,102 @@
-You are operating inside the QE automation framework rooted at the current working directory (a single project folder). Read the user story file `user_story/{{STORY_FILE}}` and convert it into Gherkin `.feature` file(s) under `feature/`.
+You are operating inside the QE automation framework rooted at the current working directory (a single project folder). Read the user story file `user_story/{{STORY_FILE}}` and convert it into a single Gherkin `.feature` file under `feature/`.
+
+═══════════════════════════════════════════════════════════════════
+DUPLICATE STORY DETECTION — RUN FIRST, BEFORE ANY GENERATION
+═══════════════════════════════════════════════════════════════════
+BEFORE generating any Gherkin, you MUST check for duplicate user stories:
+
+1. Read the new user story file `user_story/{{STORY_FILE}}`.
+2. Read EVERY OTHER file in `user_story/` (skip the new file itself).
+3. For each existing story, compare at the STEP level:
+   - Extract the action steps from both stories (navigate to X, click Y,
+     enter Z, verify W — ignore preamble/description text).
+   - If 80%+ of the action steps in the new story match an existing story
+     (same actions on the same targets, even if worded differently), the
+     stories are DUPLICATES.
+   - "Match" means the same functional intent: "click Sign In" matches
+     "press the Sign In button"; "enter email" matches "type the email
+     address". Minor phrasing differences do not make steps different.
+
+4. IF FULL DUPLICATE (80%+ steps match):
+   - DO NOT generate any .feature file.
+   - Find the existing `.feature` file that corresponds to the matched
+     story (check `feature/` for a file whose scenarios cover those steps).
+   - OUTPUT to the user:
+     a. Which existing story file matched and why (list the matching steps).
+     b. The full content of the existing `.feature` file.
+     c. State: "Skipping generation — this story is already covered."
+   - STOP. Do not proceed to Gherkin generation.
+
+5. IF PARTIAL OVERLAP (some steps match but new story has additional steps):
+   - Find the existing `.feature` file for the overlapping story.
+   - OUTPUT to the user:
+     a. Which existing story partially matches (list the overlapping steps).
+     b. The full content of the existing `.feature` file.
+     c. List the NEW steps that are NOT covered by the existing feature.
+     d. State: "Partial overlap detected — the following steps are new:
+        [list]. Generating a new .feature file for the full story."
+   - PROCEED with Gherkin generation for the new story (generate the
+     complete .feature file including all steps, not just the delta).
+
+6. IF NO MATCH — proceed directly to Gherkin generation.
+═══════════════════════════════════════════════════════════════════
 
 ═══════════════════════════════════════════════════════════════════
 FIDELITY TO USER STORY — NON-NEGOTIABLE
 ═══════════════════════════════════════════════════════════════════
 1. EVERY meaningful line of the user story file becomes AT LEAST ONE Gherkin step. No line is silently dropped. No story step is merged with another.
-2. Do NOT invent steps that aren't in the story. No extra "best-practice" checks the user didn't ask for.
+2. The user story is the BASELINE — generate it faithfully as the first Scenario (the positive/happy path). Then ADDITIONALLY generate negative, edge-case, and boundary-value Scenarios to ensure the requirement works as expected (see COMPREHENSIVE SCENARIO GENERATION below).
 3. Preserve the ORDER from the story. If the story says A then B then C, the scenario does A then B then C — never reordered for "convenience".
 4. Every line that contains words like "Verify", "Check", "Validate", "should be", "should display", "is shown", "is displayed", "matches" → translate into ONE explicit `Then` step. Don't bundle multiple verifications into one step.
-5. Negative cases (invalid creds, "user already exists", "out of stock") must appear as their own step sequence; never skipped or replaced by the happy path.
+5. Negative cases explicitly stated in the story (invalid creds, "user already exists", "out of stock") must appear as their own step sequence; never skipped or replaced by the happy path.
 6. Inline data tables (Field: Value blocks, address blocks, etc.) become Gherkin doc-strings or data tables — every key/value preserved.
+═══════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════
+COMPREHENSIVE SCENARIO GENERATION — NON-NEGOTIABLE
+═══════════════════════════════════════════════════════════════════
+After generating the positive-path Scenario from the story, you MUST analyse every user interaction in the story and generate ADDITIONAL Scenarios to cover:
+
+A. NEGATIVE SCENARIOS — functional failures a QA engineer would test:
+   · Empty/missing required fields (e.g. empty email, empty password)
+   · Wrong/invalid values (e.g. incorrect password, non-existent user)
+   · Invalid formats (e.g. malformed email "userexample.com", too-short password)
+   · Unauthorised access (e.g. expired session, revoked permissions)
+   · Each negative scenario MUST assert the EXACT expected error/validation
+     message or behaviour (e.g. "Invalid email or password" is displayed).
+   · Do NOT include security testing (XSS, SQL injection, etc.).
+
+B. EDGE CASES — unusual but valid situations:
+   · Leading/trailing whitespace in inputs
+   · Special characters in text fields (quotes, ampersands, unicode)
+   · Maximum-length input values
+   · Actions performed twice (double-click, double-submit)
+   · Network-dependent states (slow load, element not yet visible)
+
+C. BOUNDARY VALUES — limits of valid/invalid input:
+   · Minimum and maximum allowed lengths for text fields
+   · Numeric fields at their min, max, min-1, max+1 values
+   · Date fields at boundary dates if applicable
+
+GROUPING RULES:
+  · Group related negative/edge variations into a SINGLE Scenario Outline
+    with an Examples table. E.g. all login-failure variations (empty email,
+    empty password, wrong password, malformed email) become ONE Scenario
+    Outline with one row per variation and columns for input + expected_error.
+  · Use a separate Scenario (not Outline) only when the BEHAVIOUR is
+    fundamentally different (e.g. double-submit has different steps than
+    wrong-password).
+  · Every Scenario Outline row MUST include an expected outcome column
+    (expected_error, expected_message, expected_result) so the step def
+    can assert the specific result for that row.
+
+SCOPE:
+  · Generate negatives/edges only for interactions IN the story (forms,
+    clicks, navigation, data entry). Do not fabricate entirely new features
+    or pages the story doesn't mention.
+  · The positive Scenario comes FIRST, followed by negative/edge Scenarios.
+  · Tag each scenario type: @positive for the happy path, @negative for
+    negative cases, @edge for edge cases, @boundary for boundary values.
 ═══════════════════════════════════════════════════════════════════
 
 ALSO read the test-data JSON file referenced by the story (if present in the project folder). It is an OPTIONAL sidecar that drives parameterisation:
@@ -24,7 +112,8 @@ ALSO read the test-data JSON file referenced by the story (if present in the pro
       If the story says things like "verify the downloaded CSV", "compare with the data file",       "every row matches", the array is the ground truth the test must check against the       live data. In that case, generate ONE Scenario whose Then steps iterate the array at       runtime (the step def loads test_data and loops), comparing **every row** the story       scopes — full table if the story says "entire CSV / all rows / every value", or only       the columns the story names if it scopes them. Either way: NEVER skip rows, NEVER stop       at a sample. The number of `cap.assert_match` calls the test ends up emitting must       equal (rows the story scopes) × (columns the story scopes).
 
   - NO user_data.json:
-      Generate as before — one Scenario per story, no parameters.
+      Generate the positive-path Scenario from the story (no parameters), plus
+      the negative/edge/boundary Scenarios per COMPREHENSIVE SCENARIO GENERATION.
 
 NEGATIVE STEPS INLINE IN THE STORY (no JSON needed)
 
@@ -68,10 +157,11 @@ When the story has a BLOCKING prerequisite (e.g. "log in as manager 503 then …
 Never collapse a "search A and search B" story into one step "search the catalog". Each named target needs its own step so missing items can be individually reported.
 
 Hard rules:
-- Write feature file(s) into `feature/`. Name each file after the FEATURE under test — a short snake_case slug of the feature, e.g. `feature/login_validation.feature`.
+- Write EXACTLY ONE `.feature` file per user story into `feature/`. Name it after the FEATURE under test — a short snake_case slug, e.g. `feature/login_validation.feature`. This single file contains ALL Scenarios (positive, negative, edge, boundary) for that story.
 - NEVER delete or overwrite an existing `.feature` file. If a file with your chosen name already exists, append a short disambiguating suffix so the new file is unique.
-- One `.feature` file may contain multiple `Scenario` / `Scenario Outline` blocks. Cover the positive path, negative/invalid paths, and boundary conditions that the story implies — but do NOT invent requirements the story does not state.
-- For Scenario Outlines, every Examples row must end with an assertable expected outcome. Negative rows must assert the EXACT error/validation string from the story or its data file — never just "some error happens".
-- After writing, list every file you created with one-line summaries.
+- The `.feature` file MUST contain multiple `Scenario` / `Scenario Outline` blocks: the positive path first, then negative/edge/boundary Scenarios. Use Scenario Outlines with Examples tables for data-driven variations.
+- For Scenario Outlines, every Examples row must end with an assertable expected outcome column. Negative rows must assert the EXACT error/validation string — never just "some error happens".
+- Scenario names MUST NOT contain test data values. Use generic names that describe the test intent (e.g. "Login with invalid credentials" not "Login with user john@test.com").
+- After writing, list the file you created with a summary of how many Scenarios it contains and their types (positive/negative/edge/boundary).
 
 Do not generate page objects, step definitions, or tests in this pass. Only Gherkin.

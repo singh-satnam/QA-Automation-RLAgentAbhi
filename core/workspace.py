@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as _dt
+import difflib
 import json
 import os
 import re
@@ -147,6 +148,164 @@ def list_stories(project: str) -> list[Path]:
                     seen.add(p.name)
                     result.append(p)
     return sorted(result, key=lambda p: p.name)
+
+
+_ACTION_RE = re.compile(
+    r"(?i)^\s*(?:\d+[\.\)]\s*)?(?:given|when|then|and|but)?\s*"
+    r"(?:the\s+user\s+|user\s+|I\s+)?"
+)
+_ACTION_VERBS = re.compile(
+    r"(?i)\b(navigate|click|enter|fill|type|select|verify|check|validate|"
+    r"submit|press|open|close|log\s*in|sign\s*in|sign\s*out|log\s*out|"
+    r"search|add|remove|delete|update|upload|download|drag|drop|scroll|"
+    r"hover|should|is\s+displayed|is\s+available|is\s+present|lands?\s+on)\b"
+)
+
+
+def _extract_action_lines(text: str) -> list[str]:
+    """Extract normalised action lines from a user story for comparison."""
+    lines = []
+    for raw in text.splitlines():
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if not _ACTION_VERBS.search(stripped):
+            continue
+        normalised = _ACTION_RE.sub("", stripped).strip()
+        normalised = re.sub(r"\bhttps?://\S+", "<URL>", normalised)
+        normalised = re.sub(r"[\"']([^\"']*)[\"']", r"\1", normalised)
+        normalised = re.sub(r"\s+", " ", normalised).lower().strip(" ,.;:-")
+        if len(normalised) >= 5:
+            lines.append(normalised)
+    return lines
+
+
+def _step_similarity(lines_a: list[str], lines_b: list[str]) -> float:
+    """Ratio of matching action steps between two stories (0.0–1.0)."""
+    if not lines_a or not lines_b:
+        return 0.0
+    return difflib.SequenceMatcher(None, lines_a, lines_b).ratio()
+
+
+def _matching_steps(lines_a: list[str], lines_b: list[str]) -> list[str]:
+    """Return the steps from lines_a that have a close match in lines_b."""
+    matched = []
+    for step in lines_a:
+        for other in lines_b:
+            if difflib.SequenceMatcher(None, step, other).ratio() >= 0.7:
+                matched.append(step)
+                break
+    return matched
+
+
+def _new_steps(lines_new: list[str], lines_existing: list[str]) -> list[str]:
+    """Return steps in the new story that have NO close match in the existing."""
+    unmatched = []
+    for step in lines_new:
+        has_match = any(
+            difflib.SequenceMatcher(None, step, other).ratio() >= 0.7
+            for other in lines_existing
+        )
+        if not has_match:
+            unmatched.append(step)
+    return unmatched
+
+
+def check_duplicate_story(
+    project: str, new_story_file: str, staging: bool = False,
+) -> dict | None:
+    """Check if a new story duplicates or overlaps an existing one.
+
+    Compares against other stories within the same project, scanning both
+    the workspace and staging roots for that project name.
+
+    Returns None if no significant match. Otherwise returns:
+        {
+            "match_type": "full" | "partial",
+            "ratio": float,
+            "matched_story_file": str,
+            "matched_story_text": str,
+            "matching_steps": [str, ...],
+            "new_steps": [str, ...],
+            "feature_file": Path | None,
+            "feature_content": str,
+        }
+    """
+    story_dir = subdir(project, "user_story", staging=staging)
+    new_path = story_dir / new_story_file
+    if not new_path.exists():
+        return None
+    new_text = new_path.read_text(encoding="utf-8")
+    new_lines = _extract_action_lines(new_text)
+    if not new_lines:
+        return None
+
+    best: dict | None = None
+    best_ratio = 0.0
+
+    # Scan both workspace and staging roots for this project's stories
+    scan_dirs: list[tuple[bool, Path]] = []
+    for stg in (False, True):
+        us = subdir(project, "user_story", staging=stg)
+        if us.exists():
+            scan_dirs.append((stg, us))
+
+    for _stg, us_dir in scan_dirs:
+        for story_path in sorted(us_dir.glob("*.txt")):
+            if story_path == new_path:
+                continue
+            try:
+                existing_text = story_path.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            existing_lines = _extract_action_lines(existing_text)
+            if not existing_lines:
+                continue
+            ratio = _step_similarity(new_lines, existing_lines)
+            if ratio > best_ratio:
+                best_ratio = ratio
+                best = {
+                    "ratio": ratio,
+                    "matched_story_file": story_path.name,
+                    "matched_staging": _stg,
+                    "matched_story_text": existing_text,
+                    "matched_lines": existing_lines,
+                }
+
+    if best is None or best_ratio < 0.50:
+        return None
+
+    matched_steps = _matching_steps(new_lines, best["matched_lines"])
+    delta_steps = _new_steps(new_lines, best["matched_lines"])
+
+    # Look for feature file in the matched root (workspace or staging)
+    matched_stg = best["matched_staging"]
+    feature_dir = subdir(project, "feature", staging=matched_stg)
+    feature_file = None
+    feature_content = ""
+    if feature_dir.exists():
+        stem = Path(best["matched_story_file"]).stem
+        for fp in feature_dir.glob("*.feature"):
+            if stem in fp.stem or fp.stem in stem:
+                feature_file = fp
+                feature_content = fp.read_text(encoding="utf-8")
+                break
+        if not feature_file:
+            features = sorted(feature_dir.glob("*.feature"))
+            if features:
+                feature_file = features[0]
+                feature_content = feature_file.read_text(encoding="utf-8")
+
+    return {
+        "match_type": "full" if best_ratio >= 0.80 else "partial",
+        "ratio": round(best_ratio, 2),
+        "matched_story_file": best["matched_story_file"],
+        "matched_story_text": best["matched_story_text"],
+        "matching_steps": matched_steps,
+        "new_steps": delta_steps,
+        "feature_file": feature_file,
+        "feature_content": feature_content,
+    }
 
 
 def extract_base_url(text: str) -> str:

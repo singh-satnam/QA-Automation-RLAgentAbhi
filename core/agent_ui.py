@@ -2431,6 +2431,11 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
                     else:
                         ws.add_story(project, filename, content, staging=True)
                         ws.write_pytest_ini(project, ws.extract_base_url(content), staging=True)
+                        # Content-level duplicate check against other stories
+                        dup = ws.check_duplicate_story(project, filename, staging=True)
+                        if dup:
+                            st.session_state["upload_duplicate"] = dup
+                            st.session_state["upload_duplicate_file"] = filename
                         st.session_state.project = project
                         st.session_state.active_story = filename
                         st.session_state.staging_active = True
@@ -2475,6 +2480,11 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
                     else:
                         ws.add_story(project, filename, content, staging=True)
                         ws.write_pytest_ini(project, ws.extract_base_url(content), staging=True)
+                        # Content-level duplicate check against other stories
+                        dup = ws.check_duplicate_story(project, filename, staging=True)
+                        if dup:
+                            st.session_state["upload_duplicate"] = dup
+                            st.session_state["upload_duplicate_file"] = filename
                         st.session_state.project = project
                         st.session_state.active_story = filename
                         st.session_state.staging_active = True
@@ -2752,6 +2762,68 @@ def render_stepper(gherkin_done: bool, framework_done: bool) -> tuple[bool, bool
     return clicks["gherkin"], clicks["framework"], clicks["run"]
 
 
+def render_duplicate_story_dialog(dup: dict) -> str | None:
+    """Show a dialog when a duplicate/overlapping story is detected.
+
+    Returns the user's choice: 'view_existing', 'generate_anyway', or None (cancel / not yet chosen).
+    """
+    match_type = dup["match_type"]
+    ratio_pct = int(dup["ratio"] * 100)
+    is_full = match_type == "full"
+
+    icon = "⚠️" if is_full else "ℹ️"
+    title = "Duplicate Story Detected" if is_full else "Partial Story Overlap Detected"
+    st.markdown(
+        f'<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;'
+        f'padding:16px;margin-bottom:16px;">'
+        f'<h3 style="margin:0 0 8px 0;">{icon} {title}</h3>'
+        f'<p style="margin:0;">Your story matches <b>{dup["matched_story_file"]}</b> '
+        f'with <b>{ratio_pct}%</b> step overlap.</p>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    col_match, col_new = st.columns(2)
+    with col_match:
+        st.markdown("**Matching steps:**")
+        for step in dup["matching_steps"]:
+            st.markdown(f"&ensp;✅&ensp;{step}")
+    with col_new:
+        if dup["new_steps"]:
+            st.markdown("**New steps (not in existing story):**")
+            for step in dup["new_steps"]:
+                st.markdown(f"&ensp;➕&ensp;{step}")
+        else:
+            st.markdown("**No new steps** — all steps are already covered.")
+
+    if dup["feature_content"]:
+        with st.expander(
+            f"Existing feature file: {dup['feature_file'].name if dup['feature_file'] else 'N/A'}",
+            expanded=False,
+        ):
+            st.code(dup["feature_content"], language="gherkin")
+
+    c1, c2, c3, _ = st.columns([1.5, 1.5, 1, 3])
+    with c1:
+        if st.button(
+            "View Existing Feature",
+            key="dup_view_existing",
+            type="secondary",
+        ):
+            return "view_existing"
+    with c2:
+        if st.button(
+            "Generate Anyway",
+            key="dup_generate_anyway",
+            type="primary" if not is_full else "secondary",
+        ):
+            return "generate_anyway"
+    with c3:
+        if st.button("Cancel", key="dup_cancel"):
+            return "cancel"
+    return None
+
+
 def render_promotion_dialog() -> None:
     project = current_project()
     if not project:
@@ -2833,6 +2905,53 @@ def main() -> None:
     tests_n = story_test_count(story_id)
 
     render_summary_line(n_stories, features, tests_n)
+
+    # --- Show duplicate story warning (persists after upload rerun) ---
+    if "upload_duplicate" in st.session_state:
+        dup = st.session_state["upload_duplicate"]
+        dup_file = st.session_state.get("upload_duplicate_file", "")
+        ratio_pct = int(dup["ratio"] * 100)
+        is_full = dup["match_type"] == "full"
+        icon = "⚠️" if is_full else "ℹ️"
+        title = "Duplicate Story Detected" if is_full else "Partial Story Overlap Detected"
+        st.markdown(
+            f'<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;'
+            f'padding:16px;margin-bottom:16px;">'
+            f'<h3 style="margin:0 0 8px 0;">{icon} {title}</h3>'
+            f'<p>Your story <b>{dup_file}</b> matches existing story '
+            f'<b>{dup["matched_story_file"]}</b> with <b>{ratio_pct}%</b> step overlap.</p>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+        col_m, col_n = st.columns(2)
+        with col_m:
+            st.markdown("**Matching steps:**")
+            for step in dup["matching_steps"]:
+                st.markdown(f"&ensp;✅&ensp;{step}")
+        with col_n:
+            if dup["new_steps"]:
+                st.markdown("**New steps not in existing story:**")
+                for step in dup["new_steps"]:
+                    st.markdown(f"&ensp;➕&ensp;{step}")
+            else:
+                st.markdown("**No new steps** — all steps are already covered.")
+        if dup["feature_content"]:
+            with st.expander(
+                f"Existing feature: {dup['feature_file'].name if dup.get('feature_file') else 'N/A'}",
+                expanded=False,
+            ):
+                st.code(dup["feature_content"], language="gherkin")
+        col1, col2, _ = st.columns([1.5, 1.5, 4])
+        with col1:
+            if st.button("Proceed with generation", key="dup_proceed", type="primary"):
+                st.session_state.pop("upload_duplicate", None)
+                st.session_state.pop("upload_duplicate_file", None)
+                st.rerun()
+        with col2:
+            if st.button("Dismiss", key="dup_dismiss"):
+                st.session_state.pop("upload_duplicate", None)
+                st.session_state.pop("upload_duplicate_file", None)
+                st.rerun()
 
     # Reset session flags if the project changed.
     if st.session_state.get("flags_for_story") != story_id:
@@ -2946,6 +3065,30 @@ def main() -> None:
         ws.ensure_project_dirs(project, staging=_is_staging())
         story_file = st.session_state.get("active_story", "")
         append_process_log(project, f"Generate Gherkin clicked for {story_file}")
+
+        # --- Duplicate story detection (pre-check before LLM call) ---
+        if not st.session_state.get("dup_override"):
+            dup = ws.check_duplicate_story(project, story_file, staging=_is_staging())
+            if dup:
+                log_event(f"Duplicate detected: {dup['match_type']} match "
+                          f"({int(dup['ratio']*100)}%) with {dup['matched_story_file']}")
+                append_process_log(project,
+                    f"Duplicate {dup['match_type']} match ({int(dup['ratio']*100)}%) "
+                    f"with {dup['matched_story_file']}")
+                choice = render_duplicate_story_dialog(dup)
+                if choice == "view_existing" or choice == "cancel":
+                    if choice == "view_existing" and dup["feature_file"]:
+                        st.info(f"Existing feature: **{dup['feature_file'].name}**")
+                        st.code(dup["feature_content"], language="gherkin")
+                    st.session_state.pop("dup_override", None)
+                    return
+                elif choice == "generate_anyway":
+                    st.session_state["dup_override"] = True
+                    st.rerun()
+                else:
+                    return
+        st.session_state.pop("dup_override", None)
+
         with st.status("Generating Gherkin…", expanded=False) as status:
             prompt = GHERKIN_PROMPT.replace("{{STORY_FILE}}", story_file)
             rc = stream_command(
