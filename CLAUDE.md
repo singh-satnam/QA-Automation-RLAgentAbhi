@@ -14,7 +14,7 @@ All generated files go through a **staging workspace** (`temp_workspace/<Project
 
 ```
 core/
-  agent_ui.py        # Streamlit UI + pipeline orchestration (~3000 lines)
+  agent_ui.py        # Streamlit UI + pipeline orchestration (~3231 lines)
   workspace.py       # All path resolution, project/story CRUD, staging/promotion
   step_report.py     # Pure HTML rendering of per-step test results
   prompts/           # LLM prompt templates (.md files, loaded at import time)
@@ -23,9 +23,10 @@ core/
 tests/
   test_workspace.py  # 29 unit tests for workspace.py
   test_step_report.py
-workspace/<Project>/ # Promoted (production) test projects
+workspace/<Project>/ # Promoted (production) test projects — flat per-project layout
 temp_workspace/<Project>/ # Staging area (gitignored)
 docs/superpowers/    # Design specs and implementation plans
+SYSTEM_GUIDE.md      # Single source of truth for current architecture (supersedes ARCHITECTURE.md)
 ```
 
 ## Tech Stack
@@ -87,6 +88,8 @@ Tests use `tmp_path` fixtures — no real workspace/temp_workspace is touched. A
 - `promote_to_workspace()` uses additive merge: copy only if dest doesn't exist, never overwrite
 - `list_projects()` and `list_stories()` scan BOTH roots (workspace + temp_workspace)
 - `PROJECT_SUBDIRS` is the single source of truth for subfolder names (singular: `user_story`, not `user_stories`)
+- `derive_project_name(filename)` extracts the project name from the **filename prefix before the first underscore** — `RLRG_login.txt` → project `RLRG`. All path resolution flows from this. Files without an underscore raise `ProjectNameError`.
+- Env vars `QA_WORKSPACE_DIR` and `QA_TEMP_WORKSPACE_DIR` override the default workspace roots at runtime (used to point at a per-client path without touching code)
 
 ### agent_ui.py Conventions
 
@@ -104,6 +107,12 @@ Tests use `tmp_path` fixtures — no real workspace/temp_workspace is touched. A
 - `framework_delta_prompt.md` — Incremental framework for additional stories
 - Use `{{TOKEN}}` placeholders in prompts, replaced at call time in `agent_ui.py`
 
+Scout prompts (opt-in, defined inline in `agent_ui.py`) produce JSON artefacts the framework prompt can ingest:
+- `SCOUT_SITEMAP_PROMPT` → `mcp-selectors/sitemap.json`
+- `SCOUT_INVENTORY_PROMPT` → `mcp-selectors/scout_inventory.json` (confirmed-clickable selectors per page)
+- `SCOUT_FLOW_PROMPT` → `mcp-selectors/scout_flow.json` (end-to-end story replay with selectors per step)
+- `SCOUT_EDGE_PROMPT` → `mcp-selectors/scout_edge.json` (overlays: cookie banners, modals, iframes)
+
 ### Testing
 
 - Unit tests go in `tests/`
@@ -113,14 +122,38 @@ Tests use `tmp_path` fixtures — no real workspace/temp_workspace is touched. A
 
 ### Git
 
-- Branch: `feature/version4` for active development
+- Branch: `feature/Version5` for active development
 - Commit style: `feat(scope):`, `fix(scope):`, `chore:`, `docs:`
 - `temp_workspace/` is gitignored
-- `workspace/projects/*/*/reports/runs/` is gitignored (accumulates without bound)
+- `workspace/*/report/` and `workspace/**/report/` are gitignored (run artefacts accumulate without bound)
+
+### captured_values Contract
+
+Every generated step definition receives a `captured_values` fixture (a `CapturedValues` instance from `core/templates/conftest.py`). It accumulates every observation into memory and flushes to `report/captured_values.json` at session end. The coverage report is built **entirely** from that JSON — if a step def calls no `cap.*` method, that step shows as "not exercised" even if the test passes green.
+
+**Rule: every `Then` step (any Verify/Check/Validate step) must call exactly one `cap.*` method.**
+
+| Method | Raises? | Use when |
+|---|---|---|
+| `cap.add(label, value)` | No | Recording an observed value with no pass/fail |
+| `cap.assert_match(label, expected, actual)` | No | Verifying a displayed value matches expected |
+| `cap.record_missing(label, target, reason)` | No | An item in a loop was not found — loop continues |
+| `cap.assert_prerequisite(label, condition, reason)` | Yes (halts scenario) | Login/navigation — if this fails, the rest can't run |
+| `cap.assert_action_succeeded(label, error_text, positive_signal)` | Yes on failure | Confirming a create/submit action completed |
+| `cap.add_component(label, value, group)` + `cap.assert_sum/avg/min/max/count(...)` | No / No | Multi-row aggregates (totals, averages across a table) |
+
+**Verdict hierarchy** (written into `story_coverage.html` by the deterministic Python builder in `agent_ui.py`):
+
+| Verdict | Condition |
+|---|---|
+| 🚫 BLOCKED | An `assert_prerequisite` call returned false |
+| ❌ FAIL | At least one `assert_match` failed, or pytest exited nonzero |
+| ⚠ PARTIAL | At least one `record_missing` entry, remaining assertions passed |
+| ✓ PASS | All recorded assertions passed and pytest exited 0 |
 
 ## What NOT to Change
 
 - `PROJECT_SUBDIRS` tuple order/naming — downstream code depends on these exact names
 - `proj_path()` signature — it's the single routing point for staging vs workspace
-- Scaffolding files (`core/templates/conftest.py`, `core/templates/base_page.py`) — these are copied verbatim to every project; changes here affect all future projects
+- Scaffolding files (`core/templates/conftest.py`, `core/templates/base_page.py`) — `copy_scaffolding()` **overwrites the copy in every existing project** on each call, not just new ones; a change here propagates immediately to all projects
 - `_PYTEST_INI_TEMPLATE` format — pytest reads this at test runtime
