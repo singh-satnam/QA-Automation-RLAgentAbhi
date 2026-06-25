@@ -17,18 +17,55 @@ FIDELITY TO STORY + FRAMEWORK — NON-NEGOTIABLE
 6. NEVER hardcode values from user_data.json into Python — read them at runtime via the `test_data` fixture (also declared in conftest.py).
 ═══════════════════════════════════════════════════════════════════
 
-Pipeline (per .feature file in feature/):
-1. Use Playwright MCP (configured headless) to discover the live site for that feature. Walk every    action the feature requires.
-2. Capture real selectors into mcp-selectors/locators.json. Never guess.
-3. Generate Page Objects under /pages/page_<slug>.py, inheriting BasePage. All Playwright calls    live in the POM. Use selector keys from locators.json only.
-4. Generate ONE step-definition file PER feature file: /step_defs/<feature_slug>_steps.py.    Each step calls one POM method. Do NOT edit conftest.py pytest_plugins — the harness registers the step modules from disk after you finish.
-5. Generate ONE pytest-bdd test PER feature file: test/test_<feature_slug>.py.
-6. Before generating, delete stale files in /pages, /step_defs, test/ that don't correspond to    the current feature files — BUT never delete the provided scaffolding: keep `pages/base_page.py`, `conftest.py`, and any `__init__.py`. The final state must contain only the scaffolding plus the files for the current run.
-7. Run HEADLESS validation: `pytest -v` (no --headed). On failure, heal up to 3 cycles using    fresh MCP discovery, updated selectors, and explicit waits. Stop healing once green.
-8. Append a one-line summary of generated/healed files to generation_log.txt.
+Pipeline:
+1. Read ALL `.feature` files in `feature/`. Identify every unique Given/When/Then   step text across all features. Group them into:
+   a. SHARED steps — identical step text appearing in 2+ feature files (e.g. login,
+      navigation, project selection, credential entry).
+   b. FEATURE-SPECIFIC steps — step text unique to one feature file.
+2. Use Playwright MCP (configured headless) to discover the live site. Walk every   action the features require.
+3. Capture real selectors into mcp-selectors/locators.json. Never guess.
+4. Generate Page Objects under /pages/:
+   a. `pages/page_common.py` — shared POM classes used by 2+ features (e.g.
+      LoginPage, MyProjectsPage, NavigationPage). ONE class per logical page, not
+      per feature.
+   b. `pages/page_<slug>.py` — feature-specific POM classes (e.g.
+      page_amazon_dcv.py, page_stop_instance.py). Only for pages/actions unique
+      to that feature.
+   All POM classes inherit BasePage. All Playwright calls live in the POM. Use
+   selector keys from locators.json only.
+5. Generate step definitions under /step_defs/:
+   a. `step_defs/common_steps.py` — ALL shared step defs (steps whose Gherkin text
+      appears in 2+ features). Imports shared POM classes from `pages/page_common.py`.
+   b. `step_defs/<feature_slug>_steps.py` — ONLY the step defs unique to that
+      feature. Imports feature-specific POM classes. Does NOT redefine any step
+      pattern already in common_steps.py.
+   CRITICAL: A @given/@when/@then pattern string MUST be defined in EXACTLY ONE
+   file across the entire step_defs/ folder. pytest-bdd raises an error if the
+   same pattern is registered twice.
+6. Generate ONE pytest-bdd test PER feature file: test/test_<feature_slug>.py.
+   Each test file imports from common_steps AND its feature-specific steps:
+      from step_defs.common_steps import *
+      from step_defs.<feature_slug>_steps import *
+7. Before generating, delete stale files in /pages, /step_defs, test/ that don't
+   correspond to the current feature files — BUT never delete the provided
+   scaffolding: keep `pages/base_page.py`, `conftest.py`, and any `__init__.py`.
+   The final state must contain only the scaffolding plus the files for the
+   current run.
+8. Run HEADLESS validation: `pytest -v` (no --headed). On failure, heal up to 3
+   cycles using fresh MCP discovery, updated selectors, and explicit waits. Stop
+   healing once green.
+9. Append a one-line summary of generated/healed files to generation_log.txt.
 
 Hard rules:
-- Per-feature isolation: N feature files → N step-def files → N test files.
+- STEP-DEF DEDUPLICATION: a step pattern MUST be defined EXACTLY ONCE across all
+  files in step_defs/. Shared steps live in common_steps.py. Feature-specific
+  steps live in <feature_slug>_steps.py. NEVER define the same @given/@when/@then
+  pattern in two different files — pytest-bdd will error on duplicate registrations.
+- PAGE OBJECT DEDUPLICATION: a POM class for a logical page (LoginPage,
+  MyProjectsPage, etc.) MUST exist in EXACTLY ONE file under pages/. If multiple
+  features interact with the same page, that POM class goes in page_common.py.
+  Feature-specific POM files import shared classes from page_common when needed.
+- N feature files → 1 common_steps + N feature-specific step files → N test files.
 - Live DOM via MCP is the only source of truth for selectors.
 - Step defs call POM methods, never raw Playwright.
 - Do NOT show the headed browser; this phase is silent.

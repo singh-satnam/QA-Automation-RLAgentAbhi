@@ -28,25 +28,54 @@ DELTA-ONLY MODE — NON-NEGOTIABLE
 ═══════════════════════════════════════════════════════════════════
 1. READ FIRST. Before generating ANYTHING, you MUST:
    a. Read the NEW story file `user_story/{{STORY_FILE}}`.
-   b. Read every .feature in feature/ — these include prior stories' features AND the new feature just generated for this story.
+   b. Read every .feature in feature/ — these include prior stories' features
+      AND the new feature just generated for this story.
    c. Read every page object in /pages/ and every step def in /step_defs/.
+      Pay special attention to step_defs/common_steps.py — it contains shared
+      step definitions used across multiple features.
    d. Read mcp-selectors/locators.json if it exists.
    e. Read user_data.json if it exists.
-2. DIFF. Compare the NEW story to the existing feature/step defs. Identify:
-   - Steps that are ALREADY covered (login, navigate, etc.) — leave them alone.
-   - Steps that are NEW (e.g. "place an order", a new field, a new tab).
+2. DIFF. Compare the NEW feature's Given/When/Then steps to EVERY existing
+   step def across ALL files in step_defs/. Classify each step:
+   - ALREADY DEFINED — the exact step pattern exists in common_steps.py or
+     another step file. DO NOT redefine it. The test file just imports it.
+   - SHARED-CANDIDATE — the step text also appears in other feature files but
+     has no step def yet. Define it ONCE in common_steps.py.
+   - FEATURE-SPECIFIC — the step text is unique to this feature. Define it in
+     step_defs/<new_feature_slug>_steps.py.
 3. EXTEND only the new steps:
-   - If a new step belongs to an existing page object, add ONE method to that      POM class. Do not duplicate. Do not rewrite the class.
-   - If a new step needs a new page, create a new file `pages/page_<slug>.py`      that inherits BasePage. Reuse selectors from locators.json if any apply;      otherwise discover them via Playwright MCP and append to locators.json.
-   - Add ONE new step def (or append to the existing matching step def file)      for each new Gherkin step. Wire it to the right POM method.
+   - If a new step's pattern already exists in ANY file under step_defs/,
+     DO NOT create a second definition. pytest-bdd errors on duplicate
+     registrations. The test file will import the existing module.
+   - If a new step is shared (appears in 2+ features) and not yet defined,
+     add it to step_defs/common_steps.py. If common_steps.py doesn't exist,
+     create it.
+   - If a new step belongs to an existing page object, add ONE method to that
+     POM class. Do not duplicate. Do not rewrite the class.
+   - If a new step needs a new page, create a new file `pages/page_<slug>.py`
+     that inherits BasePage. Reuse selectors from locators.json if any apply;
+     otherwise discover them via Playwright MCP and append to locators.json.
+   - NEVER create a new LoginPage, MyProjectsPage, or NavigationPage class if
+     one already exists in pages/page_common.py or another page file. Import
+     and reuse the existing class.
 4. UPDATE feature/:
-   - If the new story is a superset of the prior story (same flow + extra      steps), APPEND a new Scenario to the existing .feature.
-   - If the new story is a different feature on the same site, CREATE a new      .feature file. Do NOT delete the existing one.
-5. DO NOT DELETE existing files unless the new story explicitly contradicts    them (e.g. the prior login flow is now obsolete). When in doubt, keep.
-6. After writing, list:
+   - If the new story is a superset of the prior story (same flow + extra
+     steps), APPEND a new Scenario to the existing .feature.
+   - If the new story is a different feature on the same site, CREATE a new
+     .feature file. Do NOT delete the existing one.
+5. UPDATE test files:
+   - Each test file MUST import common_steps AND its feature-specific steps:
+       from step_defs.common_steps import *
+       from step_defs.<feature_slug>_steps import *
+   - If adding common_steps.py for the first time, update EXISTING test files
+     to also import it, so they pick up the shared definitions.
+6. DO NOT DELETE existing files unless the new story explicitly contradicts
+   them (e.g. the prior login flow is now obsolete). When in doubt, keep.
+7. After writing, list:
    - Files MODIFIED   (existing files you appended to)
    - Files CREATED    (brand-new files)
-   - Files UNCHANGED  (existing files you intentionally left alone — proof you                       respected the fork instead of regenerating)
+   - Files UNCHANGED  (existing files you intentionally left alone — proof you
+                      respected the fork instead of regenerating)
 
 All the FIDELITY rules from FRAMEWORK_PROMPT still apply: every step def must call captured_values, full row coverage on user_data.json, MCP-discovered selectors, no headed browser in this phase. Run `pytest -v` headless to validate, healing up to 3 cycles.
 

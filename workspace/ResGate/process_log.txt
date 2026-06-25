@@ -1727,3 +1727,304 @@
 [2026-06-25 08:32:28] !!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
 [2026-06-25 08:32:28] ============================== 1 error in 0.16s ===============================
 [2026-06-25 08:32:29] exit 2 after 1s
+[2026-06-25 09:13:25] Run test_login_and_launch_machine.py clicked
+[2026-06-25 09:13:25] exec: 'C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe' -m pytest -v --headed '--html=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_09-13-25\report.html' --self-contained-html '--alluredir=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_09-13-25\allure-results' test/test_login_and_launch_machine.py
+[2026-06-25 09:13:25] pid 30644 started
+[2026-06-25 09:13:27] ============================= test session starts =============================
+[2026-06-25 09:13:27] platform win32 -- Python 3.14.4, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe
+[2026-06-25 09:13:27] cachedir: .pytest_cache
+[2026-06-25 09:13:27] baseurl: https://ra-demo.rlcatalyst.com/login
+[2026-06-25 09:13:27] metadata: {'Python': '3.14.4', 'Platform': 'Windows-11-10.0.26200-SP0', 'Packages': {'pytest': '9.0.3', 'pluggy': '1.6.0'}, 'Plugins': {'allure-pytest': '2.16.0', 'anyio': '4.13.0', 'base-url': '2.1.0', 'bdd': '8.1.0', 'html': '4.2.0', 'metadata': '3.1.1', 'playwright': '0.8.0', 'xdist': '3.8.0'}, 'AWS_REGION': 'us-east-1', 'JAVA_HOME': 'C:\\Program Files\\OpenLogic\\jdk-8.0.482.08-hotspot\\', 'Base URL': 'https://ra-demo.rlcatalyst.com/login'}
+[2026-06-25 09:13:27] rootdir: D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate
+[2026-06-25 09:13:27] configfile: pytest.ini
+[2026-06-25 09:13:27] plugins: allure-pytest-2.16.0, anyio-4.13.0, base-url-2.1.0, bdd-8.1.0, html-4.2.0, metadata-3.1.1, playwright-0.8.0, xdist-3.8.0
+[2026-06-25 09:13:27] collecting ... collected 1 item
+[2026-06-25 09:13:27] 
+[2026-06-25 09:13:57] pytest still running — waiting on a Playwright action · pid 30644 · 31s elapsed (last update 09:13:57)
+[2026-06-25 09:14:11] test/test_login_and_launch_machine.py::test_login_navigate_to_project_product_and_launch_remote_desktop PASSED [100%]
+[2026-06-25 09:14:11] 
+[2026-06-25 09:14:11] ============================== warnings summary ===============================
+[2026-06-25 09:14:11] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\gherkin\gherkin_line.py:79
+[2026-06-25 09:14:11]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\gherkin\gherkin_line.py:79: DeprecationWarning: 'maxsplit' is passed as positional argument
+[2026-06-25 09:14:11]     uncommented_line = re.split(r"\s#", self._trimmed_line_text.strip(), 2)[0]
+[2026-06-25 09:14:11] 
+[2026-06-25 09:14:11] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137
+[2026-06-25 09:14:11]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.remote_desktop - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+[2026-06-25 09:14:11]     mark = getattr(pytest.mark, tag)
+[2026-06-25 09:14:11] 
+[2026-06-25 09:14:11] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137
+[2026-06-25 09:14:11]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.resgate - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+[2026-06-25 09:14:11]     mark = getattr(pytest.mark, tag)
+[2026-06-25 09:14:11] 
+[2026-06-25 09:14:11] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137
+[2026-06-25 09:14:11]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.login - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+[2026-06-25 09:14:11]     mark = getattr(pytest.mark, tag)
+[2026-06-25 09:14:11] 
+[2026-06-25 09:14:11] -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+[2026-06-25 09:14:11] - Generated html report: file:///D:/D_WS/QE_Agent_Abhi_SS_A/QA-Automation/QA-Automation-RLAgentAbhi/workspace/Resgate/report/2026-06-25_09-13-25/report.html -
+[2026-06-25 09:14:11] ======================= 1 passed, 4 warnings in 44.63s ========================
+[2026-06-25 09:14:12] exit 0 after 46s
+[2026-06-25 09:14:16] Run test_login_and_stop_instance.py clicked
+[2026-06-25 09:14:16] exec: 'C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe' -m pytest -v --headed '--html=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_09-14-16\report.html' --self-contained-html '--alluredir=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_09-14-16\allure-results' test/test_login_and_stop_instance.py
+[2026-06-25 09:14:16] pid 29992 started
+[2026-06-25 09:14:17] ============================= test session starts =============================
+[2026-06-25 09:14:17] platform win32 -- Python 3.14.4, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe
+[2026-06-25 09:14:17] cachedir: .pytest_cache
+[2026-06-25 09:14:17] baseurl: https://ra-demo.rlcatalyst.com/login
+[2026-06-25 09:14:17] metadata: {'Python': '3.14.4', 'Platform': 'Windows-11-10.0.26200-SP0', 'Packages': {'pytest': '9.0.3', 'pluggy': '1.6.0'}, 'Plugins': {'allure-pytest': '2.16.0', 'anyio': '4.13.0', 'base-url': '2.1.0', 'bdd': '8.1.0', 'html': '4.2.0', 'metadata': '3.1.1', 'playwright': '0.8.0', 'xdist': '3.8.0'}, 'AWS_REGION': 'us-east-1', 'JAVA_HOME': 'C:\\Program Files\\OpenLogic\\jdk-8.0.482.08-hotspot\\', 'Base URL': 'https://ra-demo.rlcatalyst.com/login'}
+[2026-06-25 09:14:17] rootdir: D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate
+[2026-06-25 09:14:17] configfile: pytest.ini
+[2026-06-25 09:14:17] plugins: allure-pytest-2.16.0, anyio-4.13.0, base-url-2.1.0, bdd-8.1.0, html-4.2.0, metadata-3.1.1, playwright-0.8.0, xdist-3.8.0
+[2026-06-25 09:14:17] collecting ... collected 1 item
+[2026-06-25 09:14:17] 
+[2026-06-25 09:14:47] pytest still running — waiting on a Playwright action · pid 29992 · 30s elapsed (last update 09:14:47)
+[2026-06-25 09:15:17] test/test_login_and_stop_instance.py::test_login_and_stop_instance PASSED [100%]
+[2026-06-25 09:15:17] 
+[2026-06-25 09:15:17] - Generated html report: file:///D:/D_WS/QE_Agent_Abhi_SS_A/QA-Automation/QA-Automation-RLAgentAbhi/workspace/Resgate/report/2026-06-25_09-14-16/report.html -
+[2026-06-25 09:15:17] ============================= 1 passed in 59.59s ==============================
+[2026-06-25 09:15:17] exit 0 after 61s
+[2026-06-25 09:17:22] Run test_create_new_instance.py clicked
+[2026-06-25 09:17:22] exec: 'C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe' -m pytest -v --headed '--html=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_09-17-22\report.html' --self-contained-html '--alluredir=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_09-17-22\allure-results' test/test_create_new_instance.py
+[2026-06-25 09:17:22] pid 32128 started
+[2026-06-25 09:17:23] ============================= test session starts =============================
+[2026-06-25 09:17:23] platform win32 -- Python 3.14.4, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe
+[2026-06-25 09:17:23] cachedir: .pytest_cache
+[2026-06-25 09:17:23] baseurl: https://ra-demo.rlcatalyst.com/login
+[2026-06-25 09:17:23] metadata: {'Python': '3.14.4', 'Platform': 'Windows-11-10.0.26200-SP0', 'Packages': {'pytest': '9.0.3', 'pluggy': '1.6.0'}, 'Plugins': {'allure-pytest': '2.16.0', 'anyio': '4.13.0', 'base-url': '2.1.0', 'bdd': '8.1.0', 'html': '4.2.0', 'metadata': '3.1.1', 'playwright': '0.8.0', 'xdist': '3.8.0'}, 'AWS_REGION': 'us-east-1', 'JAVA_HOME': 'C:\\Program Files\\OpenLogic\\jdk-8.0.482.08-hotspot\\', 'Base URL': 'https://ra-demo.rlcatalyst.com/login'}
+[2026-06-25 09:17:23] rootdir: D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate
+[2026-06-25 09:17:23] configfile: pytest.ini
+[2026-06-25 09:17:23] plugins: allure-pytest-2.16.0, anyio-4.13.0, base-url-2.1.0, bdd-8.1.0, html-4.2.0, metadata-3.1.1, playwright-0.8.0, xdist-3.8.0
+[2026-06-25 09:17:23] collecting ... collected 1 item
+[2026-06-25 09:17:23] 
+[2026-06-25 09:17:51] test/test_create_new_instance.py::test_launch_standard_linux_remote_desktop PASSED [100%]
+[2026-06-25 09:17:51] 
+[2026-06-25 09:17:51] - Generated html report: file:///D:/D_WS/QE_Agent_Abhi_SS_A/QA-Automation/QA-Automation-RLAgentAbhi/workspace/Resgate/report/2026-06-25_09-17-22/report.html -
+[2026-06-25 09:17:51] ============================= 1 passed in 27.86s ==============================
+[2026-06-25 09:17:52] exit 0 after 29s
+[2026-06-25 09:17:58] Run test_login_and_launch_machine.py clicked
+[2026-06-25 09:17:58] exec: 'C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe' -m pytest -v --headed '--html=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_09-17-58\report.html' --self-contained-html '--alluredir=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_09-17-58\allure-results' test/test_login_and_launch_machine.py
+[2026-06-25 09:17:58] pid 22076 started
+[2026-06-25 09:17:58] ============================= test session starts =============================
+[2026-06-25 09:17:58] platform win32 -- Python 3.14.4, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe
+[2026-06-25 09:17:58] cachedir: .pytest_cache
+[2026-06-25 09:17:58] baseurl: https://ra-demo.rlcatalyst.com/login
+[2026-06-25 09:17:58] metadata: {'Python': '3.14.4', 'Platform': 'Windows-11-10.0.26200-SP0', 'Packages': {'pytest': '9.0.3', 'pluggy': '1.6.0'}, 'Plugins': {'allure-pytest': '2.16.0', 'anyio': '4.13.0', 'base-url': '2.1.0', 'bdd': '8.1.0', 'html': '4.2.0', 'metadata': '3.1.1', 'playwright': '0.8.0', 'xdist': '3.8.0'}, 'AWS_REGION': 'us-east-1', 'JAVA_HOME': 'C:\\Program Files\\OpenLogic\\jdk-8.0.482.08-hotspot\\', 'Base URL': 'https://ra-demo.rlcatalyst.com/login'}
+[2026-06-25 09:17:58] rootdir: D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate
+[2026-06-25 09:17:58] configfile: pytest.ini
+[2026-06-25 09:17:58] plugins: allure-pytest-2.16.0, anyio-4.13.0, base-url-2.1.0, bdd-8.1.0, html-4.2.0, metadata-3.1.1, playwright-0.8.0, xdist-3.8.0
+[2026-06-25 09:17:58] collecting ... collected 1 item
+[2026-06-25 09:17:58] 
+[2026-06-25 09:18:18] test/test_login_and_launch_machine.py::test_login_navigate_to_project_product_and_launch_remote_desktop FAILED [100%]
+[2026-06-25 09:18:18] 
+[2026-06-25 09:18:18] ================================== FAILURES ===================================
+[2026-06-25 09:18:18] ______ test_login_navigate_to_project_product_and_launch_remote_desktop _______
+[2026-06-25 09:18:18] 
+[2026-06-25 09:18:18] fixturefunc = <function verify_product_status at 0x000001724E2D9380>
+[2026-06-25 09:18:18] request = <FixtureRequest for <Function test_login_navigate_to_project_product_and_launch_remote_desktop>>
+[2026-06-25 09:18:18] kwargs = {'captured_values': <conftest.CapturedValues object at 0x000001724E5D2BA0>, 'page': <Page url='https://ra-demo.rlcatal...00001724E5D38C0>, 'project_page': <pages.page_login_and_launch_machine.ProjectPage object at 0x000001724E5D3CB0>}, ...}
+[2026-06-25 09:18:18] 
+[2026-06-25 09:18:18]     def call_fixture_func(
+[2026-06-25 09:18:18]         fixturefunc: _FixtureFunc[FixtureValue], request: FixtureRequest, kwargs
+[2026-06-25 09:18:18]     ) -> FixtureValue:
+[2026-06-25 09:18:18]         if inspect.isgeneratorfunction(fixturefunc):
+[2026-06-25 09:18:18]             fixturefunc = cast(Callable[..., Generator[FixtureValue]], fixturefunc)
+[2026-06-25 09:18:18]             generator = fixturefunc(**kwargs)
+[2026-06-25 09:18:18]             try:
+[2026-06-25 09:18:18]                 fixture_result = next(generator)
+[2026-06-25 09:18:18]             except StopIteration:
+[2026-06-25 09:18:18]                 raise ValueError(f"{request.fixturename} did not yield a value") from None
+[2026-06-25 09:18:18]             finalizer = functools.partial(_teardown_yield_fixture, fixturefunc, generator)
+[2026-06-25 09:18:18]             request.addfinalizer(finalizer)
+[2026-06-25 09:18:18]         else:
+[2026-06-25 09:18:18]             fixturefunc = cast(Callable[..., FixtureValue], fixturefunc)
+[2026-06-25 09:18:18] >           fixture_result = fixturefunc(**kwargs)
+[2026-06-25 09:18:18]                              ^^^^^^^^^^^^^^^^^^^^^
+[2026-06-25 09:18:18] 
+[2026-06-25 09:18:18] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\fixtures.py:915:
+[2026-06-25 09:18:18] _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+[2026-06-25 09:18:18] 
+[2026-06-25 09:18:18] page = <Page url='https://ra-demo.rlcatalyst.com/catalog/Automation%2520Testing/698406a7e3ba4fad79bbcb86'>
+[2026-06-25 09:18:18] captured_values = <conftest.CapturedValues object at 0x000001724E5D2BA0>
+[2026-06-25 09:18:18] scenario_context = {'login_page': <pages.page_login_and_launch_machine.LoginPage object at 0x000001724E5D2A50>, 'my_projects_page': <page...at 0x000001724E5D38C0>, 'project_page': <pages.page_login_and_launch_machine.ProjectPage object at 0x000001724E5D3CB0>}
+[2026-06-25 09:18:18] product_name = 'Demo-RD-2379', status = 'Active'
+[2026-06-25 09:18:18] 
+[2026-06-25 09:18:18]     @then(parsers.parse('"{product_name}" is in green "{status}" status'))
+[2026-06-25 09:18:18]     def verify_product_status(page, captured_values, scenario_context, product_name, status):
+[2026-06-25 09:18:18]         cap = captured_values
+[2026-06-25 09:18:18]         pp = scenario_context.get("project_page") or ProjectPage(page)
+[2026-06-25 09:18:18]         actual_status = pp.get_product_status(product_name)
+[2026-06-25 09:18:18] >       assert cap.assert_match(
+[2026-06-25 09:18:18]             f"Product '{product_name}' status",
+[2026-06-25 09:18:18]             expected=status,
+[2026-06-25 09:18:18]             actual=actual_status,
+[2026-06-25 09:18:18]         )
+[2026-06-25 09:18:18] E       assert False
+[2026-06-25 09:18:18] E        +  where False = assert_match("Product 'Demo-RD-2379' status", expected='Active', actual='Stopped')
+[2026-06-25 09:18:18] E        +    where assert_match = <conftest.CapturedValues object at 0x000001724E5D2BA0>.assert_match
+[2026-06-25 09:18:18] 
+[2026-06-25 09:18:18] step_defs\login_and_launch_machine_steps.py:124: AssertionError
+[2026-06-25 09:18:18] ============================== warnings summary ===============================
+[2026-06-25 09:18:18] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\gherkin\gherkin_line.py:79
+[2026-06-25 09:18:18]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\gherkin\gherkin_line.py:79: DeprecationWarning: 'maxsplit' is passed as positional argument
+[2026-06-25 09:18:18]     uncommented_line = re.split(r"\s#", self._trimmed_line_text.strip(), 2)[0]
+[2026-06-25 09:18:18] 
+[2026-06-25 09:18:18] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137
+[2026-06-25 09:18:18]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.resgate - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+[2026-06-25 09:18:18]     mark = getattr(pytest.mark, tag)
+[2026-06-25 09:18:18] 
+[2026-06-25 09:18:18] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137
+[2026-06-25 09:18:18]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.login - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+[2026-06-25 09:18:18]     mark = getattr(pytest.mark, tag)
+[2026-06-25 09:18:18] 
+[2026-06-25 09:18:18] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137
+[2026-06-25 09:18:18]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.remote_desktop - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+[2026-06-25 09:18:18]     mark = getattr(pytest.mark, tag)
+[2026-06-25 09:18:18] 
+[2026-06-25 09:18:18] -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+[2026-06-25 09:18:18] - Generated html report: file:///D:/D_WS/QE_Agent_Abhi_SS_A/QA-Automation/QA-Automation-RLAgentAbhi/workspace/Resgate/report/2026-06-25_09-17-58/report.html -
+[2026-06-25 09:18:18] =========================== short test summary info ===========================
+[2026-06-25 09:18:18] FAILED test/test_login_and_launch_machine.py::test_login_navigate_to_project_product_and_launch_remote_desktop
+[2026-06-25 09:18:18] ======================= 1 failed, 4 warnings in 19.52s ========================
+[2026-06-25 09:18:18] exit 1 after 20s
+[2026-06-25 09:22:18] Run test_login_and_launch_machine.py clicked
+[2026-06-25 09:22:18] exec: 'C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe' -m pytest -v --headed '--html=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_09-22-18\report.html' --self-contained-html '--alluredir=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_09-22-18\allure-results' test/test_login_and_launch_machine.py
+[2026-06-25 09:22:18] pid 27628 started
+[2026-06-25 09:22:18] ============================= test session starts =============================
+[2026-06-25 09:22:18] platform win32 -- Python 3.14.4, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe
+[2026-06-25 09:22:18] cachedir: .pytest_cache
+[2026-06-25 09:22:18] baseurl: https://ra-demo.rlcatalyst.com/login
+[2026-06-25 09:22:18] metadata: {'Python': '3.14.4', 'Platform': 'Windows-11-10.0.26200-SP0', 'Packages': {'pytest': '9.0.3', 'pluggy': '1.6.0'}, 'Plugins': {'allure-pytest': '2.16.0', 'anyio': '4.13.0', 'base-url': '2.1.0', 'bdd': '8.1.0', 'html': '4.2.0', 'metadata': '3.1.1', 'playwright': '0.8.0', 'xdist': '3.8.0'}, 'AWS_REGION': 'us-east-1', 'JAVA_HOME': 'C:\\Program Files\\OpenLogic\\jdk-8.0.482.08-hotspot\\', 'Base URL': 'https://ra-demo.rlcatalyst.com/login'}
+[2026-06-25 09:22:18] rootdir: D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate
+[2026-06-25 09:22:18] configfile: pytest.ini
+[2026-06-25 09:22:18] plugins: allure-pytest-2.16.0, anyio-4.13.0, base-url-2.1.0, bdd-8.1.0, html-4.2.0, metadata-3.1.1, playwright-0.8.0, xdist-3.8.0
+[2026-06-25 09:22:18] collecting ... collected 1 item
+[2026-06-25 09:22:18] 
+[2026-06-25 09:22:39] test/test_login_and_launch_machine.py::test_login_navigate_to_project_product_and_launch_remote_desktop FAILED [100%]
+[2026-06-25 09:22:39] 
+[2026-06-25 09:22:39] ================================== FAILURES ===================================
+[2026-06-25 09:22:39] ______ test_login_navigate_to_project_product_and_launch_remote_desktop _______
+[2026-06-25 09:22:39] 
+[2026-06-25 09:22:39] fixturefunc = <function verify_product_status at 0x0000015F61829380>
+[2026-06-25 09:22:39] request = <FixtureRequest for <Function test_login_navigate_to_project_product_and_launch_remote_desktop>>
+[2026-06-25 09:22:39] kwargs = {'captured_values': <conftest.CapturedValues object at 0x0000015F61B52BA0>, 'page': <Page url='https://ra-demo.rlcatal...000015F61B538C0>, 'project_page': <pages.page_login_and_launch_machine.ProjectPage object at 0x0000015F61B53CB0>}, ...}
+[2026-06-25 09:22:39] 
+[2026-06-25 09:22:39]     def call_fixture_func(
+[2026-06-25 09:22:39]         fixturefunc: _FixtureFunc[FixtureValue], request: FixtureRequest, kwargs
+[2026-06-25 09:22:39]     ) -> FixtureValue:
+[2026-06-25 09:22:39]         if inspect.isgeneratorfunction(fixturefunc):
+[2026-06-25 09:22:39]             fixturefunc = cast(Callable[..., Generator[FixtureValue]], fixturefunc)
+[2026-06-25 09:22:39]             generator = fixturefunc(**kwargs)
+[2026-06-25 09:22:39]             try:
+[2026-06-25 09:22:39]                 fixture_result = next(generator)
+[2026-06-25 09:22:39]             except StopIteration:
+[2026-06-25 09:22:39]                 raise ValueError(f"{request.fixturename} did not yield a value") from None
+[2026-06-25 09:22:39]             finalizer = functools.partial(_teardown_yield_fixture, fixturefunc, generator)
+[2026-06-25 09:22:39]             request.addfinalizer(finalizer)
+[2026-06-25 09:22:39]         else:
+[2026-06-25 09:22:39]             fixturefunc = cast(Callable[..., FixtureValue], fixturefunc)
+[2026-06-25 09:22:39] >           fixture_result = fixturefunc(**kwargs)
+[2026-06-25 09:22:39]                              ^^^^^^^^^^^^^^^^^^^^^
+[2026-06-25 09:22:39] 
+[2026-06-25 09:22:39] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\fixtures.py:915:
+[2026-06-25 09:22:39] _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+[2026-06-25 09:22:39] 
+[2026-06-25 09:22:39] page = <Page url='https://ra-demo.rlcatalyst.com/catalog/Automation%2520Testing/698406a7e3ba4fad79bbcb86'>
+[2026-06-25 09:22:39] captured_values = <conftest.CapturedValues object at 0x0000015F61B52BA0>
+[2026-06-25 09:22:39] scenario_context = {'login_page': <pages.page_login_and_launch_machine.LoginPage object at 0x0000015F61B52A50>, 'my_projects_page': <page...at 0x0000015F61B538C0>, 'project_page': <pages.page_login_and_launch_machine.ProjectPage object at 0x0000015F61B53CB0>}
+[2026-06-25 09:22:39] product_name = 'Demo-RD-2379', status = 'Active'
+[2026-06-25 09:22:39] 
+[2026-06-25 09:22:39]     @then(parsers.parse('"{product_name}" is in green "{status}" status'))
+[2026-06-25 09:22:39]     def verify_product_status(page, captured_values, scenario_context, product_name, status):
+[2026-06-25 09:22:39]         cap = captured_values
+[2026-06-25 09:22:39]         pp = scenario_context.get("project_page") or ProjectPage(page)
+[2026-06-25 09:22:39]         actual_status = pp.get_product_status(product_name)
+[2026-06-25 09:22:39] >       assert cap.assert_match(
+[2026-06-25 09:22:39]             f"Product '{product_name}' status",
+[2026-06-25 09:22:39]             expected=status,
+[2026-06-25 09:22:39]             actual=actual_status,
+[2026-06-25 09:22:39]         )
+[2026-06-25 09:22:39] E       assert False
+[2026-06-25 09:22:39] E        +  where False = assert_match("Product 'Demo-RD-2379' status", expected='Active', actual='Stopped')
+[2026-06-25 09:22:39] E        +    where assert_match = <conftest.CapturedValues object at 0x0000015F61B52BA0>.assert_match
+[2026-06-25 09:22:39] 
+[2026-06-25 09:22:39] step_defs\login_and_launch_machine_steps.py:124: AssertionError
+[2026-06-25 09:22:39] ============================== warnings summary ===============================
+[2026-06-25 09:22:39] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\gherkin\gherkin_line.py:79
+[2026-06-25 09:22:39]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\gherkin\gherkin_line.py:79: DeprecationWarning: 'maxsplit' is passed as positional argument
+[2026-06-25 09:22:39]     uncommented_line = re.split(r"\s#", self._trimmed_line_text.strip(), 2)[0]
+[2026-06-25 09:22:39] 
+[2026-06-25 09:22:39] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137
+[2026-06-25 09:22:39]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.login - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+[2026-06-25 09:22:39]     mark = getattr(pytest.mark, tag)
+[2026-06-25 09:22:39] 
+[2026-06-25 09:22:39] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137
+[2026-06-25 09:22:39]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.remote_desktop - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+[2026-06-25 09:22:39]     mark = getattr(pytest.mark, tag)
+[2026-06-25 09:22:39] 
+[2026-06-25 09:22:39] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137
+[2026-06-25 09:22:39]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.resgate - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+[2026-06-25 09:22:39]     mark = getattr(pytest.mark, tag)
+[2026-06-25 09:22:39] 
+[2026-06-25 09:22:39] -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+[2026-06-25 09:22:39] - Generated html report: file:///D:/D_WS/QE_Agent_Abhi_SS_A/QA-Automation/QA-Automation-RLAgentAbhi/workspace/Resgate/report/2026-06-25_09-22-18/report.html -
+[2026-06-25 09:22:39] =========================== short test summary info ===========================
+[2026-06-25 09:22:39] FAILED test/test_login_and_launch_machine.py::test_login_navigate_to_project_product_and_launch_remote_desktop
+[2026-06-25 09:22:39] ======================= 1 failed, 4 warnings in 19.92s ========================
+[2026-06-25 09:22:39] exit 1 after 21s
+[2026-06-25 09:23:41] Run test_login_and_launch_machine.py clicked
+[2026-06-25 09:23:41] exec: 'C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe' -m pytest -v --headed '--html=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_09-23-41\report.html' --self-contained-html '--alluredir=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_09-23-41\allure-results' test/test_login_and_launch_machine.py
+[2026-06-25 09:23:41] pid 17460 started
+[2026-06-25 09:23:41] ============================= test session starts =============================
+[2026-06-25 09:23:41] platform win32 -- Python 3.14.4, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe
+[2026-06-25 09:23:41] cachedir: .pytest_cache
+[2026-06-25 09:23:41] baseurl: https://ra-demo.rlcatalyst.com/login
+[2026-06-25 09:23:41] metadata: {'Python': '3.14.4', 'Platform': 'Windows-11-10.0.26200-SP0', 'Packages': {'pytest': '9.0.3', 'pluggy': '1.6.0'}, 'Plugins': {'allure-pytest': '2.16.0', 'anyio': '4.13.0', 'base-url': '2.1.0', 'bdd': '8.1.0', 'html': '4.2.0', 'metadata': '3.1.1', 'playwright': '0.8.0', 'xdist': '3.8.0'}, 'AWS_REGION': 'us-east-1', 'JAVA_HOME': 'C:\\Program Files\\OpenLogic\\jdk-8.0.482.08-hotspot\\', 'Base URL': 'https://ra-demo.rlcatalyst.com/login'}
+[2026-06-25 09:23:41] rootdir: D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate
+[2026-06-25 09:23:41] configfile: pytest.ini
+[2026-06-25 09:23:41] plugins: allure-pytest-2.16.0, anyio-4.13.0, base-url-2.1.0, bdd-8.1.0, html-4.2.0, metadata-3.1.1, playwright-0.8.0, xdist-3.8.0
+[2026-06-25 09:23:41] collecting ... collected 1 item
+[2026-06-25 09:23:41] 
+[2026-06-25 09:24:11] pytest still running — waiting on a Playwright action · pid 17460 · 30s elapsed (last update 09:24:11)
+[2026-06-25 09:24:41] pytest still running — waiting on a Playwright action · pid 17460 · 60s elapsed (last update 09:24:41)
+[2026-06-25 09:24:42] test/test_login_and_launch_machine.py::test_login_navigate_to_project_product_and_launch_remote_desktop PASSED [100%]
+[2026-06-25 09:24:42] 
+[2026-06-25 09:24:42] ============================== warnings summary ===============================
+[2026-06-25 09:24:42] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\gherkin\gherkin_line.py:79
+[2026-06-25 09:24:42]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\gherkin\gherkin_line.py:79: DeprecationWarning: 'maxsplit' is passed as positional argument
+[2026-06-25 09:24:42]     uncommented_line = re.split(r"\s#", self._trimmed_line_text.strip(), 2)[0]
+[2026-06-25 09:24:42] 
+[2026-06-25 09:24:42] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137
+[2026-06-25 09:24:42]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.resgate - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+[2026-06-25 09:24:42]     mark = getattr(pytest.mark, tag)
+[2026-06-25 09:24:42] 
+[2026-06-25 09:24:42] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137
+[2026-06-25 09:24:42]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.login - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+[2026-06-25 09:24:42]     mark = getattr(pytest.mark, tag)
+[2026-06-25 09:24:42] 
+[2026-06-25 09:24:42] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137
+[2026-06-25 09:24:42]   C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\pytest_bdd\plugin.py:137: PytestUnknownMarkWarning: Unknown pytest.mark.remote_desktop - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+[2026-06-25 09:24:42]     mark = getattr(pytest.mark, tag)
+[2026-06-25 09:24:42] 
+[2026-06-25 09:24:42] -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+[2026-06-25 09:24:42] - Generated html report: file:///D:/D_WS/QE_Agent_Abhi_SS_A/QA-Automation/QA-Automation-RLAgentAbhi/workspace/Resgate/report/2026-06-25_09-23-41/report.html -
+[2026-06-25 09:24:42] ================== 1 passed, 4 warnings in 60.22s (0:01:00) ===================
+[2026-06-25 09:24:42] exit 0 after 61s
+[2026-06-25 09:24:50] Run test_login_and_stop_instance.py clicked
+[2026-06-25 09:24:50] exec: 'C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe' -m pytest -v --headed '--html=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_09-24-50\report.html' --self-contained-html '--alluredir=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate\report\2026-06-25_09-24-50\allure-results' test/test_login_and_stop_instance.py
+[2026-06-25 09:24:50] pid 27184 started
+[2026-06-25 09:24:51] ============================= test session starts =============================
+[2026-06-25 09:24:51] platform win32 -- Python 3.14.4, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe
+[2026-06-25 09:24:51] cachedir: .pytest_cache
+[2026-06-25 09:24:51] baseurl: https://ra-demo.rlcatalyst.com/login
+[2026-06-25 09:24:51] metadata: {'Python': '3.14.4', 'Platform': 'Windows-11-10.0.26200-SP0', 'Packages': {'pytest': '9.0.3', 'pluggy': '1.6.0'}, 'Plugins': {'allure-pytest': '2.16.0', 'anyio': '4.13.0', 'base-url': '2.1.0', 'bdd': '8.1.0', 'html': '4.2.0', 'metadata': '3.1.1', 'playwright': '0.8.0', 'xdist': '3.8.0'}, 'AWS_REGION': 'us-east-1', 'JAVA_HOME': 'C:\\Program Files\\OpenLogic\\jdk-8.0.482.08-hotspot\\', 'Base URL': 'https://ra-demo.rlcatalyst.com/login'}
+[2026-06-25 09:24:51] rootdir: D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\Resgate
+[2026-06-25 09:24:51] configfile: pytest.ini
+[2026-06-25 09:24:51] plugins: allure-pytest-2.16.0, anyio-4.13.0, base-url-2.1.0, bdd-8.1.0, html-4.2.0, metadata-3.1.1, playwright-0.8.0, xdist-3.8.0
+[2026-06-25 09:24:51] collecting ... collected 1 item
+[2026-06-25 09:24:51] 
+[2026-06-25 09:25:21] pytest still running — waiting on a Playwright action · pid 27184 · 30s elapsed (last update 09:25:21)
+[2026-06-25 09:25:47] test/test_login_and_stop_instance.py::test_login_and_stop_instance PASSED [100%]
+[2026-06-25 09:25:47] 
+[2026-06-25 09:25:47] - Generated html report: file:///D:/D_WS/QE_Agent_Abhi_SS_A/QA-Automation/QA-Automation-RLAgentAbhi/workspace/Resgate/report/2026-06-25_09-24-50/report.html -
+[2026-06-25 09:25:47] ============================= 1 passed in 55.95s ==============================
+[2026-06-25 09:25:48] exit 0 after 57s

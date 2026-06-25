@@ -15,10 +15,10 @@ Feature: Login and Launch Remote Desktop Machine
     When the user clicks on the "Automation Testing" project
     Then the "Automation Testing" page is displayed
     When the user clicks on the My Products tab
-    Then "Demo-RD-7984" is available
-    And "Demo-RD-7984" is in green "Active" status
-    When the user clicks on "Demo-RD-7984"
-    Then the user lands on the product details of "Demo-RD-7984"
+    Then "Demo-RD-2379" is available
+    And "Demo-RD-2379" is in green "Active" status
+    When the user clicks on "Demo-RD-2379"
+    Then the user lands on the product details of "Demo-RD-2379"
     When the user clicks on "Remote Desktop" under "CONNECT"
     Then a new browser tab is opened with the new Amazon instance
     When on the new tab the user clicks on the option with text starting with "ip-"

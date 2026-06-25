@@ -60,3 +60,4 @@ user_data.xls
 # MCP browser session logs + DOM snapshots (cache, not source)
 .playwright-mcp/
 .claude/
+workspace/ResGate/process_log.txt

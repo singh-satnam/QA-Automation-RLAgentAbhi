@@ -515,17 +515,15 @@ def sync_pytest_plugins() -> list[str]:
     the module object but does NOT expose pytest-bdd's injected step fixtures).
     Instead we derive the plugin list from the artifacts actually on disk.
 
-    Mapping rule (matches the current FRAMEWORK_PROMPT: one step file per
-    feature, named /step_defs/<feature_stem>_steps.py):
+    Mapping rule:
 
-      * Register the step module that corresponds to each present feature, and
-        SKIP stale/reused step modules whose feature is NOT part of this story.
-        (A reused login POM can drag along an unrelated *_steps.py whose generic
-        patterns — 'the user navigates to ...', 'the user clicks on ...' —
-        would collide with the active story's steps.)
+      * Always register step_defs/common_steps.py if it exists — it contains
+        shared step definitions (login, navigation, etc.) used across features.
+      * Register the step module that corresponds to each present feature
+        (step_defs/<feature_stem>_steps.py).
       * Fallback: if nothing matches by name (LLM deviated from the naming
         convention), register every *_steps.py so we register SOMETHING rather
-        than nothing — mirrors the older shared-steps projects.
+        than nothing.
 
     Returns the list of dotted module paths written (for logging)."""
     conftest = proj_path("conftest.py")
@@ -545,6 +543,10 @@ def sync_pytest_plugins() -> list[str]:
         if any(s == f"{fstem}_steps" for fstem in feature_stems)
     ]
     modules = matched or all_steps
+    # Always include common_steps if it exists (shared step defs across features)
+    common = step_defs_dir / "common_steps.py" if step_defs_dir.exists() else None
+    if common and common.exists() and "common_steps" not in modules:
+        modules = ["common_steps"] + modules
     plugins = tuple(f"step_defs.{m}" for m in modules)
 
     text = conftest.read_text(encoding="utf-8")
