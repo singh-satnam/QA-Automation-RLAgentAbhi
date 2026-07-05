@@ -2185,3 +2185,152 @@
 [2026-06-25 11:35:52] - Generated html report: file:///D:/D_WS/QE_Agent_Abhi_SS_A/QA-Automation/QA-Automation-RLAgentAbhi/workspace/Resgate/report/2026-06-25_11-33-57/report.html -
 [2026-06-25 11:35:52] ================== 3 passed, 4 warnings in 113.98s (0:01:53) ==================
 [2026-06-25 11:35:52] exit 0 after 115s
+[2026-07-05 18:35:01] Run test_create_new_instance.py clicked
+[2026-07-05 18:35:01] exec: 'C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe' -m pytest -v --headed '--html=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\ResGate\report\2026-07-05_18-35-01\report.html' --self-contained-html '--alluredir=D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\ResGate\report\2026-07-05_18-35-01\allure-results' test/test_create_new_instance.py
+[2026-07-05 18:35:01] pid 35880 started
+[2026-07-05 18:35:02] ============================= test session starts =============================
+[2026-07-05 18:35:02] platform win32 -- Python 3.14.4, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\python.exe
+[2026-07-05 18:35:02] cachedir: .pytest_cache
+[2026-07-05 18:35:02] baseurl: https://ra-demo.rlcatalyst.com/login
+[2026-07-05 18:35:02] metadata: {'Python': '3.14.4', 'Platform': 'Windows-11-10.0.26200-SP0', 'Packages': {'pytest': '9.0.3', 'pluggy': '1.6.0'}, 'Plugins': {'allure-pytest': '2.16.0', 'anyio': '4.13.0', 'base-url': '2.1.0', 'bdd': '8.1.0', 'html': '4.2.0', 'metadata': '3.1.1', 'playwright': '0.8.0', 'xdist': '3.8.0'}, 'AWS_REGION': 'us-east-1', 'JAVA_HOME': 'C:\\Program Files\\OpenLogic\\jdk-8.0.482.08-hotspot\\', 'Base URL': 'https://ra-demo.rlcatalyst.com/login'}
+[2026-07-05 18:35:02] rootdir: D:\D_WS\QE_Agent_Abhi_SS_A\QA-Automation\QA-Automation-RLAgentAbhi\workspace\ResGate
+[2026-07-05 18:35:02] configfile: pytest.ini
+[2026-07-05 18:35:02] plugins: allure-pytest-2.16.0, anyio-4.13.0, base-url-2.1.0, bdd-8.1.0, html-4.2.0, metadata-3.1.1, playwright-0.8.0, xdist-3.8.0
+[2026-07-05 18:35:02] collecting ... collected 1 item
+[2026-07-05 18:35:02] 
+[2026-07-05 18:35:31] test/test_create_new_instance.py::test_launch_standard_linux_remote_desktop FAILED [100%]
+[2026-07-05 18:35:31] 
+[2026-07-05 18:35:31] ================================== FAILURES ===================================
+[2026-07-05 18:35:31] __________________ test_launch_standard_linux_remote_desktop __________________
+[2026-07-05 18:35:31] 
+[2026-07-05 18:35:31] self = <pages.page_create_new_instance.CreateInstancePage object at 0x000001DD106201A0>
+[2026-07-05 18:35:31] study_name = 'GenomicsStudyData(read-only, Internal)'
+[2026-07-05 18:35:31] 
+[2026-07-05 18:35:31]     def select_study(self, study_name):
+[2026-07-05 18:35:31]         selector = self.loc["create_instance"]["study_selection_item"].replace("{study_name}", study_name)
+[2026-07-05 18:35:31]         study_el = self.page.locator(selector)
+[2026-07-05 18:35:31]         try:
+[2026-07-05 18:35:31] >           expect(study_el.first).to_be_visible(timeout=10000)
+[2026-07-05 18:35:31] E           AssertionError: Locator expected to be visible
+[2026-07-05 18:35:31] E           Actual value: - button "Open navigation menu"
+[2026-07-05 18:35:31] E           - img "Research Gateway"
+[2026-07-05 18:35:31] E           - button "User menu": Researcher P
+[2026-07-05 18:35:31] E           - navigation "breadcrumb":
+[2026-07-05 18:35:31] E             - list:
+[2026-07-05 18:35:31] E               - listitem:
+[2026-07-05 18:35:31] E                 - link "My Projects":
+[2026-07-05 18:35:31] E                   - /url: /researcher
+[2026-07-05 18:35:31] E               - listitem: "> Automation Testing"
+[2026-07-05 18:35:31] E               - listitem: "> Standard Linux Remote Desktop"
+[2026-07-05 18:35:31] E           - heading "Standard Linux Remote Desktop" [level=3]
+[2026-07-05 18:35:31] E           - text: "Expected time to provision: 15 Minutes"
+[2026-07-05 18:35:31] E           - button "LAUNCH NOW"
+[2026-07-05 18:35:31] E           - paragraph: NICE DCV provides secure remote desktop access to graphics-intensive EC2 workloads through the RG Connect URL.
+[2026-07-05 18:35:31] E           - heading "Product Name*" [level=3]
+[2026-07-05 18:35:31] E           - paragraph: Specify a name for the product that you want to create.
+[2026-07-05 18:35:31] E           - textbox "product name":
+[2026-07-05 18:35:31] E             - /placeholder: Please enter your product name
+[2026-07-05 18:35:31] E             - text: Demo-RD-6678
+[2026-07-05 18:35:31] E           - text: Provide a name to help you easily identify this instance of the product. Only alphanumeric characters, dots, hyphens and underscores are allowed. Spaces and special characters are not allowed.
+[2026-07-05 18:35:31] E           - heading "Product Configuration*" [level=3]
+[2026-07-05 18:35:31] E           - paragraph: Specify values or use the default values for the parameters. All parameters are required.
+[2026-07-05 18:35:31] E           - contentinfo:
+[2026-07-05 18:35:31] E             - text: Powered by RLCatalyst from
+[2026-07-05 18:35:31] E             - link "Relevance Lab.":
+[2026-07-05 18:35:31] E               - /url: http://relevancelab.com/
+[2026-07-05 18:35:31] E             - text: All rights reserved. 1.24.0 /
+[2026-07-05 18:35:31] E             - link "Help":
+[2026-07-05 18:35:31] E               - /url: https://researchgateway.readthedocs.io/en/latest/
+[2026-07-05 18:35:31] E           Error: element(s) not found
+[2026-07-05 18:35:31] E           Call log:
+[2026-07-05 18:35:31] E             - Expect "to_be_visible" with timeout 10000ms
+[2026-07-05 18:35:31] E             - waiting for locator("text='GenomicsStudyData(read-only, Internal)'").first
+[2026-07-05 18:35:31] 
+[2026-07-05 18:35:31] pages\page_create_new_instance.py:225: AssertionError
+[2026-07-05 18:35:31] 
+[2026-07-05 18:35:31] During handling of the above exception, another exception occurred:
+[2026-07-05 18:35:31] 
+[2026-07-05 18:35:31] fixturefunc = <function select_study at 0x000001DD0FEBEF00>
+[2026-07-05 18:35:31] request = <FixtureRequest for <Function test_launch_standard_linux_remote_desktop>>
+[2026-07-05 18:35:31] kwargs = {'captured_values': <conftest.CapturedValues object at 0x000001DD1013ABA0>, 'datatable': [['Study Selection'], ['Genom...e': <pages.page_create_new_instance.MyProjectsPage object at 0x000001DD1013B8C0>, 'product_name': 'Demo-RD-6678', ...}}
+[2026-07-05 18:35:31] 
+[2026-07-05 18:35:31]     def call_fixture_func(
+[2026-07-05 18:35:31]         fixturefunc: _FixtureFunc[FixtureValue], request: FixtureRequest, kwargs
+[2026-07-05 18:35:31]     ) -> FixtureValue:
+[2026-07-05 18:35:31]         if inspect.isgeneratorfunction(fixturefunc):
+[2026-07-05 18:35:31]             fixturefunc = cast(Callable[..., Generator[FixtureValue]], fixturefunc)
+[2026-07-05 18:35:31]             generator = fixturefunc(**kwargs)
+[2026-07-05 18:35:31]             try:
+[2026-07-05 18:35:31]                 fixture_result = next(generator)
+[2026-07-05 18:35:31]             except StopIteration:
+[2026-07-05 18:35:31]                 raise ValueError(f"{request.fixturename} did not yield a value") from None
+[2026-07-05 18:35:31]             finalizer = functools.partial(_teardown_yield_fixture, fixturefunc, generator)
+[2026-07-05 18:35:31]             request.addfinalizer(finalizer)
+[2026-07-05 18:35:31]         else:
+[2026-07-05 18:35:31]             fixturefunc = cast(Callable[..., FixtureValue], fixturefunc)
+[2026-07-05 18:35:31] >           fixture_result = fixturefunc(**kwargs)
+[2026-07-05 18:35:31]                              ^^^^^^^^^^^^^^^^^^^^^
+[2026-07-05 18:35:31] 
+[2026-07-05 18:35:31] C:\Users\RLE0825\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\fixtures.py:915:
+[2026-07-05 18:35:31] _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+[2026-07-05 18:35:31] step_defs\create_new_instance_steps.py:160: in select_study
+[2026-07-05 18:35:31]     create_page.select_study(study_name)
+[2026-07-05 18:35:31] _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+[2026-07-05 18:35:31] 
+[2026-07-05 18:35:31] self = <pages.page_create_new_instance.CreateInstancePage object at 0x000001DD106201A0>
+[2026-07-05 18:35:31] study_name = 'GenomicsStudyData(read-only, Internal)'
+[2026-07-05 18:35:31] 
+[2026-07-05 18:35:31]     def select_study(self, study_name):
+[2026-07-05 18:35:31]         selector = self.loc["create_instance"]["study_selection_item"].replace("{study_name}", study_name)
+[2026-07-05 18:35:31]         study_el = self.page.locator(selector)
+[2026-07-05 18:35:31]         try:
+[2026-07-05 18:35:31]             expect(study_el.first).to_be_visible(timeout=10000)
+[2026-07-05 18:35:31]             checkbox = study_el.first.locator("xpath=ancestor-or-self::*[@role='checkbox' or contains(@class,'checkbox') or contains(@class,'mat-pseudo-checkbox')]")
+[2026-07-05 18:35:31]             if checkbox.count() > 0:
+[2026-07-05 18:35:31]                 checkbox.first.click()
+[2026-07-05 18:35:31]             else:
+[2026-07-05 18:35:31]                 study_el.first.click()
+[2026-07-05 18:35:31]         except Exception:
+[2026-07-05 18:35:31]             mat_checkbox = self.page.locator(f"mat-checkbox:has-text('{study_name}'), label:has-text('{study_name}'), div:has-text('{study_name}') >> nth=0")
+[2026-07-05 18:35:31] >           expect(mat_checkbox.first).to_be_visible(timeout=10000)
+[2026-07-05 18:35:31] E           AssertionError: Locator expected to be visible
+[2026-07-05 18:35:31] E           Actual value: - button "Open navigation menu"
+[2026-07-05 18:35:31] E           - img "Research Gateway"
+[2026-07-05 18:35:31] E           - button "User menu": Researcher P
+[2026-07-05 18:35:31] E           - navigation "breadcrumb":
+[2026-07-05 18:35:31] E             - list:
+[2026-07-05 18:35:31] E               - listitem:
+[2026-07-05 18:35:31] E                 - link "My Projects":
+[2026-07-05 18:35:31] E                   - /url: /researcher
+[2026-07-05 18:35:31] E               - listitem: "> Automation Testing"
+[2026-07-05 18:35:31] E               - listitem: "> Standard Linux Remote Desktop"
+[2026-07-05 18:35:31] E           - heading "Standard Linux Remote Desktop" [level=3]
+[2026-07-05 18:35:31] E           - text: "Expected time to provision: 15 Minutes"
+[2026-07-05 18:35:31] E           - button "LAUNCH NOW"
+[2026-07-05 18:35:31] E           - paragraph: NICE DCV provides secure remote desktop access to graphics-intensive EC2 workloads through the RG Connect URL.
+[2026-07-05 18:35:31] E           - heading "Product Name*" [level=3]
+[2026-07-05 18:35:31] E           - paragraph: Specify a name for the product that you want to create.
+[2026-07-05 18:35:31] E           - textbox "product name":
+[2026-07-05 18:35:31] E             - /placeholder: Please enter your product name
+[2026-07-05 18:35:31] E             - text: Demo-RD-6678
+[2026-07-05 18:35:31] E           - text: Provide a name to help you easily identify this instance of the product. Only alphanumeric characters, dots, hyphens and underscores are allowed. Spaces and special characters are not allowed.
+[2026-07-05 18:35:31] E           - heading "Product Configuration*" [level=3]
+[2026-07-05 18:35:31] E           - paragraph: Specify values or use the default values for the parameters. All parameters are required.
+[2026-07-05 18:35:31] E           - contentinfo:
+[2026-07-05 18:35:31] E             - text: Powered by RLCatalyst from
+[2026-07-05 18:35:31] E             - link "Relevance Lab.":
+[2026-07-05 18:35:31] E               - /url: http://relevancelab.com/
+[2026-07-05 18:35:31] E             - text: All rights reserved. 1.24.0 /
+[2026-07-05 18:35:31] E             - link "Help":
+[2026-07-05 18:35:31] E               - /url: https://researchgateway.readthedocs.io/en/latest/
+[2026-07-05 18:35:31] E           Error: element(s) not found
+[2026-07-05 18:35:31] E           Call log:
+[2026-07-05 18:35:31] E             - Expect "to_be_visible" with timeout 10000ms
+[2026-07-05 18:35:31] E             - waiting for locator("mat-checkbox:has-text('GenomicsStudyData(read-only, Internal)'), label:has-text('GenomicsStudyData(read-only, Internal)'), div:has-text('GenomicsStudyData(read-only, Internal)')").first.first
+[2026-07-05 18:35:31] 
+[2026-07-05 18:35:31] pages\page_create_new_instance.py:233: AssertionError
+[2026-07-05 18:35:31] - Generated html report: file:///D:/D_WS/QE_Agent_Abhi_SS_A/QA-Automation/QA-Automation-RLAgentAbhi/workspace/ResGate/report/2026-07-05_18-35-01/report.html -
+[2026-07-05 18:35:31] =========================== short test summary info ===========================
+[2026-07-05 18:35:31] FAILED test/test_create_new_instance.py::test_launch_standard_linux_remote_desktop
+[2026-07-05 18:35:31] ============================= 1 failed in 29.02s ==============================
+[2026-07-05 18:35:31] exit 1 after 30s
