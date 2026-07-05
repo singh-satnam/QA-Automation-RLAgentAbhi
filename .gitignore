@@ -62,3 +62,4 @@ user_data.xls
 .claude/
 workspace/ResGate/process_log.txt
 workspace/ResGate/process_log.txt
+core/.stop_signal
