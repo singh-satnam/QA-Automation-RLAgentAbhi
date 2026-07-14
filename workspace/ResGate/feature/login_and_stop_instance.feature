@@ -3,10 +3,8 @@ Feature: Login and stop the instance
   and stop a running instance so that the instance transitions from Active to Stopped.
 
   Scenario: Login and stop the instance
-    Given the user navigates to the login page "https://ra-demo.rlcatalyst.com/login"
-    And the user enters valid credentials:
-      | Email                                  | Password |
-      | piyusha.varshney+r@relevancelab.com    | Pass@123 |
+    Given the user navigates to the login page
+    And the user enters "res" credentials
     When the user clicks on the Sign In button
     Then the user should be landing on the "My Projects" page
     And the "Automation Testing" card is present

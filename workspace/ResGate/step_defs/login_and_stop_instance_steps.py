@@ -9,24 +9,22 @@ from pages.page_login_and_stop_instance import (
 )
 
 
-@given(parsers.parse('the user navigates to the login page "{url}"'))
-def navigate_to_login(page, base_url, captured_values, url):
-    login_page = LoginPage(page, base_url)
-    login_page.navigate_to_login(url)
-    captured_values.add("Login URL", url)
+@given("the user navigates to the login page")
+def navigate_to_login(page, test_data, base_url, captured_values):
+    login_url = test_data.get("config", {}).get("login_url", base_url)
+    login_page = LoginPage(page, login_url)
+    login_page.navigate_to_login(login_url)
+    captured_values.add("Login URL", login_url)
 
 
-@given("the user enters valid credentials:")
-def enter_credentials(page, base_url, captured_values, datatable):
+@given(parsers.parse('the user enters "{user_type}" credentials'))
+def enter_credentials(page, base_url, credentials, captured_values, user_type):
     login_page = LoginPage(page, base_url)
-    headers = datatable[0]
-    values = datatable[1]
-    row = dict(zip(headers, values))
-    email = row["Email"]
-    password = row["Password"]
-    login_page.enter_email(email)
-    login_page.enter_password(password)
-    captured_values.add("Email entered", email)
+    creds = credentials.get(user_type, {})
+    login_page.enter_email(creds["email"])
+    login_page.enter_password(creds["password"])
+    captured_values.add("User type", user_type)
+    captured_values.add("Email entered", creds["email"])
     captured_values.add("Password entered", "***")
 
 

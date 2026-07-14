@@ -57,6 +57,10 @@ user_data.tsv
 user_data.xlsx
 user_data.xls
 
+# Actual credentials — copy .env.example → .env and fill in values, never commit .env
+.env
+**/.env
+
 # MCP browser session logs + DOM snapshots (cache, not source)
 .playwright-mcp/
 .claude/

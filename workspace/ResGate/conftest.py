@@ -14,6 +14,7 @@ the step-def modules actually present on disk after generation.
 from __future__ import annotations
 
 import json
+import os
 import re
 import traceback
 from contextlib import contextmanager
@@ -327,16 +328,50 @@ def base_url(pytestconfig):
 
 @pytest.fixture(scope="session")
 def test_data():
-    """Read user_data.json at runtime if present; else {}.
-    NEVER hardcode values from it — step defs read this fixture live."""
-    for name in ("user_data.json",):
-        p = PROJECT_ROOT / name
-        if p.exists():
+    """Load all JSON files from test_data/ as a nested dict keyed by filename stem.
+    e.g. test_data["config"]["login_url"], test_data["login_and_launch_machine"]["product_name"]
+    Falls back to legacy user_data.json under key "user_data" if present."""
+    result: dict = {}
+    data_dir = PROJECT_ROOT / "test_data"
+    if data_dir.exists():
+        for json_file in sorted(data_dir.glob("*.json")):
+            key = json_file.stem
             try:
-                return json.loads(p.read_text(encoding="utf-8"))
+                result[key] = json.loads(json_file.read_text(encoding="utf-8"))
             except (OSError, ValueError):
-                return {}
-    return {}
+                result[key] = {}
+    legacy = PROJECT_ROOT / "user_data.json"
+    if legacy.exists():
+        try:
+            result["user_data"] = json.loads(legacy.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            pass
+    return result
+
+
+@pytest.fixture(scope="session")
+def credentials():
+    """Role-keyed credentials loaded from .env (gitignored).
+    Copy .env.example → .env, fill values, never commit .env.
+    Usage in step defs: credentials["admin"]["email"], credentials["res"]["password"]
+    Roles: admin | res | user  (extend by adding UNAME_<ROLE> / PWD_<ROLE> to .env)"""
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(PROJECT_ROOT / ".env")
+    except ImportError:
+        pass
+
+    def _role(key: str) -> dict:
+        return {
+            "email": os.getenv(f"UNAME_{key.upper()}", ""),
+            "password": os.getenv(f"PWD_{key.upper()}", ""),
+        }
+
+    return {
+        "admin": _role("admin"),
+        "res": _role("res"),
+        "user": _role("user"),
+    }
 
 
 @pytest.fixture(scope="session")

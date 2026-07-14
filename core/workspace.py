@@ -15,7 +15,7 @@ TEMPLATES_DIR = PROJECT_ROOT / "templates"
 
 # Canonical subfolders of a project, per the design diagram (singular names).
 PROJECT_SUBDIRS = (
-    "user_story", "feature", "step_defs", "pages", "test", "mcp-selectors", "report",
+    "user_story", "feature", "step_defs", "pages", "test", "mcp-selectors", "report", "test_data",
 )
 
 REUSE_INDEX_NAME = "reuse_index.json"
@@ -102,6 +102,12 @@ def copy_scaffolding(project: str, staging: bool = False) -> list[str]:
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(src, dst)
             written.append(str(dst.relative_to(pd)).replace("\\", "/"))
+    # .env.example — copy only if not present; never overwrite (users may add roles)
+    env_example_src = TEMPLATES_DIR / "env.example"
+    env_example_dst = pd / ".env.example"
+    if env_example_src.exists() and not env_example_dst.exists():
+        shutil.copyfile(env_example_src, env_example_dst)
+        written.append(".env.example")
     # Package markers so `pages` and `step_defs` import cleanly.
     for pkg in ("pages", "step_defs"):
         init = pd / pkg / "__init__.py"
@@ -454,8 +460,12 @@ def promote_to_workspace(project: str, max_retries: int = 3) -> dict:
         if "__pycache__" in src_file.parts:
             continue
         rel = src_file.relative_to(staging_pd)
-        dst_file = workspace_pd / rel
         rel_str = str(rel).replace("\\", "/")
+        # Never promote .env — credentials must stay local, never travel via staging
+        if src_file.name == ".env":
+            result["skipped"].append(rel_str)
+            continue
+        dst_file = workspace_pd / rel
         if dst_file.exists():
             result["skipped"].append(rel_str)
         else:

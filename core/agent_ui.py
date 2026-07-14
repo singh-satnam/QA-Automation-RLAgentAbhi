@@ -2873,6 +2873,33 @@ def render_promotion_dialog() -> None:
         st.success(st.session_state.pop("promotion_result"))
 
 
+def _create_test_data_skeletons(project: str, story_file: str) -> None:
+    """Create test_data/*.json skeletons in the active project dir (staging or workspace).
+
+    Skeletons are never overwritten — the user populates real values.
+    - config.json  : project-wide login URL and project name placeholder
+    - <story>.json : empty object; LLM-generated keys are added by the user
+    """
+    test_data_dir = proj_path("test_data")
+    test_data_dir.mkdir(parents=True, exist_ok=True)
+
+    config_json = test_data_dir / "config.json"
+    if not config_json.exists():
+        config_json.write_text(
+            json.dumps({"login_url": "", "project_name": project}, indent=2),
+            encoding="utf-8",
+        )
+
+    if story_file:
+        stem = Path(story_file).stem
+        prefix = project + "_"
+        if stem.startswith(prefix):
+            stem = stem[len(prefix):]
+        story_json = test_data_dir / f"{stem}.json"
+        if not story_json.exists():
+            story_json.write_text("{}\n", encoding="utf-8")
+
+
 def main() -> None:
     st.set_page_config(page_title="QE Agent", layout="wide", initial_sidebar_state="expanded")
     st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
@@ -3137,6 +3164,10 @@ def main() -> None:
                                + (", ".join(registered) if registered else "(none)"))
             ok, errs = syntax_check_generated()
             ws.rebuild_reuse_index(project, staging=_is_staging())   # refresh reuse map after generation
+
+            # Generate test_data skeleton files (never overwrite — user populates values)
+            _create_test_data_skeletons(project, story_file)
+
             n_tests = len(list(proj_path("test").glob("test_*.py")))
             log_event(f"Framework done — {n_tests} test file(s) written, exit {rc}")
             status.update(label=f"Framework ready — {n_tests} test(s)",

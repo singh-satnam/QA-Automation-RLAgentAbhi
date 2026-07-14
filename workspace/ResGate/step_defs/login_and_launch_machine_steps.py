@@ -9,29 +9,26 @@ from pages.page_login_and_launch_machine import (
 )
 
 
-@given(parsers.parse('the user navigates to the login page "{url}"'))
-def navigate_to_login(page, base_url, captured_values, scenario_context, url):
+@given("the user navigates to the login page")
+def navigate_to_login(page, test_data, captured_values, scenario_context):
     cap = captured_values
-    login_page = LoginPage(page, base_url)
-    login_page.navigate(url)
+    login_url = test_data.get("config", {}).get("login_url", "")
+    login_page = LoginPage(page, login_url)
+    login_page.navigate(login_url)
     login_page.dismiss_session_expired_alert()
-    cap.add("Navigated to login URL", url)
+    cap.add("Navigated to login URL", login_url)
     scenario_context["login_page"] = login_page
 
 
-@given("the user enters valid credentials:")
-def enter_credentials(page, captured_values, scenario_context, datatable):
+@given(parsers.parse('the user enters "{user_type}" credentials'))
+def enter_credentials(page, credentials, captured_values, scenario_context, user_type):
     cap = captured_values
     login_page = scenario_context.get("login_page") or LoginPage(page)
-    headers = datatable[0]
-    row = datatable[1]
-    email_idx = headers.index("Email")
-    password_idx = headers.index("Password")
-    email = row[email_idx]
-    password = row[password_idx]
-    login_page.fill_email(email)
-    login_page.fill_password(password)
-    cap.add("Email entered", email)
+    creds = credentials.get(user_type, {})
+    login_page.fill_email(creds["email"])
+    login_page.fill_password(creds["password"])
+    cap.add("User type", user_type)
+    cap.add("Email entered", creds["email"])
     cap.add("Password entered", "***")
     scenario_context["login_page"] = login_page
 

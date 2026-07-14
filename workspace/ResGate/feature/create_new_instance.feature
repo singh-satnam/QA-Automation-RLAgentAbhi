@@ -4,10 +4,8 @@ Feature: Create New Standard Linux Remote Desktop Instance
   So that I can use it for my project work
 
   Scenario: Launch a Standard Linux Remote Desktop instance with project configuration
-    Given the user navigates to the login page "https://ra-demo.rlcatalyst.com/login"
-    And the user enters valid credentials:
-      | Email                                    | Password  |
-      | piyusha.varshney+r@relevancelab.com      | Pass@123  |
+    Given the user navigates to the login page
+    And the user enters "res" credentials
     Then the user clicks on the Sign In button
     Then the user should be landing on the "My Projects" page
     And the user verifies the "Automation Testing" card is present

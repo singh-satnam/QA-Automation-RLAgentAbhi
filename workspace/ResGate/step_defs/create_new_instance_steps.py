@@ -14,27 +14,25 @@ def _table_to_dicts(datatable):
     return [dict(zip(headers, row)) for row in datatable[1:]]
 
 
-@given(parsers.parse('the user navigates to the login page "{url}"'))
-def navigate_to_login(page, base_url, captured_values, scenario_context, url):
-    login_page = LoginPage(page, base_url)
-    login_page.navigate_to_login(url)
+@given("the user navigates to the login page")
+def navigate_to_login(page, test_data, captured_values, scenario_context):
+    login_url = test_data.get("config", {}).get("login_url", "")
+    login_page = LoginPage(page, login_url)
+    login_page.navigate_to_login(login_url)
     cap = captured_values
-    cap.add("Login URL", url)
+    cap.add("Login URL", login_url)
     scenario_context["login_page"] = login_page
 
 
-@then("the user enters valid credentials:")
-@given("the user enters valid credentials:")
-def enter_credentials(page, captured_values, scenario_context, datatable):
+@given(parsers.parse('the user enters "{user_type}" credentials'))
+def enter_credentials(page, credentials, captured_values, scenario_context, user_type):
     login_page = scenario_context.get("login_page") or LoginPage(page)
-    rows = _table_to_dicts(datatable)
-    row = rows[0]
-    email = row["Email"]
-    password = row["Password"]
-    login_page.enter_email(email)
-    login_page.enter_password(password)
+    creds = credentials.get(user_type, {})
+    login_page.enter_email(creds["email"])
+    login_page.enter_password(creds["password"])
     cap = captured_values
-    cap.add("Login Email", email)
+    cap.add("User type", user_type)
+    cap.add("Login Email", creds["email"])
     cap.add("Login Password", "***")
     scenario_context["login_page"] = login_page
 
