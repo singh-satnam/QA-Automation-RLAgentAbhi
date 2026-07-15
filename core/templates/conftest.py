@@ -376,17 +376,18 @@ def credentials():
     except ImportError:
         pass
 
-    def _role(key: str) -> dict:
-        return {
-            "email": os.getenv(f"UNAME_{key.upper()}", ""),
-            "password": os.getenv(f"PWD_{key.upper()}", ""),
-        }
+    class _CredentialsMap:
+        """Dict-like: credentials["any_role"] reads UNAME_<ROLE>/PWD_<ROLE> from env."""
+        def __getitem__(self, key: str) -> dict:
+            return {
+                "email": os.getenv(f"UNAME_{key.upper()}", ""),
+                "password": os.getenv(f"PWD_{key.upper()}", ""),
+            }
+        def get(self, key: str, default=None):
+            val = self[key]
+            return val if (val["email"] or val["password"]) else (default or val)
 
-    return {
-        "admin": _role("admin"),
-        "res": _role("res"),
-        "user": _role("user"),
-    }
+    return _CredentialsMap()
 
 
 @pytest.fixture(scope="session")

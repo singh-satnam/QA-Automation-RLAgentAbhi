@@ -3086,12 +3086,18 @@ def main() -> None:
         return
 
     # ---- Button 1 — Generate Gherkin ----
+    # gen_pending survives the st.rerun() triggered by "Generate Anyway"
     if gen_clicked:
-        log_event("Step ① clicked — Generate Gherkin")
+        st.session_state["gen_pending"] = True
+
+    if st.session_state.get("gen_pending"):
+        if gen_clicked:
+            log_event("Step ① clicked — Generate Gherkin")
         project = current_project()
         ws.ensure_project_dirs(project, staging=_is_staging())
         story_file = st.session_state.get("active_story", "")
-        append_process_log(project, f"Generate Gherkin clicked for {story_file}")
+        if gen_clicked:
+            append_process_log(project, f"Generate Gherkin clicked for {story_file}")
 
         # --- Duplicate story detection (pre-check before LLM call) ---
         if not st.session_state.get("dup_override"):
@@ -3108,13 +3114,16 @@ def main() -> None:
                         st.info(f"Existing feature: **{dup['feature_file'].name}**")
                         st.code(dup["feature_content"], language="gherkin")
                     st.session_state.pop("dup_override", None)
+                    st.session_state.pop("gen_pending", None)
                     return
                 elif choice == "generate_anyway":
                     st.session_state["dup_override"] = True
                     st.rerun()
                 else:
+                    # dialog not yet answered — keep gen_pending, wait for next interaction
                     return
         st.session_state.pop("dup_override", None)
+        st.session_state.pop("gen_pending", None)
 
         with st.status("Generating Gherkin…", expanded=False) as status:
             prompt = GHERKIN_PROMPT.replace("{{STORY_FILE}}", story_file)

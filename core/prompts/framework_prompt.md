@@ -77,11 +77,14 @@ Hard rules:
       role "admin"     → UNAME_ADMIN / PWD_ADMIN
       role "res"       → UNAME_RES   / PWD_RES
       role "user"      → UNAME_USER  / PWD_USER
+      role "pi"        → UNAME_PI    / PWD_PI
       role "principal" → UNAME_PRIN  / PWD_PRIN
+      Any other role X → UNAME_<X.upper()> / PWD_<X.upper()> (fixture handles dynamically)
   · NEVER hardcode email or password values in step defs or POM methods.
   · NEVER split this into two separate step defs for email and password.
   · This step is SHARED — define it ONCE in `step_defs/common_steps.py`.
 
+- URL / NAVIGATION: ALWAYS read the login/start URL from `test_data["config"]["login_url"]` (loaded from `test_data/config.json` by the `test_data` fixture). NEVER use the `base_url` fixture for navigation — `base_url` is unreliable in staging environments where `pytest.ini` may have a blank value. The `test_data` fixture is the single source of truth for runtime configuration values.
 - PERFORMANCE: page.goto must use wait_until="domcontentloaded" and a finite timeout. NEVER call page.wait_for_load_state("networkidle") — most storefronts have long-tail analytics/tracking traffic that prevents networkidle from ever firing, so the wait burns its full timeout on every navigation. When a step needs a specific element, wait on THAT element (`expect(locator).to_be_visible(timeout=...)`) instead.
 - TEST DATA: if user_data.json exists, generated step defs MUST read its current contents AT RUNTIME via the `test_data` fixture already declared in the root conftest.py — never hardcode values from the JSON into step defs. This lets the user change user_data.json between runs without regenerating code.
   · For Scenario Outline rows: the row's parameters (from Examples:) take precedence.
