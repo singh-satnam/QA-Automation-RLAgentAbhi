@@ -353,11 +353,26 @@ def test_data():
 def credentials():
     """Role-keyed credentials loaded from .env (gitignored).
     Copy .env.example → .env, fill values, never commit .env.
+
+    .env lookup order (first file found wins):
+      1. <project_dir>/.env            — staging or workspace, wherever tests run
+      2. workspace/<project_name>/.env — fallback so staging tests reuse promoted .env
+
     Usage in step defs: credentials["admin"]["email"], credentials["res"]["password"]
     Roles: admin | res | user  (extend by adding UNAME_<ROLE> / PWD_<ROLE> to .env)"""
     try:
         from dotenv import load_dotenv
-        load_dotenv(PROJECT_ROOT / ".env")
+        _workspace_root = Path(
+            os.environ.get("QA_WORKSPACE_DIR", PROJECT_ROOT.parent.parent / "workspace")
+        )
+        _candidates = [
+            PROJECT_ROOT / ".env",
+            _workspace_root / PROJECT_ROOT.name / ".env",
+        ]
+        for _env_path in _candidates:
+            if _env_path.exists():
+                load_dotenv(_env_path)
+                break
     except ImportError:
         pass
 
