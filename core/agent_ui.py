@@ -20,6 +20,8 @@ import streamlit as st
 
 import workspace as ws
 import step_report
+import test_data_io as tdio
+from test_data_io import USER_DATA_SUPPORTED_EXTENSIONS, convert_uploaded_to_json
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 PROMPTS_DIR = PROJECT_ROOT / "prompts"
@@ -1802,8 +1804,6 @@ def _read_user_data_text() -> str:
 # The original file is also preserved at `user_data.<ext>` so the user can
 # download/inspect it later, and Claude can read it if needed.
 
-USER_DATA_SUPPORTED_EXTENSIONS = ("json", "csv", "tsv", "xlsx", "xls")
-
 # Stop-signal file. The sidebar Stop button writes this; stream_command polls
 # it every heartbeat tick. When a fresh signal (<5 min old) is detected, the
 # running subprocess is killed.  Cross-tab usage: if a run is stuck and the
@@ -1840,103 +1840,6 @@ def _write_stop_signal(reason: str = "user_clicked_stop") -> None:
         )
     except OSError:
         pass
-
-
-def _csv_bytes_to_json_text(raw: bytes, delimiter: str = ",") -> tuple[str | None, str | None]:
-    import csv as _csv
-    import io
-    import json as _json
-    text = None
-    for enc in ("utf-8-sig", "utf-8", "latin-1"):
-        try:
-            text = raw.decode(enc)
-            break
-        except UnicodeDecodeError:
-            continue
-    if text is None:
-        return None, "Could not decode CSV/TSV (tried utf-8 and latin-1)."
-    try:
-        rows = list(_csv.DictReader(io.StringIO(text), delimiter=delimiter))
-    except _csv.Error as exc:
-        return None, f"CSV parse error: {exc}"
-    if not rows:
-        return "[]", "(CSV had no data rows — saved as empty array)"
-    # Strip whitespace from keys and values for cleaner downstream use
-    rows = [{(k.strip() if isinstance(k, str) else k): (v.strip() if isinstance(v, str) else v)
-             for k, v in row.items()} for row in rows]
-    return _json.dumps(rows, indent=2, ensure_ascii=False), None
-
-
-def _excel_bytes_to_json_text(raw: bytes) -> tuple[str | None, str | None]:
-    """Parse the FIRST sheet of an .xlsx/.xls workbook into list-of-dicts.
-    Row 1 is treated as headers. Empty rows are skipped."""
-    try:
-        import openpyxl  # type: ignore[import-untyped]
-    except ImportError:
-        return None, ("Excel parsing requires openpyxl. Install with: "
-                      "pip install openpyxl")
-    import io
-    import json as _json
-    try:
-        wb = openpyxl.load_workbook(io.BytesIO(raw), data_only=True, read_only=True)
-    except Exception as exc:
-        return None, f"Could not open Excel file: {exc}"
-    sheet = wb.active
-    if sheet is None:
-        return "[]", "(workbook had no active sheet)"
-    rows = list(sheet.iter_rows(values_only=True))
-    if not rows:
-        return "[]", "(sheet was empty)"
-    raw_header = rows[0]
-    header = []
-    for i, cell in enumerate(raw_header):
-        if cell is None or str(cell).strip() == "":
-            header.append(f"col{i + 1}")
-        else:
-            header.append(str(cell).strip())
-    data: list[dict] = []
-    for row in rows[1:]:
-        if all(c is None or (isinstance(c, str) and not c.strip()) for c in row):
-            continue
-        entry = {}
-        for h, v in zip(header, row):
-            if v is None:
-                entry[h] = ""
-            elif isinstance(v, (int, float)):
-                entry[h] = v
-            else:
-                entry[h] = str(v).strip()
-        data.append(entry)
-    return _json.dumps(data, indent=2, ensure_ascii=False), None
-
-
-def convert_uploaded_to_json(filename: str, raw_bytes: bytes) -> tuple[str | None, str | None]:
-    """Dispatch on file extension. Returns (json_text, status_or_error)."""
-    import json as _json
-    ext = (filename.rsplit(".", 1)[-1] if "." in filename else "").lower()
-    if ext == "json":
-        try:
-            text = raw_bytes.decode("utf-8-sig")
-        except UnicodeDecodeError:
-            return None, "JSON must be UTF-8 encoded."
-        try:
-            data = _json.loads(text)
-        except ValueError as exc:
-            return None, f"Not valid JSON: {exc}"
-        if not isinstance(data, (dict, list)):
-            return None, "Top-level JSON must be an object or an array."
-        # Re-serialise so we strip BOM and normalise indentation
-        return _json.dumps(data, indent=2, ensure_ascii=False), None
-    if ext == "csv":
-        return _csv_bytes_to_json_text(raw_bytes, delimiter=",")
-    if ext == "tsv":
-        return _csv_bytes_to_json_text(raw_bytes, delimiter="\t")
-    if ext in ("xlsx", "xls"):
-        return _excel_bytes_to_json_text(raw_bytes)
-    return None, (
-        f"Unsupported file type: .{ext}. "
-        f"Allowed: {', '.join('.' + e for e in USER_DATA_SUPPORTED_EXTENSIONS)}"
-    )
 
 
 def parse_user_data(text: str) -> tuple[object | None, str | None]:
