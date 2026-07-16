@@ -2301,7 +2301,7 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
                 st.session_state.active_story = sel_story
                 st.session_state.staging_active = ws.is_staged(sel_proj)
 
-        # ----- Add a new story (upload OR paste) — one collapsible block. Auto-
+        # ----- Add a new story (upload a .txt) — one collapsible block. Auto-
         # opens for first-time users (no active story), collapsed once one exists.
         with st.expander(
             "➕ Add a new story",
@@ -2353,53 +2353,11 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
             if "last_upload_info" in st.session_state:
                 st.success("Uploaded: " + st.session_state.last_upload_info)
 
-            # ----- Or paste a story (explicit project name + filename) -----
-            st.markdown('<div class="section-heading">Or paste a story</div>', unsafe_allow_html=True)
-            paste_project = st.text_input("Project name", key="paste_project",
-                                          placeholder="e.g. RLRG")
-            paste_filename = st.text_input("Story file name (.txt)", key="paste_filename",
-                                           placeholder="e.g. RLRG_login.txt")
-            paste_body = st.text_area("Story content", key="paste_body", height=180,
-                                      placeholder="Paste your user story here.")
-            if st.button("Save story", disabled=not (paste_project.strip()
-                                                     and paste_filename.strip()
-                                                     and paste_body.strip())):
-                project = re.sub(r"[^A-Za-z0-9]+", "", paste_project.strip())
-                if not project:
-                    st.error("Project name must contain letters or digits.")
-                else:
-                    filename = ws.sanitize_filename(paste_filename)
-                    content = normalize_story_text(paste_body)
-                    if ws.story_exists(project, filename):
-                        st.error("same user story exists. Proceed to execute the test")
-                        st.session_state.project = project
-                        st.session_state.active_story = filename
-                        st.session_state.staging_active = False
-                    elif ws.story_exists(project, filename, staging=True):
-                        st.error("same user story exists in staging. Proceed to execute the test")
-                        st.session_state.project = project
-                        st.session_state.active_story = filename
-                        st.session_state.staging_active = True
-                    else:
-                        ws.add_story(project, filename, content, staging=True)
-                        ws.write_pytest_ini(project, ws.extract_base_url(content), staging=True)
-                        # Content-level duplicate check against other stories
-                        dup = ws.check_duplicate_story(project, filename, staging=True)
-                        if dup:
-                            st.session_state["upload_duplicate"] = dup
-                            st.session_state["upload_duplicate_file"] = filename
-                        st.session_state.project = project
-                        st.session_state.active_story = filename
-                        st.session_state.staging_active = True
-                        st.session_state.log = []
-                        st.session_state.last_run = "never"
-                        st.rerun()
-
         story_caption = (
             f"Project `{current_project()}`"
             + (f" · story `{st.session_state.get('active_story', '')}`"
                if st.session_state.get("active_story") else "")
-            if current_project() else "Upload or paste a story to begin."
+            if current_project() else "Upload a story to begin."
         )
         if current_project():
             staging = _is_staging()
@@ -2906,7 +2864,7 @@ def main() -> None:
     )
     no_story_msg = (
         '<div class="empty-state"><strong>No project selected.</strong><br>'
-        "Upload or paste a user story in the sidebar to begin.</div>"
+        "Upload a user story in the sidebar to begin.</div>"
     )
     runner_target: str | None = None
     with tab_features:
