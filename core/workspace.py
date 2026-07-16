@@ -16,6 +16,7 @@ TEMPLATES_DIR = PROJECT_ROOT / "templates"
 # Canonical subfolders of a project, per the design diagram (singular names).
 PROJECT_SUBDIRS = (
     "user_story", "feature", "step_defs", "pages", "test", "mcp-selectors", "report",
+    "test_data",
 )
 
 REUSE_INDEX_NAME = "reuse_index.json"

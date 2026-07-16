@@ -24,6 +24,14 @@ def test_sanitize_filename_forces_txt_and_strips_unsafe_chars():
         workspace.sanitize_filename("   ")
 
 
+def test_test_data_dir_registered_and_created(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    assert "test_data" in workspace.PROJECT_SUBDIRS
+    workspace.ensure_project_dirs("Demo", staging=True)
+    assert (tmp_path / "temp_workspace" / "Demo" / "test_data").is_dir()
+
+
 def test_ensure_project_dirs_creates_all_canonical_subfolders(tmp_path, monkeypatch):
     monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path)
     pd = workspace.ensure_project_dirs("RLRG")
