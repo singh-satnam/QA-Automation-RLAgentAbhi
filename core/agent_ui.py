@@ -2412,7 +2412,42 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
         else:
             st.caption(story_caption)
 
-        # ----- Optional test data (JSON / CSV / TSV / Excel) — collapsible -----
+        # ----- Global_Project_Data (JSON -> test_data/.env) -----
+        with st.expander(
+            "Global_Project_Data (JSON · URL / username / password)",
+            expanded=bool(current_project()
+                          and (ws.project_dir(current_project(), staging=_is_staging())
+                               / "test_data" / ".env").exists()),
+        ):
+            gpd = st.file_uploader(
+                "Global_Project_Data",
+                type=["json"],
+                label_visibility="collapsed",
+                key=f"gpd_upload_{st.session_state.get('gpd_upload_nonce', 0)}",
+                help=("Upload a JSON object of values shared across most tests "
+                      "(URL, USERNAME, PASSWORD, ...). Saved to test_data/.env and "
+                      "read by every test via the global_data / test_data fixtures."),
+            )
+            if gpd is not None and current_project():
+                raw_text = gpd.read().decode("utf-8-sig")
+                ok, msg = tdio.write_global_env(
+                    ws.project_dir(current_project(), staging=_is_staging()), raw_text)
+                if ok:
+                    st.success(msg)
+                    st.session_state.gpd_upload_nonce = st.session_state.get("gpd_upload_nonce", 0) + 1
+                    st.rerun()
+                else:
+                    st.error(msg)
+            elif gpd is not None and not current_project():
+                st.warning("Select or create a project before adding Global_Project_Data.")
+
+            env_path = (ws.project_dir(current_project(), staging=_is_staging())
+                        / "test_data" / ".env") if current_project() else None
+            if env_path and env_path.exists():
+                st.caption("Current test_data/.env")
+                st.code(env_path.read_text(encoding="utf-8"), language="ini")
+
+        # ----- Optional per-story test data (JSON / CSV / TSV / Excel) — collapsible -----
         # Auto-opens only when the project already has test data.
         with st.expander(
             "Test data (optional · JSON / CSV / TSV / Excel)",
@@ -2430,37 +2465,25 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
                     "test_data fixture. The original file is preserved as user_data.<ext>."
                 ),
             )
-            if data_uploaded is not None and current_project():
+            if (data_uploaded is not None and current_project()
+                    and st.session_state.get("active_story")):
                 raw_bytes = data_uploaded.read()
-                json_text, msg = convert_uploaded_to_json(data_uploaded.name, raw_bytes)
-                if json_text is None:
-                    st.error(msg or "Could not convert file.")
-                else:
-                    # Canonical JSON used by the runtime test_data fixture
-                    user_data_path().parent.mkdir(parents=True, exist_ok=True)
-                    user_data_path().write_text(json_text, encoding="utf-8")
-                    # Persist the ORIGINAL file too so the user can download/inspect
-                    ext = data_uploaded.name.rsplit(".", 1)[-1].lower() if "." in data_uploaded.name else "bin"
-                    # Clear any stale original-format files first
-                    for prev_ext in USER_DATA_SUPPORTED_EXTENSIONS:
-                        prev = proj_path(f"user_data.{prev_ext}")
-                        if prev != user_data_path() and prev.exists():
-                            try:
-                                prev.unlink()
-                            except OSError:
-                                pass
-                    if ext != "json":
-                        try:
-                            proj_path(f"user_data.{ext}").write_bytes(raw_bytes)
-                        except OSError:
-                            pass
+                story_stem = Path(st.session_state["active_story"]).stem
+                ok, msg = tdio.write_story_data(
+                    ws.project_dir(current_project(), staging=_is_staging()),
+                    story_stem, data_uploaded.name, raw_bytes)
+                if ok:
                     if msg:
                         st.info(msg)
                     st.session_state["user_uploaded_data"] = True
                     st.session_state.data_upload_nonce = st.session_state.get("data_upload_nonce", 0) + 1
                     st.rerun()
+                else:
+                    st.error(msg)
             elif data_uploaded is not None and not current_project():
                 st.warning("Select or create a project before adding test data.")
+            elif data_uploaded is not None and not st.session_state.get("active_story"):
+                st.warning("Select or upload a user story before adding per-story test data.")
 
             # Test data is stored per project under user_data.json. It persists with
             # the project — no session-scoped purge.
