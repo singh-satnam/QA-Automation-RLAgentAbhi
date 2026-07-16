@@ -14,6 +14,7 @@ the step-def modules actually present on disk after generation.
 from __future__ import annotations
 
 import json
+import os
 import re
 import traceback
 from contextlib import contextmanager
@@ -39,6 +40,44 @@ _STEP_TRACE: list[dict] = []
 
 def _now() -> str:
     return datetime.now().strftime("%H:%M:%S")
+
+
+# --- global test data (test_data/.env) --------------------------------------
+TEST_DATA_DIR = PROJECT_ROOT / "test_data"
+_URL_KEYS = ("URL", "BASE_URL")
+
+
+def _parse_env(path: Path) -> dict:
+    out = {}
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return out
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, val = line.partition("=")
+        key = key.strip()
+        val = val.strip()
+        if len(val) >= 2 and val[0] == val[-1] and val[0] in ("\"", "'"):
+            val = val[1:-1].replace('\\n', "\n").replace('\\"', '"').replace("\\\\", "\\")
+        out[key] = val
+    return out
+
+
+def _resolve_story_file(slug: str):
+    if not TEST_DATA_DIR.exists():
+        return None
+    candidates = [p for p in sorted(TEST_DATA_DIR.glob("*.json"))
+                  if p.name != "global_project_data.json"]
+    for p in candidates:
+        if p.stem == slug:
+            return p
+    for p in candidates:
+        if slug and (slug in p.stem or p.stem in slug):
+            return p
+    return None
 
 
 # ============================================================================
@@ -314,7 +353,11 @@ def page(context):
 
 
 @pytest.fixture(scope="session")
-def base_url(pytestconfig):
+def base_url(pytestconfig, global_data):
+    # Global test_data/.env URL wins; then pytest.ini base_url; then empty.
+    for key in _URL_KEYS:
+        if global_data.get(key):
+            return global_data[key]
     for getter in ("getoption", "getini"):
         try:
             val = getattr(pytestconfig, getter)("base_url")
@@ -326,17 +369,49 @@ def base_url(pytestconfig):
 
 
 @pytest.fixture(scope="session")
-def test_data():
-    """Read user_data.json at runtime if present; else {}.
+def global_data():
+    """Global project data from test_data/.env (URL, credentials, shared values).
+    Also exported to os.environ (without clobbering already-set vars)."""
+    env_path = TEST_DATA_DIR / ".env"
+    data = _parse_env(env_path) if env_path.exists() else {}
+    for k, v in data.items():
+        os.environ.setdefault(k, v)
+    return data
+
+
+@pytest.fixture
+def test_data(request, global_data):
+    """Merged test data for the running test: global .env values overlaid with the
+    per-story test_data/<slug>.json (per-story wins, except the URL key). Falls
+    back to legacy project-root user_data.json when no test_data/ files exist.
     NEVER hardcode values from it — step defs read this fixture live."""
-    for name in ("user_data.json",):
-        p = PROJECT_ROOT / name
-        if p.exists():
+    slug = request.module.__name__.rsplit(".", 1)[-1]
+    if slug.startswith("test_"):
+        slug = slug[len("test_"):]
+    story = _resolve_story_file(slug)
+
+    if not (TEST_DATA_DIR / ".env").exists() and story is None:
+        legacy = PROJECT_ROOT / "user_data.json"
+        if legacy.exists():
             try:
-                return json.loads(p.read_text(encoding="utf-8"))
+                return json.loads(legacy.read_text(encoding="utf-8"))
             except (OSError, ValueError):
                 return {}
-    return {}
+
+    data = dict(global_data)
+    if story is not None:
+        try:
+            extra = json.loads(story.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            extra = None
+        if isinstance(extra, dict):
+            for k, v in extra.items():
+                if k.upper() in _URL_KEYS and k in data:
+                    continue  # global URL is the single source
+                data[k] = v
+        elif isinstance(extra, list):
+            data["rows"] = extra  # parameterised rows exposed under 'rows'
+    return data
 
 
 @pytest.fixture(scope="session")
