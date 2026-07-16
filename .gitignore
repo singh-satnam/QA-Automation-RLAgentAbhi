@@ -57,6 +57,11 @@ user_data.tsv
 user_data.xlsx
 user_data.xls
 
+# Global + per-story test data (may contain credentials) — never commit
+**/.env
+workspace/**/test_data/
+temp_workspace/**/test_data/
+
 # MCP browser session logs + DOM snapshots (cache, not source)
 .playwright-mcp/
 .claude/
