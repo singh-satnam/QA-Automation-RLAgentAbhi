@@ -34,7 +34,8 @@ DELTA-ONLY MODE — NON-NEGOTIABLE
       Pay special attention to step_defs/common_steps.py — it contains shared
       step definitions used across multiple features.
    d. Read mcp-selectors/locators.json if it exists.
-   e. Read user_data.json if it exists.
+   e. Read test_data/.env (global URL/credentials) and test_data/<storyname>.json
+      (per-story data) if they exist; legacy user_data.json if present.
 2. DIFF. Compare the NEW feature's Given/When/Then steps to EVERY existing
    step def across ALL files in step_defs/. Classify each step:
    - ALREADY DEFINED — the exact step pattern exists in common_steps.py or
@@ -77,7 +78,7 @@ DELTA-ONLY MODE — NON-NEGOTIABLE
    - Files UNCHANGED  (existing files you intentionally left alone — proof you
                       respected the fork instead of regenerating)
 
-All the FIDELITY rules from FRAMEWORK_PROMPT still apply: every step def must call captured_values, full row coverage on user_data.json, MCP-discovered selectors, no headed browser in this phase. Run `pytest -v` headless to validate, healing up to 3 cycles.
+All the FIDELITY rules from FRAMEWORK_PROMPT still apply: every step def must call captured_values, full row coverage on per-story data, MCP-discovered selectors, no headed browser in this phase. Global URL/credentials live in test_data/.env (`global_data` fixture / `base_url`); per-story data in test_data/<storyname>.json (`test_data` fixture). Never hardcode; reuse shared credential steps from common_steps.py. Run `pytest -v` headless to validate, healing up to 3 cycles.
 
 `conftest.py` and `pages/base_page.py` are PROVIDED SCAFFOLDING (copied in by the harness) — never create, overwrite, edit, or delete them, and never touch `pytest_plugins`. They already provide the fixtures and the pytest-bdd step hooks that write `report/step_trace.json` and `report/captured_values.json`. Generate only the project-specific page objects, step defs, and tests.
 ═══════════════════════════════════════════════════════════════════

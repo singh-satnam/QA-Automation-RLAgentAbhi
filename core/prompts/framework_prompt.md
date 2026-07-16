@@ -14,7 +14,7 @@ FIDELITY TO STORY + FRAMEWORK — NON-NEGOTIABLE
 3. EVERY value the test extracts that the story refers to later (a price, a name, a count, a total) MUST be recorded via `cap.add(...)` or `cap.add_component(..., group=...)` at the moment it is read.
 4. Test order MUST match the story order. Do NOT reorder steps for what looks like efficiency — the story's order is the contract.
 5. If a step references a UI element the test can't find, raise `AssertionError` with a descriptive message including the locator attempted. Don't fall through silently to the next step.
-6. NEVER hardcode values from user_data.json into Python — read them at runtime via the `test_data` fixture (also declared in conftest.py).
+6. NEVER hardcode global URL / username / password or per-story values into Python. Read them at runtime: global values (URL, USERNAME, PASSWORD, shared config) come from the `global_data` fixture OR the `test_data` fixture (which merges the global `.env`); per-story values come from the `test_data` fixture. Both are declared in the root conftest.py.
 ═══════════════════════════════════════════════════════════════════
 
 Pipeline:
@@ -70,7 +70,14 @@ Hard rules:
 - Step defs call POM methods, never raw Playwright.
 - Do NOT show the headed browser; this phase is silent.
 - PERFORMANCE: page.goto must use wait_until="domcontentloaded" and a finite timeout. NEVER call page.wait_for_load_state("networkidle") — most storefronts have long-tail analytics/tracking traffic that prevents networkidle from ever firing, so the wait burns its full timeout on every navigation. When a step needs a specific element, wait on THAT element (`expect(locator).to_be_visible(timeout=...)`) instead.
-- TEST DATA: if user_data.json exists, generated step defs MUST read its current contents AT RUNTIME via the `test_data` fixture already declared in the root conftest.py — never hardcode values from the JSON into step defs. This lets the user change user_data.json between runs without regenerating code.
+- TEST DATA — TWO TIERS, BOTH READ AT RUNTIME (never hardcoded):
+  · GLOBAL (test_data/.env): URL and shared credentials. Read via the `global_data`
+    fixture (a dict) or the `test_data` fixture (which already includes them). The
+    `base_url` fixture already resolves the URL from .env — use it for navigation.
+    Define login/navigation ONCE in common_steps.py reading creds from the fixture,
+    so every feature reuses them ("define once, use many").
+  · PER-STORY (test_data/<storyname>.json): story-specific data. Read via the
+    `test_data` fixture; per-story keys override global keys (except the URL).
   · For Scenario Outline rows: the row's parameters (from Examples:) take precedence.
   · NEGATIVE rows (rows whose Example/object includes `expected_message`,     `expected_error`, or `should_succeed: false`): the step MUST assert that the EXACT     expected error text is visible. Failure to surface that error = test FAILURE.     Never use try/except to swallow assertion errors on negative rows.
 
