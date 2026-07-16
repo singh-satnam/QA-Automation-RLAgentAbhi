@@ -2353,23 +2353,6 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
             if "last_upload_info" in st.session_state:
                 st.success("Uploaded: " + st.session_state.last_upload_info)
 
-        story_caption = (
-            f"Project `{current_project()}`"
-            + (f" · story `{st.session_state.get('active_story', '')}`"
-               if st.session_state.get("active_story") else "")
-            if current_project() else "Upload a story to begin."
-        )
-        if current_project():
-            staging = _is_staging()
-            badge_class = "staging" if staging else "workspace"
-            badge_label = "Staging" if staging else "Workspace"
-            st.markdown(
-                f'{story_caption} <span class="staging-badge {badge_class}">{badge_label}</span>',
-                unsafe_allow_html=True,
-            )
-        else:
-            st.caption(story_caption)
-
         # ----- Global_Project_Data (JSON -> test_data/.env) -----
         with st.expander(
             "Global_Project_Data (JSON · URL / username / password)",
