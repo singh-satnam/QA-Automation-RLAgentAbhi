@@ -1,0 +1,6 @@
+1. Open RG login page
+2. Enter valid Admin email & password
+3. Click Sign In
+4. Click user name in header
+5. Click Sign Out
+6. User is redirected to login screen with button 'Click here to Login'

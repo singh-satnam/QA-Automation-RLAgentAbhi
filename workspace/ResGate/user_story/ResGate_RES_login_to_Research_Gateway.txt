@@ -1,0 +1,4 @@
+1. Open RG login page 
+2. Enter valid RES email & password
+3. Click Sign In
+4. Researcher lands on My Projects with only assigned projects

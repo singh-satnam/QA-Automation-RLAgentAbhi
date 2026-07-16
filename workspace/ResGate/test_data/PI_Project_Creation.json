@@ -1,0 +1,9 @@
+{
+  "projectName": "Auto Demo",
+  "projectDescription": "PW-Demo",
+  "budgetAvailable": "10",
+  "Select an account from the list": "StandardAccount",
+  "Select users from the list": "Researcher P (piyusha.varshney+r@relevancelab.com)",
+  "Select Create standard catalog type from the list": "Create standard catalog - 29 products are available.",
+  "Select Bring your own catalog type from the list": "Bring all catalog items (This option will sync all the products which have the required launch permission)."
+}

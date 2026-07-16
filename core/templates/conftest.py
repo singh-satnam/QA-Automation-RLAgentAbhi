@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import os
+import random
 import re
 import traceback
 from contextlib import contextmanager
@@ -393,6 +394,13 @@ def credentials():
 @pytest.fixture(scope="session")
 def captured_values():
     return CapturedValues(_CAPTURES)
+
+
+@pytest.fixture(scope="session")
+def run_id():
+    """3-digit random suffix, fixed for the entire session.
+    Use to make dynamically-named entities (projects, instances, etc.) unique per run."""
+    return str(random.randint(100, 999))
 
 
 @pytest.fixture
