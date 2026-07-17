@@ -97,6 +97,7 @@ def copy_scaffolding(project: str, staging: bool = False) -> list[str]:
     mapping = {
         TEMPLATES_DIR / "conftest.py": pd / "conftest.py",
         TEMPLATES_DIR / "base_page.py": pd / "pages" / "base_page.py",
+        TEMPLATES_DIR / "utils.py": pd / "utils.py",
     }
     for src, dst in mapping.items():
         if src.exists():
