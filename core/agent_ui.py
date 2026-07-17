@@ -2629,6 +2629,29 @@ def render_stepper(gherkin_done: bool, framework_done: bool) -> tuple[bool, bool
     return clicks["gherkin"], clicks["framework"], clicks["run"]
 
 
+def duplicate_dialog_next(choice: str | None) -> dict:
+    """Pure state-machine for the duplicate dialog: map a dialog choice to the
+    session-state effects that must survive the button-click rerun.
+
+    Returns {"set": {key: value}, "clear": [keys], "rerun": bool}. Kept pure and
+    separate from the Streamlit widgets so the transition is unit-testable — the
+    bug it fixes was that "Generate Anyway" was read inside the transient
+    gen_clicked handler, so its effect never persisted across the rerun.
+
+    - "generate_anyway": persist dup_override + force_gherkin so the generate
+      step actually fires on the next run; drop the pending dialog.
+    - "cancel": drop the pending dialog, do nothing else.
+    - "view_existing" / None: no state change (the dialog already shows the
+      existing feature and stays open).
+    """
+    if choice == "generate_anyway":
+        return {"set": {"dup_override": True, "force_gherkin": True},
+                "clear": ["pending_dup"], "rerun": True}
+    if choice == "cancel":
+        return {"set": {}, "clear": ["pending_dup"], "rerun": True}
+    return {"set": {}, "clear": [], "rerun": False}
+
+
 def render_duplicate_story_dialog(dup: dict) -> str | None:
     """Show a dialog when a duplicate/overlapping story is detected.
 
@@ -2820,6 +2843,20 @@ def main() -> None:
                 st.session_state.pop("upload_duplicate_file", None)
                 st.rerun()
 
+    # --- Duplicate dialog for the Generate Gherkin step (persistent) ---
+    # Rendered OUTSIDE the transient gen_clicked handler so the dialog buttons
+    # survive their own click-rerun. "Generate Anyway" sets force_gherkin, which
+    # the generate handler consumes on the next run.
+    if "pending_dup" in st.session_state:
+        choice = render_duplicate_story_dialog(st.session_state["pending_dup"])
+        effect = duplicate_dialog_next(choice)
+        for key, value in effect["set"].items():
+            st.session_state[key] = value
+        for key in effect["clear"]:
+            st.session_state.pop(key, None)
+        if effect["rerun"]:
+            st.rerun()
+
     # Reset session flags if the project changed.
     if st.session_state.get("flags_for_story") != story_id:
         st.session_state.gherkin_done = False
@@ -2926,7 +2963,11 @@ def main() -> None:
         return
 
     # ---- Button 1 — Generate Gherkin ----
-    if gen_clicked:
+    # Fires on the stepper button OR on the persistent force_gherkin flag set by
+    # the "Generate Anyway" choice in the duplicate dialog (which lives outside
+    # this transient handler so its effect survives the button-click rerun).
+    force_gherkin = st.session_state.pop("force_gherkin", False)
+    if gen_clicked or force_gherkin:
         log_event("Step ① clicked — Generate Gherkin")
         project = current_project()
         ws.ensure_project_dirs(project, staging=_is_staging())
@@ -2934,6 +2975,8 @@ def main() -> None:
         append_process_log(project, f"Generate Gherkin clicked for {story_file}")
 
         # --- Duplicate story detection (pre-check before LLM call) ---
+        # Skipped when the user already chose "Generate Anyway" (dup_override).
+        # Otherwise stash the match and hand off to the persistent dialog above.
         if not st.session_state.get("dup_override"):
             dup = ws.check_duplicate_story(project, story_file, staging=_is_staging())
             if dup:
@@ -2942,18 +2985,8 @@ def main() -> None:
                 append_process_log(project,
                     f"Duplicate {dup['match_type']} match ({int(dup['ratio']*100)}%) "
                     f"with {dup['matched_story_file']}")
-                choice = render_duplicate_story_dialog(dup)
-                if choice == "view_existing" or choice == "cancel":
-                    if choice == "view_existing" and dup["feature_file"]:
-                        st.info(f"Existing feature: **{dup['feature_file'].name}**")
-                        st.code(dup["feature_content"], language="gherkin")
-                    st.session_state.pop("dup_override", None)
-                    return
-                elif choice == "generate_anyway":
-                    st.session_state["dup_override"] = True
-                    st.rerun()
-                else:
-                    return
+                st.session_state["pending_dup"] = dup
+                st.rerun()
         st.session_state.pop("dup_override", None)
 
         with st.status("Generating Gherkin…", expanded=False) as status:
