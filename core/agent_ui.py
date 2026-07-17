@@ -188,6 +188,15 @@ CUSTOM_CSS = """
         color: #64748b; font-weight: 700; margin: 1.25rem 0 0.5rem 0;
     }
 
+    /* Sidebar step sections — bold dark-green labels so the upload order
+       reads as a numbered flow. Containers carry the st-key-* class. */
+    .st-key-gpd_section summary p,
+    .st-key-testdata_section summary p,
+    .st-key-project_select label p {
+        color: #1b5e20 !important;
+        font-weight: 700 !important;
+    }
+
     .step-button-wrapper { margin-bottom: 0.4rem; }
     .step-num {
         display: inline-flex; align-items: center; justify-content: center;
@@ -2279,14 +2288,52 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
             unsafe_allow_html=True,
         )
 
-        # ----- Project / story selector (switch between existing stories) -----
+        # ----- Step 1 · Global project data (JSON -> test_data/.env) -----
+        with st.container(key="gpd_section"), st.expander(
+            "Step 1 · App URL & Login Details",
+            expanded=bool(current_project()
+                          and (ws.project_dir(current_project(), staging=_is_staging())
+                               / "test_data" / ".env").exists()),
+        ):
+            st.caption("Upload a JSON with URL, username, password — shared by "
+                       "all tests in the project.")
+            gpd = st.file_uploader(
+                "Global_Project_Data",
+                type=["json"],
+                label_visibility="collapsed",
+                key=f"gpd_upload_{st.session_state.get('gpd_upload_nonce', 0)}",
+                help=("Upload a JSON object of values shared across most tests "
+                      "(URL, USERNAME, PASSWORD, ...). Saved to test_data/.env and "
+                      "read by every test via the global_data / test_data fixtures."),
+            )
+            if gpd is not None and current_project():
+                raw_text = gpd.read().decode("utf-8-sig")
+                ok, msg = tdio.write_global_env(
+                    ws.project_dir(current_project(), staging=_is_staging()), raw_text)
+                if ok:
+                    st.success(msg)
+                    st.session_state.gpd_upload_nonce = st.session_state.get("gpd_upload_nonce", 0) + 1
+                    st.rerun()
+                else:
+                    st.error(msg)
+            elif gpd is not None and not current_project():
+                st.warning("Select or create a project before adding Global_Project_Data.")
+
+            env_path = (ws.project_dir(current_project(), staging=_is_staging())
+                        / "test_data" / ".env") if current_project() else None
+            if env_path and env_path.exists():
+                st.caption("Current test_data/.env")
+                st.code(env_path.read_text(encoding="utf-8"), language="ini")
+
+        # ----- Step 2 · Project / story selector (switch between existing stories) -----
         projects = ws.list_projects()
         if projects:
-            sel_proj = st.selectbox(
-                "Project", projects,
-                index=(projects.index(current_project())
-                       if current_project() in projects else 0),
-            )
+            with st.container(key="project_select"):
+                sel_proj = st.selectbox(
+                    "Step 2 · Project & User Story", projects,
+                    index=(projects.index(current_project())
+                           if current_project() in projects else 0),
+                )
             st.session_state.project = sel_proj
             st.session_state.staging_active = ws.is_staged(sel_proj)
             st.markdown('<div class="section-heading" style="margin-top:0.75rem;">User stories</div>', unsafe_allow_html=True)
@@ -2295,6 +2342,7 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
                 names = [p.name for p in stories]
                 sel_story = st.selectbox(
                     "Story", names,
+                    label_visibility="collapsed",
                     index=(names.index(st.session_state.get("active_story"))
                            if st.session_state.get("active_story") in names else 0),
                 )
@@ -2304,7 +2352,7 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
         # ----- Add a new story (upload a .txt) — one collapsible block. Auto-
         # opens for first-time users (no active story), collapsed once one exists.
         with st.expander(
-            "➕ Add a new story",
+            "➕ Add a new user story (.txt)",
             expanded=not bool(current_project() and st.session_state.get("active_story")),
         ):
             # ----- Upload a .txt story (project derived from filename prefix) -----
@@ -2354,45 +2402,10 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
             if "last_upload_info" in st.session_state:
                 st.success("Uploaded: " + st.session_state.last_upload_info)
 
-        # ----- Global_Project_Data (JSON -> test_data/.env) -----
-        with st.expander(
-            "Global_Project_Data (JSON · URL / username / password)",
-            expanded=bool(current_project()
-                          and (ws.project_dir(current_project(), staging=_is_staging())
-                               / "test_data" / ".env").exists()),
-        ):
-            gpd = st.file_uploader(
-                "Global_Project_Data",
-                type=["json"],
-                label_visibility="collapsed",
-                key=f"gpd_upload_{st.session_state.get('gpd_upload_nonce', 0)}",
-                help=("Upload a JSON object of values shared across most tests "
-                      "(URL, USERNAME, PASSWORD, ...). Saved to test_data/.env and "
-                      "read by every test via the global_data / test_data fixtures."),
-            )
-            if gpd is not None and current_project():
-                raw_text = gpd.read().decode("utf-8-sig")
-                ok, msg = tdio.write_global_env(
-                    ws.project_dir(current_project(), staging=_is_staging()), raw_text)
-                if ok:
-                    st.success(msg)
-                    st.session_state.gpd_upload_nonce = st.session_state.get("gpd_upload_nonce", 0) + 1
-                    st.rerun()
-                else:
-                    st.error(msg)
-            elif gpd is not None and not current_project():
-                st.warning("Select or create a project before adding Global_Project_Data.")
-
-            env_path = (ws.project_dir(current_project(), staging=_is_staging())
-                        / "test_data" / ".env") if current_project() else None
-            if env_path and env_path.exists():
-                st.caption("Current test_data/.env")
-                st.code(env_path.read_text(encoding="utf-8"), language="ini")
-
-        # ----- Optional per-story test data (JSON / CSV / TSV / Excel) — collapsible -----
+        # ----- Step 3 · Optional per-story test data (JSON / CSV / TSV / Excel) -----
         # Auto-opens only when the project already has test data.
-        with st.expander(
-            "Test data (optional · JSON / CSV / TSV / Excel)",
+        with st.container(key="testdata_section"), st.expander(
+            "Step 3 · Test Data (optional · JSON / CSV / Excel)",
             expanded=bool(_read_user_data_text().strip()),
         ):
             data_uploaded = st.file_uploader(
@@ -2750,6 +2763,9 @@ def render_promotion_dialog() -> None:
                 st.warning(f"Partial promotion: {len(result['failed'])} file(s) failed to copy. Staging preserved.")
                 return
             st.session_state.staging_active = False
+            # Additive merge skips an existing workspace reuse_index.json, so
+            # rebuild it from the promoted files to keep it current.
+            ws.rebuild_reuse_index(project, staging=False)
             copied_n = len(result["copied"])
             skipped_n = len(result["skipped"])
             msg = f"Promoted {copied_n} file(s) to workspace/{project}. Staging cleared."
@@ -2971,12 +2987,20 @@ def main() -> None:
         append_process_log(project,
                            "Scaffolding copied: " + (", ".join(scaffold) or "(none)"))
         append_process_log(project, "Generate Test Framework clicked")
+        if _is_staging():
+            # Pull the promoted framework into staging so the delta prompt can
+            # read/extend real code and staged pytest runs resolve imports.
+            seeded = ws.seed_staging_from_workspace(project)
+            if seeded:
+                append_process_log(project,
+                                   f"Seeded {len(seeded)} file(s) from workspace: "
+                                   + ", ".join(seeded[:10]))
         has_framework = (
             any(proj_path("pages").glob("page_*.py"))
             or any(proj_path("step_defs").glob("*_steps.py"))
         )
         story_file = st.session_state.get("active_story", "")
-        reuse_idx = ws.load_reuse_index(project, staging=_is_staging())
+        reuse_idx = ws.load_merged_reuse_index(project)
         prompt_base = FRAMEWORK_DELTA_PROMPT if has_framework else FRAMEWORK_PROMPT
         prompt = (prompt_base
                   .replace("{{STORY_FILE}}", story_file)

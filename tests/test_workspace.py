@@ -139,6 +139,86 @@ def test_load_reuse_index_default_when_missing(tmp_path, monkeypatch):
     assert idx == {"page_methods": {}, "step_defs": {}, "selectors": {}, "flows": {}}
 
 
+def test_load_merged_reuse_index_overlays_staging_on_workspace(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    workspace.ensure_project_dirs("RLRG")
+    workspace.ensure_project_dirs("RLRG", staging=True)
+    (tmp_path / "workspace" / "RLRG" / "pages" / "page_login.py").write_text(
+        "class LoginPage:\n"
+        "    def open(self): ...\n"
+        "    def submit_credentials(self): ...\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "temp_workspace" / "RLRG" / "pages" / "page_signup.py").write_text(
+        "class SignupPage:\n"
+        "    def open(self): ...\n"
+        "    def register(self): ...\n",
+        encoding="utf-8",
+    )
+    workspace.rebuild_reuse_index("RLRG")
+    workspace.rebuild_reuse_index("RLRG", staging=True)
+    merged = workspace.load_merged_reuse_index("RLRG")
+    # Workspace-only entry visible
+    assert merged["page_methods"]["submit_credentials"] == "page_login.py"
+    # Staging-only entry visible
+    assert merged["page_methods"]["register"] == "page_signup.py"
+    # Collision: staging wins
+    assert merged["page_methods"]["open"] == "page_signup.py"
+
+
+def test_load_merged_reuse_index_workspace_only(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    workspace.ensure_project_dirs("RLRG")
+    (tmp_path / "workspace" / "RLRG" / "step_defs" / "login_steps.py").write_text(
+        "def given_user_on_login(): ...\n", encoding="utf-8",
+    )
+    workspace.rebuild_reuse_index("RLRG")
+    merged = workspace.load_merged_reuse_index("RLRG")
+    assert merged["step_defs"]["given_user_on_login"] == "login_steps.py"
+
+
+def test_seed_staging_copies_framework_additively(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    workspace.ensure_project_dirs("RLRG")
+    workspace.ensure_project_dirs("RLRG", staging=True)
+    ws_pd = tmp_path / "workspace" / "RLRG"
+    stg_pd = tmp_path / "temp_workspace" / "RLRG"
+    (ws_pd / "pages" / "page_login.py").write_text("class LoginPage: ...\n", encoding="utf-8")
+    (ws_pd / "step_defs" / "login_steps.py").write_text("def s(): ...\n", encoding="utf-8")
+    (ws_pd / "test" / "test_login.py").write_text("# test\n", encoding="utf-8")
+    # Staging already has its own newer version of this file — must not be overwritten
+    (stg_pd / "pages" / "page_signup.py").write_text("STAGING VERSION\n", encoding="utf-8")
+    (ws_pd / "pages" / "page_signup.py").write_text("WORKSPACE VERSION\n", encoding="utf-8")
+    # __pycache__ must be skipped
+    cache = ws_pd / "pages" / "__pycache__"
+    cache.mkdir()
+    (cache / "page_login.cpython-314.pyc").write_bytes(b"\x00")
+    # report/ and user_story/ must not be seeded
+    (ws_pd / "report" / "old.html").write_text("x", encoding="utf-8")
+    (ws_pd / "user_story" / "RLRG_login.txt").write_text("story", encoding="utf-8")
+
+    copied = workspace.seed_staging_from_workspace("RLRG")
+
+    assert "pages/page_login.py" in copied
+    assert "step_defs/login_steps.py" in copied
+    assert "test/test_login.py" in copied
+    assert (stg_pd / "pages" / "page_login.py").exists()
+    assert (stg_pd / "pages" / "page_signup.py").read_text(encoding="utf-8") == "STAGING VERSION\n"
+    assert not (stg_pd / "pages" / "__pycache__").exists()
+    assert not (stg_pd / "report" / "old.html").exists()
+    assert not (stg_pd / "user_story" / "RLRG_login.txt").exists()
+
+
+def test_seed_staging_noop_without_workspace_project(tmp_path, monkeypatch):
+    monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
+    monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")
+    workspace.ensure_project_dirs("RLRG", staging=True)
+    assert workspace.seed_staging_from_workspace("RLRG") == []
+
+
 def test_project_dir_staging_resolves_to_temp_workspace(tmp_path, monkeypatch):
     monkeypatch.setattr(workspace, "WORKSPACE_DIR", tmp_path / "workspace")
     monkeypatch.setattr(workspace, "TEMP_WORKSPACE_DIR", tmp_path / "temp_workspace")

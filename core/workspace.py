@@ -377,6 +377,19 @@ def load_reuse_index(project: str, staging: bool = False) -> dict:
         return _empty_reuse_index()
 
 
+def load_merged_reuse_index(project: str) -> dict:
+    """Workspace index overlaid with staging index (staging entries win).
+
+    Framework generation runs in staging, but code already promoted to the
+    workspace should still be visible to the LLM so it reuses existing page
+    methods / step defs instead of regenerating them."""
+    merged = load_reuse_index(project, staging=False)
+    staged = load_reuse_index(project, staging=True)
+    for section, entries in staged.items():
+        merged[section].update(entries)
+    return merged
+
+
 def rebuild_reuse_index(project: str, staging: bool = False) -> dict:
     """Scan pages/, step_defs/, mcp-selectors/ and write reuse_index.json.
     Best-effort and tolerant of parse errors. Existing files always win on
@@ -484,6 +497,39 @@ def promote_to_workspace(project: str, max_retries: int = 3) -> dict:
             if cache_dir.is_dir():
                 shutil.rmtree(cache_dir, ignore_errors=True)
     return result
+
+
+# Subdirs copied into staging so delta framework generation sees the promoted
+# code. report/ and user_story/ stay out: reports are run artifacts, and story
+# duplicate-checking already scans both roots.
+_SEED_SUBDIRS = ("feature", "step_defs", "pages", "test", "mcp-selectors", "test_data")
+
+
+def seed_staging_from_workspace(project: str) -> list[str]:
+    """Copy the promoted framework into staging (additive: never overwrites a
+    staging file) so the delta prompt can read and extend real code and staged
+    test runs resolve their imports. Returns copied paths relative to the
+    project dir."""
+    workspace_pd = project_dir(project, staging=False)
+    staging_pd = project_dir(project, staging=True)
+    copied: list[str] = []
+    if not workspace_pd.exists():
+        return copied
+    for sub in _SEED_SUBDIRS:
+        src_dir = workspace_pd / sub
+        if not src_dir.exists():
+            continue
+        for src_file in sorted(src_dir.rglob("*")):
+            if not src_file.is_file() or "__pycache__" in src_file.parts:
+                continue
+            rel = src_file.relative_to(workspace_pd)
+            dst_file = staging_pd / rel
+            if dst_file.exists():
+                continue
+            dst_file.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src_file, dst_file)
+            copied.append(str(rel).replace("\\", "/"))
+    return copied
 
 
 def discard_staging(project: str) -> None:
