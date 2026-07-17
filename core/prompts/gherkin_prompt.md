@@ -85,6 +85,25 @@ test-data JSON) is the entire and only contract.
 6. INLINE DATA: Field: Value blocks, address blocks, and similar inline data in
    the story become Gherkin doc-strings or data tables — every key/value
    preserved.
+7. NO TEST DATA INSIDE THE FEATURE. Any value that lives in the project's test
+   data (URL, usernames, passwords, and other values in `test_data/.env` or a
+   `test_data/*.json` sidecar) MUST be referenced SEMANTICALLY, never pasted as
+   a literal into the `.feature` file. The feature describes intent; the step
+   definitions read the actual value from the `test_data` / `base_url` fixtures
+   at runtime. This keeps the feature stable when the data changes.
+     · A login becomes a role step: `When the user signs in as a Researcher`
+       (NOT `enters email "x@y.com" and password "..."`). The step def resolves
+       the role to its credential keys (see convention below).
+     · The page/URL step carries no URL: `Given the user is on the <app> login
+       page` (NOT `... page "https://..."`). The step def uses `base_url`.
+     · Even when the story says "enter valid credentials" and the values happen
+       to exist in test_data, DO NOT resolve them into the feature — keep the
+       step semantic.
+   ROLE → KEY CONVENTION (what the step defs will look up): credentials are keyed
+   `<ROLE>_USER` / `<ROLE>_PWD` in test_data (e.g. Researcher → `RES_USER` /
+   `RES_PWD`, PI → `PI_USER` / `PI_PWD`, Admin → `ADMIN_USER` / `ADMIN_PWD`);
+   the base URL is `URL`. Use the role word from the story in the step text; the
+   framework pass maps it to these keys.
 ═══════════════════════════════════════════════════════════════════
 
 ═══════════════════════════════════════════════════════════════════
@@ -104,11 +123,14 @@ scenarios beyond the rows it contains, and you must NEVER omit rows, sample
 data, or invent expected values.
 
   - SHAPE A — JSON object (one dict at the top level):
-      Key/value pairs the story references via <placeholder> tokens. Generate
-      ONE Scenario for the story, substituting concrete values into the steps.
-      If the story has assertion intent (e.g. "Total should be 61.94"), emit
-      explicit `Then` steps referencing the data values — `Then the Subtotal is
-      "<Subtotal>"` — so the tests can verify exact values at runtime.
+      Key/value pairs the story references. Generate ONE Scenario. Do NOT
+      substitute the concrete values into the feature steps — keep the steps
+      SEMANTIC and let the step def read the value from the `test_data` fixture
+      by key at runtime (see CORE RULE #7). If the story has assertion intent
+      (e.g. "the Subtotal should match the data"), write a generic `Then` step
+      like `Then the Subtotal matches the expected value` and let the step def
+      compare against `test_data["Subtotal"]`. Only a value written LITERALLY in
+      the story text itself (not sourced from the JSON) may appear in the feature.
 
   - SHAPE B — JSON array (list of dicts):
       Each dict is one Example row. Generate a Scenario Outline whose Examples:

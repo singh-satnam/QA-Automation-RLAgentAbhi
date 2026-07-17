@@ -78,6 +78,26 @@ Hard rules:
     so every feature reuses them ("define once, use many").
   · PER-STORY (test_data/<storyname>.json): story-specific data. Read via the
     `test_data` fixture; per-story keys override global keys (except the URL).
+  · SEMANTIC STEPS CARRY NO DATA — RESOLVE FROM KEYS. The Gherkin features are
+    written semantically: a login reads `When the user signs in as a Researcher`
+    and the page step reads `Given the user is on the <app> login page` — NO
+    email/password/URL literal appears in the feature. Your step defs MUST
+    resolve these from the fixtures. FIRST read the ACTUAL keys present in
+    `test_data/.env` (they are stored UPPER_SNAKE, e.g. `URL`, `RES_USER`,
+    `RES_PWD`, `PI_USER`, `PI_PWD`, `ADMIN_USER`, `ADMIN_PWD`) and use those
+    exact key strings. Map the role word in the step to `<ROLE>_USER` /
+    `<ROLE>_PWD` (Researcher → `RES_USER`/`RES_PWD`, PI → `PI_USER`/`PI_PWD`,
+    Admin → `ADMIN_USER`/`ADMIN_PWD`). The URL comes from the `base_url` fixture
+    (fall back to `test_data["URL"]`). Example step def:
+        @when("the user signs in as a Researcher")
+        def sign_in(page, test_data, captured_values):
+            login = LoginPage(page)
+            login.enter_email(test_data["RES_USER"])
+            login.enter_password(test_data["RES_PWD"])
+    The generated step def references test_data KEYS only — it must contain NO
+    literal email, password, or URL. POM methods stay parameter-based (they
+    receive the value, they do not read the fixture). Pages, step defs, and test
+    files must be free of any credential/URL literal.
   · For Scenario Outline rows: the row's parameters (from Examples:) take precedence.
   · NEGATIVE rows (rows whose Example/object includes `expected_message`,     `expected_error`, or `should_succeed: false`): the step MUST assert that the EXACT     expected error text is visible. Failure to surface that error = test FAILURE.     Never use try/except to swallow assertion errors on negative rows.
 
