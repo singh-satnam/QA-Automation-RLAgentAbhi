@@ -2334,11 +2334,12 @@ def render_sidebar(stories_n: int, story_id: str) -> None:
                     else:
                         ws.add_story(project, filename, content, staging=True)
                         ws.write_pytest_ini(project, ws.extract_base_url(content), staging=True)
-                        # Content-level duplicate check against other stories
+                        # Content-level duplicate check against other stories.
+                        # Route through the single pending_dup dialog (same one
+                        # the Generate Gherkin step uses).
                         dup = ws.check_duplicate_story(project, filename, staging=True)
                         if dup:
-                            st.session_state["upload_duplicate"] = dup
-                            st.session_state["upload_duplicate_file"] = filename
+                            st.session_state["pending_dup"] = dup
                         st.session_state.project = project
                         st.session_state.active_story = filename
                         st.session_state.staging_active = True
@@ -2796,57 +2797,12 @@ def main() -> None:
 
     render_summary_line(n_stories, features, tests_n)
 
-    # --- Show duplicate story warning (persists after upload rerun) ---
-    if "upload_duplicate" in st.session_state:
-        dup = st.session_state["upload_duplicate"]
-        dup_file = st.session_state.get("upload_duplicate_file", "")
-        ratio_pct = int(dup["ratio"] * 100)
-        is_full = dup["match_type"] == "full"
-        icon = "⚠️" if is_full else "ℹ️"
-        title = "Duplicate Story Detected" if is_full else "Partial Story Overlap Detected"
-        st.markdown(
-            f'<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;'
-            f'padding:16px;margin-bottom:16px;">'
-            f'<h3 style="margin:0 0 8px 0;">{icon} {title}</h3>'
-            f'<p>Your story <b>{dup_file}</b> matches existing story '
-            f'<b>{dup["matched_story_file"]}</b> with <b>{ratio_pct}%</b> step overlap.</p>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
-        col_m, col_n = st.columns(2)
-        with col_m:
-            st.markdown("**Matching steps:**")
-            for step in dup["matching_steps"]:
-                st.markdown(f"&ensp;✅&ensp;{step}")
-        with col_n:
-            if dup["new_steps"]:
-                st.markdown("**New steps not in existing story:**")
-                for step in dup["new_steps"]:
-                    st.markdown(f"&ensp;➕&ensp;{step}")
-            else:
-                st.markdown("**No new steps** — all steps are already covered.")
-        if dup["feature_content"]:
-            with st.expander(
-                f"Existing feature: {dup['feature_file'].name if dup.get('feature_file') else 'N/A'}",
-                expanded=False,
-            ):
-                st.code(dup["feature_content"], language="gherkin")
-        col1, col2, _ = st.columns([1.5, 1.5, 4])
-        with col1:
-            if st.button("Proceed with generation", key="dup_proceed", type="primary"):
-                st.session_state.pop("upload_duplicate", None)
-                st.session_state.pop("upload_duplicate_file", None)
-                st.rerun()
-        with col2:
-            if st.button("Dismiss", key="dup_dismiss"):
-                st.session_state.pop("upload_duplicate", None)
-                st.session_state.pop("upload_duplicate_file", None)
-                st.rerun()
-
-    # --- Duplicate dialog for the Generate Gherkin step (persistent) ---
-    # Rendered OUTSIDE the transient gen_clicked handler so the dialog buttons
-    # survive their own click-rerun. "Generate Anyway" sets force_gherkin, which
-    # the generate handler consumes on the next run.
+    # --- Single duplicate-story dialog (persistent, session-state driven) ---
+    # Set from BOTH entry points — right after an upload (content-similarity
+    # match) and from the Generate Gherkin step. Rendered OUTSIDE the transient
+    # gen_clicked handler so the dialog buttons survive their own click-rerun.
+    # "Generate Anyway" sets force_gherkin, which the generate handler consumes
+    # on the next run; "Cancel" dismisses; "View Existing" keeps it open.
     if "pending_dup" in st.session_state:
         choice = render_duplicate_story_dialog(st.session_state["pending_dup"])
         effect = duplicate_dialog_next(choice)
