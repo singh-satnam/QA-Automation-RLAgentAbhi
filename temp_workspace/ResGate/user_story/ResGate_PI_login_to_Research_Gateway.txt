@@ -1,0 +1,4 @@
+1. Open RG login page 
+2. Enter valid "PI" email & password
+3. Click Sign In
+4. PI lands on 'My Projects' page successfully

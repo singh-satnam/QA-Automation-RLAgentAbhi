@@ -1,0 +1,49 @@
+{
+  "login": {
+    "email_input": "input[placeholder='Please enter your Email ID']",
+    "password_input": "input[placeholder='Please enter your password']",
+    "sign_in_btn": "button:has-text('Sign In')"
+  },
+  "my_projects": {
+    "page_heading": "h3:has-text('My Projects')",
+    "breadcrumb_item": "nav[aria-label='breadcrumb'] li"
+  },
+  "my_organizations": {
+    "page_heading": "h1:has-text('My Organizations')",
+    "org_count_heading": "h1:has-text('(')",
+    "breadcrumb_item": "nav[aria-label='breadcrumb'] li"
+  },
+  "pi_my_projects": {
+    "page_heading": "h1:has-text('My Projects')",
+    "breadcrumb_item": "nav[aria-label='breadcrumb'] li",
+    "add_new_btn": "button:has-text('Add New')"
+  },
+  "create_project": {
+    "page_heading": "h3:has-text('Create Project')",
+    "project_name_input": "input[placeholder*='Please enter your project name']",
+    "project_description_input": "textarea[placeholder='Please enter your project description - (required)']",
+    "budget_input": "input[placeholder*='direct cost budget']",
+    "create_project_btn": "button:has-text('Create Project')"
+  },
+  "logout": {
+    "username_menu_btn": "button[aria-label='User menu']",
+    "sign_out_item": "[role='menuitem']:has-text('Sign out')",
+    "click_here_login_btn": "button:has-text('Click here to login')"
+  },
+  "active_project_card": {
+    "active_status_badge": "span.status-text:has-text('Active')"
+  },
+  "project_details_page": {
+    "project_status_text": ".status-info .status-text",
+    "tab_list": "[role='tablist']",
+    "actions_heading": "text=ACTIONS",
+    "action_link_btn": "button.action-link"
+  },
+  "add_budget_dialog": {
+    "amount_input": "input[name='addBudgetValue']",
+    "submit_btn": "mat-dialog-container button:has-text('Submit')"
+  },
+  "success_toast": {
+    "alert": "[role='alert']"
+  }
+}

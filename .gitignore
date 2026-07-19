@@ -20,6 +20,9 @@ core/reports/.storage_state.json
 # Browser-process logs
 agent_ui.log
 generation_log.txt
+*_log.txt
+*.png
+
 
 # ---------------------------------------------------------------------------
 # Per-run snapshots — accumulate without bound, not useful in git
@@ -36,7 +39,7 @@ workspace/projects/*/*/.demo_stash/
 # ---------------------------------------------------------------------------
 # Staging workspace — generated files before promotion to workspace/
 # ---------------------------------------------------------------------------
-temp_workspace/
+#temp_workspace/
 
 # ---------------------------------------------------------------------------
 # OS / editor
