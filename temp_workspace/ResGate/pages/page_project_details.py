@@ -98,3 +98,22 @@ class ProjectDetailsPage(BasePage):
             if close_btn.is_visible():
                 close_btn.click()
             expect(alert_loc).to_be_hidden(timeout=5000)
+
+    def click_manage_assigned_users(self):
+        panel = self.page.locator(".mat-mdc-tab-body-active")
+        panel.locator(self.loc["assigned_users_section"]["manage_btn"]).first.click()
+
+    def get_assigned_users_list(self):
+        panel = self.page.locator(".mat-mdc-tab-body-active")
+        items = panel.locator(self.loc["assigned_users_section"]["user_selection_label"]).all()
+        result = []
+        for item in items:
+            try:
+                result.append(item.inner_text(timeout=3000).strip())
+            except Exception:
+                pass
+        return result
+
+    def click_cancel_assigned_users(self):
+        panel = self.page.locator(".mat-mdc-tab-body-active")
+        panel.locator(self.loc["assigned_users_section"]["cancel_btn"]).first.click()

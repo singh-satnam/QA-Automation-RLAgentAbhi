@@ -30,7 +30,7 @@ generation_log.txt
 workspace/projects/*/*/reports/runs/
 workspace/*/report/
 workspace/**/report/
-temp_workspace/**/report/
+temp_workspace/**/report
 # ---------------------------------------------------------------------------
 # Local-only stash for the demo replay (not for shared use)
 # ---------------------------------------------------------------------------
@@ -71,3 +71,5 @@ temp_workspace/**/test_data/
 workspace/ResGate/process_log.txt
 workspace/ResGate/process_log.txt
 *.process_log.txt
+temp_workspace/ResGate/report/captured_values.json
+temp_workspace/ResGate/report/step_trace.json

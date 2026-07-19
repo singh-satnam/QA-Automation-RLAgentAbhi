@@ -45,5 +45,10 @@
   },
   "success_toast": {
     "alert": "[role='alert']"
+  },
+  "assigned_users_section": {
+    "manage_btn": "h2:has-text('Assigned Users') .add-researcher-manage",
+    "user_selection_label": "div.selection label.selection-label",
+    "cancel_btn": "button.edit-cancel-btn"
   }
 }
