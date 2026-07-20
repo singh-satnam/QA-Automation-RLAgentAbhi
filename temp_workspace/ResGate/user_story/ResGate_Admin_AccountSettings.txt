@@ -1,0 +1,19 @@
+1. Open RG login page 
+2. Enter valid "admin" credentials
+3. Click "Sign In"
+4. After login on the Organizations page click on the Account icon and select the 'Settings'
+5. You are taken to 'Back to Organization' page 
+6. Validate on this page 'Project Accounts' table is displayed
+7. The following headings for the table are shown 
+	Account Name
+	Region
+	Account Number
+	Organization
+	Created On
+	SRE
+8. Under Account Name - Click on the link icon and this should display 'StandardAccount' popup
+9. The pop up should have the following fields 
+	Project Name
+	Created On
+	Project Owner
+10. Click on 'X' icon to close the pop up

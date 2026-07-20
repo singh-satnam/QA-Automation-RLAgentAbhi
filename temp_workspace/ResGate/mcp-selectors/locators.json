@@ -91,5 +91,16 @@
   "user_selection_list": {
     "user_checkbox_wrapper": "div.selection",
     "user_checkbox": "div.selection input[type='checkbox']"
+  },
+  "account_settings": {
+    "settings_menu_item": "[role='menuitem']:has-text('Settings')",
+    "back_to_orgs_link": "a[href='/admin']:has-text('Back to Organizations')",
+    "project_accounts_table": "[role='tabpanel'] table",
+    "table_headers": "[role='tabpanel'] table th",
+    "account_name_link_icon": "[title='Click here for more details']",
+    "popup_container": "mat-dialog-container",
+    "popup_heading": "mat-dialog-container h2",
+    "popup_table_headers": "mat-dialog-container table th",
+    "popup_close_btn": "mat-dialog-container img[alt='Cancel']"
   }
 }

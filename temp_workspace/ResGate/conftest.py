@@ -25,7 +25,7 @@ import pytest
 from playwright.sync_api import sync_playwright
 
 # --- per-feature step modules (filled by the harness, not by hand) -----------
-pytest_plugins = ('step_defs.common_steps', 'step_defs.admin_create_new_org_steps', 'step_defs.admin_login_steps', 'step_defs.logout_via_signout_steps', 'step_defs.pi_add_budget_to_project_steps', 'step_defs.pi_admin_user_cannot_be_added_to_project_steps', 'step_defs.pi_login_steps', 'step_defs.pi_product_details_for_project_steps', 'step_defs.pi_project_creation_steps', 'step_defs.pi_project_details_active_project_steps', 'step_defs.researcher_login_steps')
+pytest_plugins = ()
 
 # --- project paths -----------------------------------------------------------
 PROJECT_ROOT = Path(__file__).resolve().parent
