@@ -79,7 +79,9 @@ class MyProjectsPage(BasePage):
         return names
 
     def click_add_new(self):
-        self.page.locator(self.loc["pi_my_projects"]["add_new_btn"]).click()
+        import re
+        # Matches both native <button> (PI page) and <div role="button"> (Admin page)
+        self.page.get_by_role("button", name=re.compile(r"Add New", re.IGNORECASE)).first.click()
 
     def wait_for_project_visible(self, project_name, timeout=30000):
         self.wait_visible(f"h3:has-text('{project_name}')", timeout=timeout)
