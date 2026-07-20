@@ -117,5 +117,12 @@
     "user_role": "span.user-role",
     "user_org": "span.user-org",
     "user_active_txt": "span.user-active-txt"
+  },
+  "catalog": {
+    "page_heading": "h3.box-title",
+    "view_dropdown_trigger": "div.custom-select__trigger",
+    "view_dropdown_options_container": "div.custom-options",
+    "current_filter_label": "span.filterData",
+    "search_input": "input[aria-label='searchCatalogItems']"
   }
 }

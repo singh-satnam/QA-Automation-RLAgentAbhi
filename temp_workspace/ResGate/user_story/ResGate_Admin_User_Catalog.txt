@@ -1,0 +1,15 @@
+1. Open RG login page 
+2. Enter valid "admin" credentials
+3. Click "Sign In"
+4. Click on the hamburger menu and select 'Catalog'
+5. This should display Catalog page
+6. Verify on the Catalog page title 'Catalog (X)' where X >0
+7. Also below should be present 
+	Drop down combo 'View:'
+	Custom search bar 
+	
+8.Click drop down 'All' and verify the following options are present
+	Research
+	Secure
+	RA Standard
+9. Click on 'RA Standard' the Catalog page displays result accordingly.
