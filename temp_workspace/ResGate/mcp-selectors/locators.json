@@ -50,5 +50,17 @@
     "manage_btn": "h2:has-text('Assigned Users') .add-researcher-manage",
     "user_selection_label": "div.selection label.selection-label",
     "cancel_btn": "button.edit-cancel-btn"
+  },
+  "my_products_tab": {
+    "product_card": "div.my-product-card"
+  },
+  "product_details_product_page": {
+    "tab_btn": "[role='tab']",
+    "active_panel": "[role='tabpanel']",
+    "connect_link": "span:has-text('CONNECT')",
+    "actions_link": "span:has-text('ACTIONS')",
+    "events_table": "[role='tabpanel'] table",
+    "timestamp_cells": "[role='tabpanel'] table tbody td:nth-child(2)",
+    "status_cells": "[role='tabpanel'] table tbody td:nth-child(3)"
   }
 }

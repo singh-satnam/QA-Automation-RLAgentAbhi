@@ -3,19 +3,19 @@
     "kind": "value",
     "label": "Login page URL",
     "value": "https://ra-demo.rlcatalyst.com/login",
-    "ts": "22:18:50"
+    "ts": "11:12:55"
   },
   {
     "kind": "value",
     "label": "PI email entered",
     "value": "principala@relevancelab.com",
-    "ts": "22:18:50"
+    "ts": "11:12:55"
   },
   {
     "kind": "value",
     "label": "Sign In action",
     "value": "clicked",
-    "ts": "22:18:50"
+    "ts": "11:12:55"
   },
   {
     "kind": "prerequisite",
@@ -23,13 +23,13 @@
     "passed": true,
     "reason": "Expected URL to contain /principal, got: https://ra-demo.rlcatalyst.com/principal",
     "evidence": "https://ra-demo.rlcatalyst.com/principal",
-    "ts": "22:18:51"
+    "ts": "11:12:57"
   },
   {
     "kind": "value",
     "label": "Breadcrumb text",
     "value": "My Projects",
-    "ts": "22:18:51"
+    "ts": "11:12:57"
   },
   {
     "kind": "assertion",
@@ -37,895 +37,148 @@
     "expected": "My Projects",
     "actual": "My Projects",
     "passed": true,
-    "ts": "22:18:51"
+    "ts": "11:12:57"
   },
   {
     "kind": "value",
     "label": "PI project count",
-    "value": 12,
-    "ts": "22:18:51"
+    "value": 16,
+    "ts": "11:12:57"
   },
   {
     "kind": "component",
     "label": "PI project",
     "value": "Genomics Research-ua-east-1",
     "group": "pi_projects",
-    "ts": "22:18:51"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Custom-launch-product",
-    "group": "pi_projects",
-    "ts": "22:18:51"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Cardiovascular Health Initia...",
-    "group": "pi_projects",
-    "ts": "22:18:51"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Health Sciences Project",
-    "group": "pi_projects",
-    "ts": "22:18:51"
+    "ts": "11:12:57"
   },
   {
     "kind": "component",
     "label": "PI project",
     "value": "Precision Medicine",
     "group": "pi_projects",
-    "ts": "22:18:51"
+    "ts": "11:12:57"
   },
   {
     "kind": "component",
     "label": "PI project",
-    "value": "Auto Demo 5742",
+    "value": "Auto No-Catalog 7575",
     "group": "pi_projects",
-    "ts": "22:18:51"
+    "ts": "11:12:57"
+  },
+  {
+    "kind": "component",
+    "label": "PI project",
+    "value": "Auto Demo 2938",
+    "group": "pi_projects",
+    "ts": "11:12:57"
+  },
+  {
+    "kind": "component",
+    "label": "PI project",
+    "value": "Auto No-Catalog 2907",
+    "group": "pi_projects",
+    "ts": "11:12:57"
+  },
+  {
+    "kind": "component",
+    "label": "PI project",
+    "value": "Auto Demo 7365",
+    "group": "pi_projects",
+    "ts": "11:12:57"
   },
   {
     "kind": "value",
-    "label": "Active project card found",
+    "label": "Project clicked",
+    "value": "Genomics Research-ua-east-1",
+    "ts": "11:12:57"
+  },
+  {
+    "kind": "value",
+    "label": "Product clicked",
+    "value": "GenomicsResearchuaeast1-Storage-1784278646706",
+    "ts": "11:12:58"
+  },
+  {
+    "kind": "value",
+    "label": "Product Details tab clicked",
     "value": "true",
-    "ts": "22:18:51"
-  },
-  {
-    "kind": "value",
-    "label": "Active button clicked",
-    "value": "true",
-    "ts": "22:18:51"
-  },
-  {
-    "kind": "prerequisite",
-    "label": "Project details page loaded",
-    "passed": true,
-    "reason": "Expected URL to contain /project-details/, got: https://ra-demo.rlcatalyst.com/project-details/6a59edf7df4775860259cd89?showTab=active",
-    "evidence": "https://ra-demo.rlcatalyst.com/project-details/6a59edf7df4775860259cd89?showTab=active",
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "value",
-    "label": "Project details URL",
-    "value": "https://ra-demo.rlcatalyst.com/project-details/6a59edf7df4775860259cd89?showTab=active",
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "value",
-    "label": "Visible tabs",
-    "value": "['Project Details', 'Events', 'Available Products', 'My Products', 'All Products', 'Shared Services']",
-    "ts": "22:18:52"
+    "ts": "11:12:59"
   },
   {
     "kind": "assertion",
-    "label": "Tab 'Project Details' displayed",
-    "expected": "Project Details",
-    "actual": "Project Details",
+    "label": "Field 'Description' present",
+    "expected": "Description",
+    "actual": "Description",
     "passed": true,
-    "ts": "22:18:52"
+    "ts": "11:12:59"
   },
   {
     "kind": "assertion",
-    "label": "Tab 'Events' displayed",
-    "expected": "Events",
-    "actual": "Events",
-    "passed": true,
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "assertion",
-    "label": "Tab 'Available Products' displayed",
-    "expected": "Available Products",
-    "actual": "Available Products",
-    "passed": true,
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "assertion",
-    "label": "Tab 'My Products' displayed",
-    "expected": "My Products",
-    "actual": "My Products",
-    "passed": true,
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "assertion",
-    "label": "Tab 'All Products' displayed",
-    "expected": "All Products",
-    "actual": "All Products",
-    "passed": true,
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "assertion",
-    "label": "Tab 'Shared Services' displayed",
-    "expected": "Shared Services",
-    "actual": "Shared Services",
-    "passed": true,
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "value",
-    "label": "Project Details tab clicked",
-    "value": "true",
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "assertion",
-    "label": "Field 'Project Name' displayed",
-    "expected": "Project Name",
-    "actual": "Project Name",
-    "passed": true,
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "assertion",
-    "label": "Field 'Project Description' displayed",
-    "expected": "Project Description",
-    "actual": "Project Description",
-    "passed": true,
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "assertion",
-    "label": "Field 'Project Owner' displayed",
-    "expected": "Project Owner",
-    "actual": "Project Owner",
-    "passed": true,
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "assertion",
-    "label": "Field 'Created On' displayed",
+    "label": "Field 'Created On' present",
     "expected": "Created On",
     "actual": "Created On",
     "passed": true,
-    "ts": "22:18:52"
+    "ts": "11:12:59"
   },
   {
     "kind": "assertion",
-    "label": "Field 'Project Type' displayed",
-    "expected": "Project Type",
-    "actual": "Project Type",
+    "label": "Field 'EnableS3Files' present",
+    "expected": "EnableS3Files",
+    "actual": "EnableS3Files",
     "passed": true,
-    "ts": "22:18:52"
+    "ts": "11:12:59"
   },
   {
     "kind": "assertion",
-    "label": "Field 'Account Details' displayed",
-    "expected": "Account Details",
-    "actual": "Account Details",
+    "label": "Field 'Advanced Details' present",
+    "expected": "Advanced Details",
+    "actual": "Advanced Details",
     "passed": true,
-    "ts": "22:18:52"
+    "ts": "11:12:59"
   },
   {
     "kind": "assertion",
-    "label": "Field 'Budget' displayed",
-    "expected": "Budget",
-    "actual": "Budget",
+    "label": "Field 'Bucket Name' present",
+    "expected": "Bucket Name",
+    "actual": "Bucket Name",
     "passed": true,
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "assertion",
-    "label": "Field 'Project Tags' displayed",
-    "expected": "Project Tags",
-    "actual": "Project Tags",
-    "passed": true,
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "assertion",
-    "label": "Field 'Assigned Users' displayed",
-    "expected": "Assigned Users",
-    "actual": "Assigned Users",
-    "passed": true,
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "assertion",
-    "label": "Field 'Linked Studies' displayed",
-    "expected": "Linked Studies",
-    "actual": "Linked Studies",
-    "passed": true,
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "assertion",
-    "label": "Field 'Add Products' displayed",
-    "expected": "Add Products",
-    "actual": "Add Products",
-    "passed": true,
-    "ts": "22:18:52"
+    "ts": "11:12:59"
   },
   {
     "kind": "value",
-    "label": "Actions section visible",
+    "label": "CONNECT visible",
     "value": "True",
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "assertion",
-    "label": "Action option 'Pause' displayed",
-    "expected": "Pause",
-    "actual": "Pause",
-    "passed": true,
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "assertion",
-    "label": "Action option 'Stop' displayed",
-    "expected": "Stop",
-    "actual": "Stop",
-    "passed": true,
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "assertion",
-    "label": "Action option 'Sync' displayed",
-    "expected": "Sync",
-    "actual": "Sync",
-    "passed": true,
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "assertion",
-    "label": "Action option 'Add Budget' displayed",
-    "expected": "Add Budget",
-    "actual": "Add Budget",
-    "passed": true,
-    "ts": "22:18:52"
-  },
-  {
-    "kind": "assertion",
-    "label": "Action option 'Archive' displayed",
-    "expected": "Archive",
-    "actual": "Archive",
-    "passed": true,
-    "ts": "22:18:52"
+    "ts": "11:12:59"
   },
   {
     "kind": "value",
-    "label": "Login page URL",
-    "value": "https://ra-demo.rlcatalyst.com/login",
-    "ts": "22:18:57"
+    "label": "ACTIONS visible",
+    "value": "True",
+    "ts": "11:12:59"
   },
   {
     "kind": "value",
-    "label": "PI email entered",
-    "value": "principala@relevancelab.com",
-    "ts": "22:18:57"
-  },
-  {
-    "kind": "value",
-    "label": "Sign In action",
-    "value": "clicked",
-    "ts": "22:18:57"
-  },
-  {
-    "kind": "prerequisite",
-    "label": "PI My Projects page",
-    "passed": true,
-    "reason": "Expected URL to contain /principal, got: https://ra-demo.rlcatalyst.com/principal",
-    "evidence": "https://ra-demo.rlcatalyst.com/principal",
-    "ts": "22:18:58"
-  },
-  {
-    "kind": "value",
-    "label": "Breadcrumb text",
-    "value": "My Projects",
-    "ts": "22:18:58"
-  },
-  {
-    "kind": "assertion",
-    "label": "My Projects page title displayed",
-    "expected": "My Projects",
-    "actual": "My Projects",
-    "passed": true,
-    "ts": "22:18:58"
-  },
-  {
-    "kind": "value",
-    "label": "PI project count",
-    "value": 12,
-    "ts": "22:18:58"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Genomics Research-ua-east-1",
-    "group": "pi_projects",
-    "ts": "22:18:58"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Custom-launch-product",
-    "group": "pi_projects",
-    "ts": "22:18:58"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Cardiovascular Health Initia...",
-    "group": "pi_projects",
-    "ts": "22:18:58"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Health Sciences Project",
-    "group": "pi_projects",
-    "ts": "22:18:58"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Precision Medicine",
-    "group": "pi_projects",
-    "ts": "22:18:58"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Auto Demo 5742",
-    "group": "pi_projects",
-    "ts": "22:18:58"
-  },
-  {
-    "kind": "value",
-    "label": "Add New clicked",
+    "label": "Events tab clicked",
     "value": "true",
-    "ts": "22:18:58"
-  },
-  {
-    "kind": "prerequisite",
-    "label": "Create Project page loaded",
-    "passed": true,
-    "reason": "Expected URL to contain /addProject, got: https://ra-demo.rlcatalyst.com/addProject/project",
-    "evidence": "https://ra-demo.rlcatalyst.com/addProject/project",
-    "ts": "22:18:58"
+    "ts": "11:12:59"
   },
   {
     "kind": "value",
-    "label": "Project Name",
-    "value": "Auto Demo 7365",
-    "ts": "22:18:58"
+    "label": "Events table visible",
+    "value": "True",
+    "ts": "11:12:59"
   },
   {
     "kind": "value",
-    "label": "Project Description",
-    "value": "PW-Demo",
-    "ts": "22:18:58"
+    "label": "Timestamp entries",
+    "value": "['Jul 17, 2026, 2:28:13\\u202fPM', 'Jul 17, 2026, 2:28:11\\u202fPM', 'Jul 17, 2026, 2:28:07\\u202fPM', 'Jul 17, 2026, 2:28:06\\u202fPM', 'Jul 17, 2026, 2:28:05\\u202fPM', 'Jul 17, 2026, 2:27:49\\u202fPM', 'Jul 17, 2026, 2:27:49\\u202fPM', 'Jul 17, 2026, 2:27:48\\u202fPM', 'Jul 17, 2026, 2:27:48\\u202fPM', 'Jul 17, 2026, 2:27:47\\u202fPM']",
+    "ts": "11:12:59"
   },
   {
     "kind": "value",
-    "label": "Budget Available",
-    "value": "10",
-    "ts": "22:18:58"
-  },
-  {
-    "kind": "value",
-    "label": "Account selected",
-    "value": "StandardAccount2",
-    "ts": "22:18:59"
-  },
-  {
-    "kind": "value",
-    "label": "User selected",
-    "value": "Researcher P (piyusha.varshney+r@relevancelab.com)",
-    "ts": "22:18:59"
-  },
-  {
-    "kind": "value",
-    "label": "Standard catalog selected",
-    "value": "Create standard catalog - 30 products are available.",
-    "ts": "22:18:59"
-  },
-  {
-    "kind": "value",
-    "label": "BYOC catalog selected",
-    "value": "Bring all catalog items (This option will sync all the products which have the required launch permission).",
-    "ts": "22:19:00"
-  },
-  {
-    "kind": "value",
-    "label": "Create Project clicked",
-    "value": "true",
-    "ts": "22:19:00"
-  },
-  {
-    "kind": "prerequisite",
-    "label": "Redirected to My Projects after creation",
-    "passed": true,
-    "reason": "Expected URL to contain /principal, got: https://ra-demo.rlcatalyst.com/principal",
-    "evidence": "https://ra-demo.rlcatalyst.com/principal",
-    "ts": "22:19:02"
-  },
-  {
-    "kind": "value",
-    "label": "Project names on page",
-    "value": "['Auto Demo 7365', 'Genomics Research-ua-east-1', 'Custom-launch-product', 'Cardiovascular Health Initia...', 'Health Sciences Project', 'Precision Medicine']",
-    "ts": "22:19:02"
-  },
-  {
-    "kind": "assertion",
-    "label": "New project visible in My Projects",
-    "expected": "Auto Demo 7365",
-    "actual": "Auto Demo 7365",
-    "passed": true,
-    "ts": "22:19:02"
-  },
-  {
-    "kind": "value",
-    "label": "Login page URL",
-    "value": "https://ra-demo.rlcatalyst.com/login",
-    "ts": "22:19:06"
-  },
-  {
-    "kind": "value",
-    "label": "PI email entered",
-    "value": "principala@relevancelab.com",
-    "ts": "22:19:06"
-  },
-  {
-    "kind": "value",
-    "label": "Sign In action",
-    "value": "clicked",
-    "ts": "22:19:06"
-  },
-  {
-    "kind": "prerequisite",
-    "label": "PI My Projects page",
-    "passed": true,
-    "reason": "Expected URL to contain /principal, got: https://ra-demo.rlcatalyst.com/principal",
-    "evidence": "https://ra-demo.rlcatalyst.com/principal",
-    "ts": "22:19:08"
-  },
-  {
-    "kind": "value",
-    "label": "Breadcrumb text",
-    "value": "My Projects",
-    "ts": "22:19:08"
-  },
-  {
-    "kind": "assertion",
-    "label": "My Projects page title displayed",
-    "expected": "My Projects",
-    "actual": "My Projects",
-    "passed": true,
-    "ts": "22:19:08"
-  },
-  {
-    "kind": "value",
-    "label": "PI project count",
-    "value": 13,
-    "ts": "22:19:08"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Auto Demo 7365",
-    "group": "pi_projects",
-    "ts": "22:19:08"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Genomics Research-ua-east-1",
-    "group": "pi_projects",
-    "ts": "22:19:08"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Custom-launch-product",
-    "group": "pi_projects",
-    "ts": "22:19:08"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Cardiovascular Health Initia...",
-    "group": "pi_projects",
-    "ts": "22:19:08"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Health Sciences Project",
-    "group": "pi_projects",
-    "ts": "22:19:08"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Precision Medicine",
-    "group": "pi_projects",
-    "ts": "22:19:08"
-  },
-  {
-    "kind": "value",
-    "label": "Add New clicked",
-    "value": "true",
-    "ts": "22:19:08"
-  },
-  {
-    "kind": "prerequisite",
-    "label": "Create Project page loaded",
-    "passed": true,
-    "reason": "Expected URL to contain /addProject, got: https://ra-demo.rlcatalyst.com/addProject/project",
-    "evidence": "https://ra-demo.rlcatalyst.com/addProject/project",
-    "ts": "22:19:08"
-  },
-  {
-    "kind": "value",
-    "label": "Project Name",
-    "value": "Auto No-Catalog 2907",
-    "ts": "22:19:08"
-  },
-  {
-    "kind": "value",
-    "label": "Project Description",
-    "value": "PW-NoCatalog-Demo",
-    "ts": "22:19:08"
-  },
-  {
-    "kind": "value",
-    "label": "Budget Available",
-    "value": "10",
-    "ts": "22:19:08"
-  },
-  {
-    "kind": "value",
-    "label": "Account selected",
-    "value": "StandardAccount2",
-    "ts": "22:19:09"
-  },
-  {
-    "kind": "value",
-    "label": "Create Project clicked",
-    "value": "true",
-    "ts": "22:19:09"
-  },
-  {
-    "kind": "prerequisite",
-    "label": "Redirected to My Projects after creation",
-    "passed": true,
-    "reason": "Expected URL to contain /principal, got: https://ra-demo.rlcatalyst.com/principal",
-    "evidence": "https://ra-demo.rlcatalyst.com/principal",
-    "ts": "22:19:11"
-  },
-  {
-    "kind": "value",
-    "label": "Project names on page",
-    "value": "['Auto No-Catalog 2907', 'Auto Demo 7365', 'Genomics Research-ua-east-1', 'Custom-launch-product', 'Cardiovascular Health Initia...', 'Health Sciences Project']",
-    "ts": "22:19:11"
-  },
-  {
-    "kind": "assertion",
-    "label": "New project visible in My Projects",
-    "expected": "Auto No-Catalog 2907",
-    "actual": "Auto No-Catalog 2907",
-    "passed": true,
-    "ts": "22:19:11"
-  },
-  {
-    "kind": "value",
-    "label": "Login page URL",
-    "value": "https://ra-demo.rlcatalyst.com/login",
-    "ts": "22:19:15"
-  },
-  {
-    "kind": "value",
-    "label": "ADMIN email entered",
-    "value": "sundeep.mallya+a@relevancelab.com",
-    "ts": "22:19:15"
-  },
-  {
-    "kind": "value",
-    "label": "Sign In action",
-    "value": "clicked",
-    "ts": "22:19:15"
-  },
-  {
-    "kind": "prerequisite",
-    "label": "Admin My Organizations page",
-    "passed": true,
-    "reason": "Expected URL to contain /admin, got: https://ra-demo.rlcatalyst.com/admin",
-    "evidence": "https://ra-demo.rlcatalyst.com/admin",
-    "ts": "22:19:16"
-  },
-  {
-    "kind": "value",
-    "label": "Page heading text",
-    "value": "My Organizations",
-    "ts": "22:19:16"
-  },
-  {
-    "kind": "assertion",
-    "label": "My Organizations heading displayed",
-    "expected": "My Organizations",
-    "actual": "My Organizations",
-    "passed": true,
-    "ts": "22:19:16"
-  },
-  {
-    "kind": "value",
-    "label": "Organization count",
-    "value": 4,
-    "ts": "22:19:16"
-  },
-  {
-    "kind": "component",
-    "label": "Organization",
-    "value": "Relevance Lab",
-    "group": "admin_organizations",
-    "ts": "22:19:16"
-  },
-  {
-    "kind": "component",
-    "label": "Organization",
-    "value": "Anthropic Org",
-    "group": "admin_organizations",
-    "ts": "22:19:16"
-  },
-  {
-    "kind": "component",
-    "label": "Organization",
-    "value": "Phoniex",
-    "group": "admin_organizations",
-    "ts": "22:19:16"
-  },
-  {
-    "kind": "component",
-    "label": "Organization",
-    "value": "Clinical Research Division",
-    "group": "admin_organizations",
-    "ts": "22:19:16"
-  },
-  {
-    "kind": "value",
-    "label": "Login page URL",
-    "value": "https://ra-demo.rlcatalyst.com/login",
-    "ts": "22:19:20"
-  },
-  {
-    "kind": "value",
-    "label": "ADMIN email entered",
-    "value": "sundeep.mallya+a@relevancelab.com",
-    "ts": "22:19:20"
-  },
-  {
-    "kind": "value",
-    "label": "Sign In action",
-    "value": "clicked",
-    "ts": "22:19:20"
-  },
-  {
-    "kind": "value",
-    "label": "Username menu",
-    "value": "clicked",
-    "ts": "22:19:21"
-  },
-  {
-    "kind": "value",
-    "label": "Sign Out action",
-    "value": "clicked",
-    "ts": "22:19:22"
-  },
-  {
-    "kind": "prerequisite",
-    "label": "Redirected to logout screen",
-    "passed": true,
-    "reason": "Expected URL to contain /logout, got: https://ra-demo.rlcatalyst.com/logout",
-    "evidence": "https://ra-demo.rlcatalyst.com/logout",
-    "ts": "22:19:22"
-  },
-  {
-    "kind": "value",
-    "label": "Click here to login button visible",
-    "value": true,
-    "ts": "22:19:22"
-  },
-  {
-    "kind": "assertion",
-    "label": "Click here to login button displayed",
-    "expected": true,
-    "actual": true,
-    "passed": true,
-    "ts": "22:19:22"
-  },
-  {
-    "kind": "value",
-    "label": "Login page URL",
-    "value": "https://ra-demo.rlcatalyst.com/login",
-    "ts": "22:19:26"
-  },
-  {
-    "kind": "value",
-    "label": "PI email entered",
-    "value": "principala@relevancelab.com",
-    "ts": "22:19:26"
-  },
-  {
-    "kind": "value",
-    "label": "Sign In action",
-    "value": "clicked",
-    "ts": "22:19:27"
-  },
-  {
-    "kind": "prerequisite",
-    "label": "PI My Projects page",
-    "passed": true,
-    "reason": "Expected URL to contain /principal, got: https://ra-demo.rlcatalyst.com/principal",
-    "evidence": "https://ra-demo.rlcatalyst.com/principal",
-    "ts": "22:19:28"
-  },
-  {
-    "kind": "value",
-    "label": "Breadcrumb text",
-    "value": "My Projects",
-    "ts": "22:19:28"
-  },
-  {
-    "kind": "assertion",
-    "label": "My Projects page title displayed",
-    "expected": "My Projects",
-    "actual": "My Projects",
-    "passed": true,
-    "ts": "22:19:28"
-  },
-  {
-    "kind": "value",
-    "label": "PI project count",
-    "value": 14,
-    "ts": "22:19:28"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Auto No-Catalog 2907",
-    "group": "pi_projects",
-    "ts": "22:19:28"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Auto Demo 7365",
-    "group": "pi_projects",
-    "ts": "22:19:28"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Genomics Research-ua-east-1",
-    "group": "pi_projects",
-    "ts": "22:19:28"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Custom-launch-product",
-    "group": "pi_projects",
-    "ts": "22:19:28"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Cardiovascular Health Initia...",
-    "group": "pi_projects",
-    "ts": "22:19:28"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Health Sciences Project",
-    "group": "pi_projects",
-    "ts": "22:19:28"
-  },
-  {
-    "kind": "value",
-    "label": "Login page URL",
-    "value": "https://ra-demo.rlcatalyst.com/login",
-    "ts": "22:19:32"
-  },
-  {
-    "kind": "value",
-    "label": "RES email entered",
-    "value": "piyusha.varshney+r@relevancelab.com",
-    "ts": "22:19:32"
-  },
-  {
-    "kind": "value",
-    "label": "Sign In action",
-    "value": "clicked",
-    "ts": "22:19:32"
-  },
-  {
-    "kind": "prerequisite",
-    "label": "Researcher My Projects page",
-    "passed": true,
-    "reason": "Expected URL to contain /researcher, got: https://ra-demo.rlcatalyst.com/researcher",
-    "evidence": "https://ra-demo.rlcatalyst.com/researcher",
-    "ts": "22:19:33"
-  },
-  {
-    "kind": "value",
-    "label": "Breadcrumb text",
-    "value": "My Projects",
-    "ts": "22:19:33"
-  },
-  {
-    "kind": "assertion",
-    "label": "My Projects page title displayed",
-    "expected": "My Projects",
-    "actual": "My Projects",
-    "passed": true,
-    "ts": "22:19:33"
-  },
-  {
-    "kind": "value",
-    "label": "Assigned project count",
-    "value": 5,
-    "ts": "22:19:33"
-  },
-  {
-    "kind": "component",
-    "label": "Assigned project",
-    "value": "Auto Demo 4383",
-    "group": "researcher_projects",
-    "ts": "22:19:33"
-  },
-  {
-    "kind": "component",
-    "label": "Assigned project",
-    "value": "demo auto",
-    "group": "researcher_projects",
-    "ts": "22:19:33"
-  },
-  {
-    "kind": "component",
-    "label": "Assigned project",
-    "value": "Auto Demo 5742",
-    "group": "researcher_projects",
-    "ts": "22:19:33"
-  },
-  {
-    "kind": "component",
-    "label": "Assigned project",
-    "value": "Cardiovascular Health Initia...",
-    "group": "researcher_projects",
-    "ts": "22:19:33"
-  },
-  {
-    "kind": "component",
-    "label": "Assigned project",
-    "value": "Auto Demo 7365",
-    "group": "researcher_projects",
-    "ts": "22:19:33"
+    "label": "Status entries",
+    "value": "['CREATE_COMPLETE', 'CREATE_COMPLETE', 'CREATE_IN_PROGRESS', 'CREATE_IN_PROGRESS', 'CREATE_COMPLETE', 'CREATE_COMPLETE', 'CREATE_IN_PROGRESS', 'CREATE_IN_PROGRESS', 'CREATE_IN_PROGRESS', 'CREATE_IN_PROGRESS']",
+    "ts": "11:12:59"
   }
 ]

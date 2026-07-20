@@ -1,474 +1,106 @@
 [
   {
-    "test": "PI views project details and actions for an active project",
-    "feature": "PI Project Details for Active Project",
+    "test": "PI views product details and events for a project",
+    "feature": "PI Product Details for Project",
     "index": 0,
     "keyword": "Given",
     "name": "the user is on the Research Gateway login page",
     "status": "passed"
   },
   {
-    "test": "PI views project details and actions for an active project",
-    "feature": "PI Project Details for Active Project",
+    "test": "PI views product details and events for a project",
+    "feature": "PI Product Details for Project",
     "index": 1,
     "keyword": "When",
     "name": "the user signs in as a PI",
     "status": "passed"
   },
   {
-    "test": "PI views project details and actions for an active project",
-    "feature": "PI Project Details for Active Project",
+    "test": "PI views product details and events for a project",
+    "feature": "PI Product Details for Project",
     "index": 2,
     "keyword": "And",
     "name": "the user clicks Sign In",
     "status": "passed"
   },
   {
-    "test": "PI views project details and actions for an active project",
-    "feature": "PI Project Details for Active Project",
+    "test": "PI views product details and events for a project",
+    "feature": "PI Product Details for Project",
     "index": 3,
     "keyword": "Then",
     "name": "the PI lands on the My Projects page successfully",
     "status": "passed"
   },
   {
-    "test": "PI views project details and actions for an active project",
-    "feature": "PI Project Details for Active Project",
+    "test": "PI views product details and events for a project",
+    "feature": "PI Product Details for Project",
     "index": 4,
     "keyword": "When",
-    "name": "the user searches for a project card with an Active button",
+    "name": "the user clicks on the project",
     "status": "passed"
   },
   {
-    "test": "PI views project details and actions for an active project",
-    "feature": "PI Project Details for Active Project",
+    "test": "PI views product details and events for a project",
+    "feature": "PI Product Details for Project",
     "index": 5,
     "keyword": "And",
-    "name": "the user clicks the Active button on the project card",
+    "name": "the user clicks on the product under My Products",
     "status": "passed"
   },
   {
-    "test": "PI views project details and actions for an active project",
-    "feature": "PI Project Details for Active Project",
+    "test": "PI views product details and events for a project",
+    "feature": "PI Product Details for Project",
     "index": 6,
-    "keyword": "Then",
-    "name": "the project details page is displayed",
+    "keyword": "And",
+    "name": "the user clicks the Product Details tab",
     "status": "passed"
   },
   {
-    "test": "PI views project details and actions for an active project",
-    "feature": "PI Project Details for Active Project",
+    "test": "PI views product details and events for a project",
+    "feature": "PI Product Details for Project",
     "index": 7,
-    "keyword": "And",
-    "name": "the following tabs are displayed on the page",
-    "status": "passed"
-  },
-  {
-    "test": "PI views project details and actions for an active project",
-    "feature": "PI Project Details for Active Project",
-    "index": 8,
-    "keyword": "When",
-    "name": "the user clicks the Project Details tab",
-    "status": "passed"
-  },
-  {
-    "test": "PI views project details and actions for an active project",
-    "feature": "PI Project Details for Active Project",
-    "index": 9,
     "keyword": "Then",
-    "name": "the following fields are displayed and have a value",
+    "name": "the following product fields are present and each has a value",
     "status": "passed"
   },
   {
-    "test": "PI views project details and actions for an active project",
-    "feature": "PI Project Details for Active Project",
-    "index": 10,
-    "keyword": "And",
-    "name": "the Actions section is displayed on the right side of the page",
-    "status": "passed"
-  },
-  {
-    "test": "PI views project details and actions for an active project",
-    "feature": "PI Project Details for Active Project",
-    "index": 11,
-    "keyword": "And",
-    "name": "the following options are displayed under Actions",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project with details from test data",
-    "feature": "PI Project Creation in ResGate",
-    "index": 0,
-    "keyword": "Given",
-    "name": "the user is on the Research Gateway login page",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project with details from test data",
-    "feature": "PI Project Creation in ResGate",
-    "index": 1,
-    "keyword": "When",
-    "name": "the user signs in as a PI",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project with details from test data",
-    "feature": "PI Project Creation in ResGate",
-    "index": 2,
-    "keyword": "And",
-    "name": "the user clicks Sign In",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project with details from test data",
-    "feature": "PI Project Creation in ResGate",
-    "index": 3,
-    "keyword": "Then",
-    "name": "the PI lands on the My Projects page successfully",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project with details from test data",
-    "feature": "PI Project Creation in ResGate",
-    "index": 4,
-    "keyword": "When",
-    "name": "the user clicks the Add New button",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project with details from test data",
-    "feature": "PI Project Creation in ResGate",
-    "index": 5,
-    "keyword": "Then",
-    "name": "the Create Project page is displayed",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project with details from test data",
-    "feature": "PI Project Creation in ResGate",
-    "index": 6,
-    "keyword": "When",
-    "name": "the user fills in the Project Name from the test data",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project with details from test data",
-    "feature": "PI Project Creation in ResGate",
-    "index": 7,
-    "keyword": "And",
-    "name": "the user fills in the Project Description from the test data",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project with details from test data",
-    "feature": "PI Project Creation in ResGate",
+    "test": "PI views product details and events for a project",
+    "feature": "PI Product Details for Project",
     "index": 8,
     "keyword": "And",
-    "name": "the user fills in the Budget Available from the test data",
+    "name": "CONNECT and ACTIONS are present on the page",
     "status": "passed"
   },
   {
-    "test": "PI creates a new project with details from test data",
-    "feature": "PI Project Creation in ResGate",
+    "test": "PI views product details and events for a project",
+    "feature": "PI Product Details for Project",
     "index": 9,
-    "keyword": "And",
-    "name": "the user selects an account from the test data",
+    "keyword": "When",
+    "name": "the user clicks the Events tab",
     "status": "passed"
   },
   {
-    "test": "PI creates a new project with details from test data",
-    "feature": "PI Project Creation in ResGate",
+    "test": "PI views product details and events for a project",
+    "feature": "PI Product Details for Project",
     "index": 10,
-    "keyword": "And",
-    "name": "the user selects a user from the test data",
+    "keyword": "Then",
+    "name": "the Events webtable is displayed",
     "status": "passed"
   },
   {
-    "test": "PI creates a new project with details from test data",
-    "feature": "PI Project Creation in ResGate",
+    "test": "PI views product details and events for a project",
+    "feature": "PI Product Details for Project",
     "index": 11,
     "keyword": "And",
-    "name": "the user selects the Create standard catalog type from the test data",
+    "name": "the Timestamp column has entries",
     "status": "passed"
   },
   {
-    "test": "PI creates a new project with details from test data",
-    "feature": "PI Project Creation in ResGate",
+    "test": "PI views product details and events for a project",
+    "feature": "PI Product Details for Project",
     "index": 12,
     "keyword": "And",
-    "name": "the user selects the Bring your own catalog type from the test data",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project with details from test data",
-    "feature": "PI Project Creation in ResGate",
-    "index": 13,
-    "keyword": "And",
-    "name": "the user clicks the Create Project button",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project with details from test data",
-    "feature": "PI Project Creation in ResGate",
-    "index": 14,
-    "keyword": "Then",
-    "name": "the user is taken to the My Projects page",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project with details from test data",
-    "feature": "PI Project Creation in ResGate",
-    "index": 15,
-    "keyword": "And",
-    "name": "the new project with the project name from the test data is displayed",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project without catalog selection",
-    "feature": "PI Project Creation Without Catalog in ResGate",
-    "index": 0,
-    "keyword": "Given",
-    "name": "the user is on the Research Gateway login page",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project without catalog selection",
-    "feature": "PI Project Creation Without Catalog in ResGate",
-    "index": 1,
-    "keyword": "When",
-    "name": "the user signs in as a PI",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project without catalog selection",
-    "feature": "PI Project Creation Without Catalog in ResGate",
-    "index": 2,
-    "keyword": "And",
-    "name": "the user clicks Sign In",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project without catalog selection",
-    "feature": "PI Project Creation Without Catalog in ResGate",
-    "index": 3,
-    "keyword": "Then",
-    "name": "the PI lands on the My Projects page successfully",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project without catalog selection",
-    "feature": "PI Project Creation Without Catalog in ResGate",
-    "index": 4,
-    "keyword": "When",
-    "name": "the user clicks the Add New button",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project without catalog selection",
-    "feature": "PI Project Creation Without Catalog in ResGate",
-    "index": 5,
-    "keyword": "Then",
-    "name": "the Create Project page is displayed",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project without catalog selection",
-    "feature": "PI Project Creation Without Catalog in ResGate",
-    "index": 6,
-    "keyword": "When",
-    "name": "the user fills in the Project Name from the test data",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project without catalog selection",
-    "feature": "PI Project Creation Without Catalog in ResGate",
-    "index": 7,
-    "keyword": "And",
-    "name": "the user fills in the Project Description from the test data",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project without catalog selection",
-    "feature": "PI Project Creation Without Catalog in ResGate",
-    "index": 8,
-    "keyword": "And",
-    "name": "the user fills in the Budget Available from the test data",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project without catalog selection",
-    "feature": "PI Project Creation Without Catalog in ResGate",
-    "index": 9,
-    "keyword": "And",
-    "name": "the user selects an account from the test data",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project without catalog selection",
-    "feature": "PI Project Creation Without Catalog in ResGate",
-    "index": 10,
-    "keyword": "And",
-    "name": "the user clicks the Create Project button",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project without catalog selection",
-    "feature": "PI Project Creation Without Catalog in ResGate",
-    "index": 11,
-    "keyword": "Then",
-    "name": "the user is taken to the My Projects page",
-    "status": "passed"
-  },
-  {
-    "test": "PI creates a new project without catalog selection",
-    "feature": "PI Project Creation Without Catalog in ResGate",
-    "index": 12,
-    "keyword": "And",
-    "name": "the new project with the project name from the test data is displayed",
-    "status": "passed"
-  },
-  {
-    "test": "Admin logs in with valid credentials and lands on My Organizations",
-    "feature": "Admin Login to Research Gateway",
-    "index": 0,
-    "keyword": "Given",
-    "name": "the user is on the Research Gateway login page",
-    "status": "passed"
-  },
-  {
-    "test": "Admin logs in with valid credentials and lands on My Organizations",
-    "feature": "Admin Login to Research Gateway",
-    "index": 1,
-    "keyword": "When",
-    "name": "the user signs in as an Admin",
-    "status": "passed"
-  },
-  {
-    "test": "Admin logs in with valid credentials and lands on My Organizations",
-    "feature": "Admin Login to Research Gateway",
-    "index": 2,
-    "keyword": "And",
-    "name": "the user clicks Sign In",
-    "status": "passed"
-  },
-  {
-    "test": "Admin logs in with valid credentials and lands on My Organizations",
-    "feature": "Admin Login to Research Gateway",
-    "index": 3,
-    "keyword": "Then",
-    "name": "the admin lands on the My Organizations page",
-    "status": "passed"
-  },
-  {
-    "test": "Admin logs out via Sign Out and is redirected to the login screen",
-    "feature": "Logout via Sign Out",
-    "index": 0,
-    "keyword": "Given",
-    "name": "the user is on the Research Gateway login page",
-    "status": "passed"
-  },
-  {
-    "test": "Admin logs out via Sign Out and is redirected to the login screen",
-    "feature": "Logout via Sign Out",
-    "index": 1,
-    "keyword": "When",
-    "name": "the user signs in as an Admin",
-    "status": "passed"
-  },
-  {
-    "test": "Admin logs out via Sign Out and is redirected to the login screen",
-    "feature": "Logout via Sign Out",
-    "index": 2,
-    "keyword": "And",
-    "name": "the user clicks Sign In",
-    "status": "passed"
-  },
-  {
-    "test": "Admin logs out via Sign Out and is redirected to the login screen",
-    "feature": "Logout via Sign Out",
-    "index": 3,
-    "keyword": "And",
-    "name": "the user clicks the username in the header",
-    "status": "passed"
-  },
-  {
-    "test": "Admin logs out via Sign Out and is redirected to the login screen",
-    "feature": "Logout via Sign Out",
-    "index": 4,
-    "keyword": "And",
-    "name": "the user clicks Sign Out",
-    "status": "passed"
-  },
-  {
-    "test": "Admin logs out via Sign Out and is redirected to the login screen",
-    "feature": "Logout via Sign Out",
-    "index": 5,
-    "keyword": "Then",
-    "name": "the user is redirected to the login screen with the \"Click here to Login\" button",
-    "status": "passed"
-  },
-  {
-    "test": "PI logs in with valid credentials and lands on My Projects",
-    "feature": "PI Login to Research Gateway",
-    "index": 0,
-    "keyword": "Given",
-    "name": "the user is on the Research Gateway login page",
-    "status": "passed"
-  },
-  {
-    "test": "PI logs in with valid credentials and lands on My Projects",
-    "feature": "PI Login to Research Gateway",
-    "index": 1,
-    "keyword": "When",
-    "name": "the user signs in as a PI",
-    "status": "passed"
-  },
-  {
-    "test": "PI logs in with valid credentials and lands on My Projects",
-    "feature": "PI Login to Research Gateway",
-    "index": 2,
-    "keyword": "And",
-    "name": "the user clicks Sign In",
-    "status": "passed"
-  },
-  {
-    "test": "PI logs in with valid credentials and lands on My Projects",
-    "feature": "PI Login to Research Gateway",
-    "index": 3,
-    "keyword": "Then",
-    "name": "the PI lands on the My Projects page successfully",
-    "status": "passed"
-  },
-  {
-    "test": "Researcher logs in with valid credentials and lands on My Projects",
-    "feature": "RES Login to Research Gateway",
-    "index": 0,
-    "keyword": "Given",
-    "name": "the user is on the Research Gateway login page",
-    "status": "passed"
-  },
-  {
-    "test": "Researcher logs in with valid credentials and lands on My Projects",
-    "feature": "RES Login to Research Gateway",
-    "index": 1,
-    "keyword": "When",
-    "name": "the user signs in as a Researcher",
-    "status": "passed"
-  },
-  {
-    "test": "Researcher logs in with valid credentials and lands on My Projects",
-    "feature": "RES Login to Research Gateway",
-    "index": 2,
-    "keyword": "And",
-    "name": "the user clicks Sign In",
-    "status": "passed"
-  },
-  {
-    "test": "Researcher logs in with valid credentials and lands on My Projects",
-    "feature": "RES Login to Research Gateway",
-    "index": 3,
-    "keyword": "Then",
-    "name": "the researcher lands on the My Projects page with only their assigned projects displayed",
+    "name": "the Status column has entries",
     "status": "passed"
   }
 ]

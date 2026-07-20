@@ -73,3 +73,4 @@ workspace/ResGate/process_log.txt
 *.process_log.txt
 temp_workspace/ResGate/report/captured_values.json
 temp_workspace/ResGate/report/step_trace.json
+temp_workspace/ResGate/report/captured_values.json

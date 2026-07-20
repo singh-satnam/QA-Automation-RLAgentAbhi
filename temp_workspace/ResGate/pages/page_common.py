@@ -84,6 +84,9 @@ class MyProjectsPage(BasePage):
     def wait_for_project_visible(self, project_name, timeout=30000):
         self.wait_visible(f"h3:has-text('{project_name}')", timeout=timeout)
 
+    def click_project(self, project_name):
+        self.page.locator(f"h3:has-text('{project_name}')").click()
+
     def wait_for_pi_page(self, timeout=20000):
         self.wait_visible(self.loc["pi_my_projects"]["page_heading"], timeout=timeout)
 

@@ -117,3 +117,9 @@ class ProjectDetailsPage(BasePage):
     def click_cancel_assigned_users(self):
         panel = self.page.locator(".mat-mdc-tab-body-active")
         panel.locator(self.loc["assigned_users_section"]["cancel_btn"]).first.click()
+
+    def click_product_card(self, product_name):
+        prefix = product_name.split("-")[0]
+        self.page.locator(
+            f"{self.loc['my_products_tab']['product_card']}:has-text('{prefix}')"
+        ).first.click()
