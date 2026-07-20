@@ -102,5 +102,20 @@
     "popup_heading": "mat-dialog-container h2",
     "popup_table_headers": "mat-dialog-container table th",
     "popup_close_btn": "mat-dialog-container img[alt='Cancel']"
+  },
+  "admin_nav": {
+    "hamburger_btn": "button[aria-label='Open navigation menu']"
+  },
+  "users_page": {
+    "page_heading": "h1.box-title",
+    "search_input": "input#searchKeyForUser",
+    "add_new_trigger": "div.add-new-btn-trigger",
+    "reset_filters_btn": "div.reset-btn",
+    "active_users_toggle": "button[role='switch'][aria-label='toggleButton']",
+    "user_card": ".user-card",
+    "user_name_text": "span.user-name-text",
+    "user_role": "span.user-role",
+    "user_org": "span.user-org",
+    "user_active_txt": "span.user-active-txt"
   }
 }

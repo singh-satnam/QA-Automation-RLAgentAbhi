@@ -108,6 +108,12 @@ class HeaderNav(BasePage):
     def click_sign_out(self):
         self.page.locator(self.loc["logout"]["sign_out_item"]).click()
 
+    def click_hamburger_menu(self):
+        self.page.locator(self.loc["admin_nav"]["hamburger_btn"]).click()
+
+    def click_nav_item(self, label):
+        self.page.locator(f"nav button:has-text('{label}')").click()
+
 
 class LogoutPage(BasePage):
     def wait_for_page(self, timeout=15000):
