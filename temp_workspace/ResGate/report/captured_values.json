@@ -3,182 +3,110 @@
     "kind": "value",
     "label": "Login page URL",
     "value": "https://ra-demo.rlcatalyst.com/login",
-    "ts": "11:12:55"
+    "ts": "16:10:14"
   },
   {
     "kind": "value",
-    "label": "PI email entered",
-    "value": "principala@relevancelab.com",
-    "ts": "11:12:55"
+    "label": "Admin email entered",
+    "value": "sundeep.mallya+a@relevancelab.com",
+    "ts": "16:10:14"
   },
   {
     "kind": "value",
-    "label": "Sign In action",
-    "value": "clicked",
-    "ts": "11:12:55"
+    "label": "Sign In clicked",
+    "value": "true",
+    "ts": "16:10:14"
+  },
+  {
+    "kind": "value",
+    "label": "Hamburger nav selected",
+    "value": "Catalog",
+    "ts": "16:10:17"
   },
   {
     "kind": "prerequisite",
-    "label": "PI My Projects page",
+    "label": "Catalog page loaded",
     "passed": true,
-    "reason": "Expected URL to contain /principal, got: https://ra-demo.rlcatalyst.com/principal",
-    "evidence": "https://ra-demo.rlcatalyst.com/principal",
-    "ts": "11:12:57"
+    "reason": "Expected URL to contain /catalog, got: https://ra-demo.rlcatalyst.com/admin/catalog",
+    "evidence": "https://ra-demo.rlcatalyst.com/admin/catalog",
+    "ts": "16:10:17"
   },
   {
     "kind": "value",
-    "label": "Breadcrumb text",
-    "value": "My Projects",
-    "ts": "11:12:57"
-  },
-  {
-    "kind": "assertion",
-    "label": "My Projects page title displayed",
-    "expected": "My Projects",
-    "actual": "My Projects",
-    "passed": true,
-    "ts": "11:12:57"
+    "label": "Catalog page URL",
+    "value": "https://ra-demo.rlcatalyst.com/admin/catalog",
+    "ts": "16:10:17"
   },
   {
     "kind": "value",
-    "label": "PI project count",
-    "value": 16,
-    "ts": "11:12:57"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Genomics Research-ua-east-1",
-    "group": "pi_projects",
-    "ts": "11:12:57"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Precision Medicine",
-    "group": "pi_projects",
-    "ts": "11:12:57"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Auto No-Catalog 7575",
-    "group": "pi_projects",
-    "ts": "11:12:57"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Auto Demo 2938",
-    "group": "pi_projects",
-    "ts": "11:12:57"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Auto No-Catalog 2907",
-    "group": "pi_projects",
-    "ts": "11:12:57"
-  },
-  {
-    "kind": "component",
-    "label": "PI project",
-    "value": "Auto Demo 7365",
-    "group": "pi_projects",
-    "ts": "11:12:57"
+    "label": "Catalog page title",
+    "value": "Catalog\n\u00a0( 47 )",
+    "ts": "16:10:17"
   },
   {
     "kind": "value",
-    "label": "Project clicked",
-    "value": "Genomics Research-ua-east-1",
-    "ts": "11:12:57"
+    "label": "Catalog item count",
+    "value": "47",
+    "ts": "16:10:17"
   },
   {
     "kind": "value",
-    "label": "Product clicked",
-    "value": "GenomicsResearchuaeast1-Storage-1784278646706",
-    "ts": "11:12:58"
+    "label": "\"View\" dropdown combo visible",
+    "value": "True",
+    "ts": "16:10:17"
   },
   {
     "kind": "value",
-    "label": "Product Details tab clicked",
+    "label": "Catalog search bar visible",
+    "value": "True",
+    "ts": "16:10:17"
+  },
+  {
+    "kind": "value",
+    "label": "\"View\" dropdown clicked",
     "value": "true",
-    "ts": "11:12:59"
-  },
-  {
-    "kind": "assertion",
-    "label": "Field 'Description' present",
-    "expected": "Description",
-    "actual": "Description",
-    "passed": true,
-    "ts": "11:12:59"
-  },
-  {
-    "kind": "assertion",
-    "label": "Field 'Created On' present",
-    "expected": "Created On",
-    "actual": "Created On",
-    "passed": true,
-    "ts": "11:12:59"
-  },
-  {
-    "kind": "assertion",
-    "label": "Field 'EnableS3Files' present",
-    "expected": "EnableS3Files",
-    "actual": "EnableS3Files",
-    "passed": true,
-    "ts": "11:12:59"
-  },
-  {
-    "kind": "assertion",
-    "label": "Field 'Advanced Details' present",
-    "expected": "Advanced Details",
-    "actual": "Advanced Details",
-    "passed": true,
-    "ts": "11:12:59"
-  },
-  {
-    "kind": "assertion",
-    "label": "Field 'Bucket Name' present",
-    "expected": "Bucket Name",
-    "actual": "Bucket Name",
-    "passed": true,
-    "ts": "11:12:59"
+    "ts": "16:10:17"
   },
   {
     "kind": "value",
-    "label": "CONNECT visible",
-    "value": "True",
-    "ts": "11:12:59"
+    "label": "\"View\" dropdown options",
+    "value": "['All', 'Research', 'Secure', 'RA Standard']",
+    "ts": "16:10:17"
   },
   {
     "kind": "value",
-    "label": "ACTIONS visible",
-    "value": "True",
-    "ts": "11:12:59"
+    "label": "\"View\" dropdown options",
+    "value": "['All', 'Research', 'Secure', 'RA Standard']",
+    "ts": "16:10:17"
   },
   {
     "kind": "value",
-    "label": "Events tab clicked",
-    "value": "true",
-    "ts": "11:12:59"
+    "label": "\"View\" dropdown options",
+    "value": "['All', 'Research', 'Secure', 'RA Standard']",
+    "ts": "16:10:17"
   },
   {
     "kind": "value",
-    "label": "Events table visible",
-    "value": "True",
-    "ts": "11:12:59"
+    "label": "Selected from \"View\" dropdown",
+    "value": "RA Standard",
+    "ts": "16:10:18"
   },
   {
     "kind": "value",
-    "label": "Timestamp entries",
-    "value": "['Jul 17, 2026, 2:28:13\\u202fPM', 'Jul 17, 2026, 2:28:11\\u202fPM', 'Jul 17, 2026, 2:28:07\\u202fPM', 'Jul 17, 2026, 2:28:06\\u202fPM', 'Jul 17, 2026, 2:28:05\\u202fPM', 'Jul 17, 2026, 2:27:49\\u202fPM', 'Jul 17, 2026, 2:27:49\\u202fPM', 'Jul 17, 2026, 2:27:48\\u202fPM', 'Jul 17, 2026, 2:27:48\\u202fPM', 'Jul 17, 2026, 2:27:47\\u202fPM']",
-    "ts": "11:12:59"
+    "label": "Active filter after selection",
+    "value": "RA Standard",
+    "ts": "16:10:18"
   },
   {
     "kind": "value",
-    "label": "Status entries",
-    "value": "['CREATE_COMPLETE', 'CREATE_COMPLETE', 'CREATE_IN_PROGRESS', 'CREATE_IN_PROGRESS', 'CREATE_COMPLETE', 'CREATE_COMPLETE', 'CREATE_IN_PROGRESS', 'CREATE_IN_PROGRESS', 'CREATE_IN_PROGRESS', 'CREATE_IN_PROGRESS']",
-    "ts": "11:12:59"
+    "label": "Catalog count after filter",
+    "value": "11",
+    "ts": "16:10:18"
+  },
+  {
+    "kind": "value",
+    "label": "Catalog title after filter",
+    "value": "Catalog\n\u00a0( 11 )",
+    "ts": "16:10:18"
   }
 ]
