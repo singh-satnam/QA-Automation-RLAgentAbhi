@@ -208,6 +208,7 @@
     "verify_only_active_users": "admin_users_filter_search_steps.py",
     "verify_org_visible_on_page": "admin_create_new_org_steps.py",
     "verify_pi_my_projects_page": "pi_login_steps.py",
+    "verify_pi_project_count_greater_than_zero": "pi_my_projects_count_steps.py",
     "verify_popup_field_labels": "admin_account_settings_steps.py",
     "verify_product_fields": "pi_product_details_for_project_steps.py",
     "verify_project_accounts_column_headings": "admin_account_settings_steps.py",
