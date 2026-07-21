@@ -5,7 +5,7 @@ from pages.page_project_details import ProjectDetailsPage
 from pages.page_product_details import ProductDetailsPage
 
 
-@when("the user clicks on the project")
+@when("the user clicks on the project from the test data")
 def click_on_project(page, test_data, captured_values):
     cap = captured_values
     project_name = test_data["projectName"]
@@ -13,7 +13,14 @@ def click_on_project(page, test_data, captured_values):
     cap.add("Project clicked", project_name)
 
 
-@when("the user clicks on the product under My Products")
+@when("the user clicks the My Products tab")
+def click_my_products_tab(page, captured_values):
+    cap = captured_values
+    ProjectDetailsPage(page).click_tab("My Products")
+    cap.add("My Products tab clicked", "true")
+
+
+@when("the user clicks on the product from the test data")
 def click_on_product(page, test_data, captured_values):
     cap = captured_values
     product_name = test_data["product"]

@@ -5,8 +5,9 @@ Feature: PI Product Details for Project
     When the user signs in as a PI
     And the user clicks Sign In
     Then the PI lands on the My Projects page successfully
-    When the user clicks on the project
-    And the user clicks on the product under My Products
+    When the user clicks on the project from the test data
+    And the user clicks the My Products tab
+    And the user clicks on the product from the test data
     And the user clicks the Product Details tab
     Then the following product fields are present and each has a value
       | Field            |
