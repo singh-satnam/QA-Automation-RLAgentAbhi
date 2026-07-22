@@ -1,0 +1,41 @@
+1. Open RG login page 
+2. Enter valid "PI" email & password
+3. Click Sign In
+4. PI lands on 'My Projects' page successfully
+5. Search of the project card 'AutomationProjDonotTouch'and Click
+6. This will display project details page 
+8. you should see the following tabs on the page 
+	Project Details	
+	Events	
+	Available Products
+	My Products
+	All Products
+	Shared Services
+9. User Click on the Project Details tab 
+10. Click on 'Manage' next to 'Assigned Users'
+11. validate 'Anthropic bot (auto_res@yopmail.com)'checkbox is unchecked
+12. Click to select 'Anthropic bot (auto_res@yopmail.com)'and click button Update
+13. On the Project Details page 'Assigned Users' should display 'Anthropic bot'
+14. Click on the user name on top right and select 'Sign out'
+15. Click on the button 'Click here to login'
+16. Enter valid "RESBOT" email & password
+17. Click Sign In
+18. PI lands on 'My Projects' page successfully
+19. Verify the project card with 'AutomationProjDonotTouch' is displayed
+20. Click on the user name on top right and select 'Sign out'
+21. Click on the button 'Click here to login'
+22. Enter valid "PI" email & password
+23. Click Sign In
+24. PI lands on 'My Projects' page successfully
+25. Search of the project card 'AutomationProjDonotTouch'and Click
+26. This will display project details page 
+27.User Click on the Project Details tab
+28.Click on 'Manage' next to 'Assigned Users'
+29.Verify the checkbox 'Anthropic bot (auto_res@yopmail.com)'is selected
+30.Click to remove the checkbox 'Anthropic bot (auto_res@yopmail.com)'and click button Update
+31. Click on the user name on top right and select 'Sign out'
+32. Click on the button 'Click here to login'
+33. Enter valid "RESBOT" email & password
+34. Click Sign In
+35. PI lands on 'My Projects' page successfully
+36. Verify the project card does not display 'AutomationProjDonotTouch'

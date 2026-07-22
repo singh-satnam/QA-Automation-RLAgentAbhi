@@ -118,6 +118,54 @@ class ProjectDetailsPage(BasePage):
         panel = self.page.locator(".mat-mdc-tab-body-active")
         panel.locator(self.loc["assigned_users_section"]["cancel_btn"]).first.click()
 
+    def is_assigned_users_panel_visible(self):
+        try:
+            panel = self.page.locator(".mat-mdc-tab-body-active")
+            el = panel.get_by_text("Select users from the list", exact=False).first
+            expect(el).to_be_visible(timeout=5000)
+            return True
+        except Exception:
+            return False
+
+    def select_last_user_from_list(self):
+        panel = self.page.locator(".mat-mdc-tab-body-active")
+        all_labels = panel.locator(self.loc["assigned_users_section"]["user_selection_label"]).all()
+        visible_labels = [l for l in all_labels if l.is_visible()]
+        if not visible_labels:
+            raise AssertionError("No visible users found in selection list")
+        last_label = visible_labels[-1]
+        label_text = last_label.inner_text(timeout=3000).strip()
+        last_label.click()
+        return label_text
+
+    def _get_user_checkbox_wrapper(self, user_name):
+        panel = self.page.locator(".mat-mdc-tab-body-active")
+        return panel.locator(
+            f"div.selection:has(label.selection-label:has-text('{user_name}'))"
+        ).first
+
+    def is_user_checkbox_checked(self, user_name):
+        cb = self._get_user_checkbox_wrapper(user_name).locator("input[type='checkbox']").first
+        return cb.is_checked()
+
+    def click_user_checkbox_by_name(self, user_name):
+        panel = self.page.locator(".mat-mdc-tab-body-active")
+        panel.locator(f"label.selection-label:has-text('{user_name}')").first.click()
+
+    def click_update_assigned_users(self):
+        panel = self.page.locator(".mat-mdc-tab-body-active")
+        panel.locator(self.loc["assigned_users_section"]["update_btn"]).first.click()
+
+    def is_user_assigned(self, user_name):
+        panel = self.page.locator(".mat-mdc-tab-body-active")
+        self.page.wait_for_timeout(500)
+        try:
+            el = panel.get_by_text(user_name, exact=False).first
+            expect(el).to_be_visible(timeout=8000)
+            return True
+        except Exception:
+            return False
+
     def click_product_card(self, product_name):
         prefix = product_name.split("-")[0]
         self.page.locator(
