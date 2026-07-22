@@ -1,0 +1,14 @@
+1. Open RG login page 
+2. Enter valid "PI" email & password
+3. Click Sign In
+4. PI lands on 'My Projects' page successfully
+5. Click on hamburger menu and select 'Key Pairs'
+6. Click on '+Create New' button and 'Create Key pair' dialog box appears
+7. Click on 'Project' dropdown and select the second project
+8. Fill 'Name' input box with a valid name as 'myauto'+ random number
+9. Click on the 'File format' dropdown and select option with text 'pem'
+9. Click on 'Create Key Pair'
+10. When created key pair appears on 'Key Pairs' page, click on three dots
+11. Click on 'Delete' button
+12. Delete key pair modal appears - click on button 'Delete'
+13. 'Deleted keypair successfully' message is displayed on top right

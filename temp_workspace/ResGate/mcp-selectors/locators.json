@@ -126,5 +126,26 @@
     "view_dropdown_options_container": "div.custom-options",
     "current_filter_label": "span.filterData",
     "search_input": "input[aria-label='searchCatalogItems']"
+  },
+  "key_pairs": {
+    "page_heading": "h1:has-text('Key Pairs')",
+    "search_input": "input[placeholder='Search']",
+    "create_new_btn": "button:has-text('Create New')",
+    "key_pair_table": "table",
+    "actions_btn": "button[aria-label='Key pair actions']",
+    "delete_menuitem": "[role='menuitem']:has-text('Delete')"
+  },
+  "create_key_pair_dialog": {
+    "heading": "h3:has-text('Create Key pair')",
+    "project_select": "select[name='projectId']",
+    "name_input": "input[placeholder='Enter a name for the key pair']",
+    "file_format_select": "select[name='fileFormat']",
+    "create_btn": "dialog button:has-text('Create Key Pair')",
+    "cancel_btn": "dialog img[alt='Cancel']"
+  },
+  "delete_key_pair_dialog": {
+    "heading": "h3:has-text('Delete Key pair')",
+    "delete_btn": "dialog button:has-text('Delete')",
+    "cancel_btn": "dialog button:has-text('Cancel')"
   }
 }
