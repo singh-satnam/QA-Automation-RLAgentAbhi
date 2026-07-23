@@ -1,0 +1,17 @@
+1. Open RG login page 
+2. Enter valid "PI" email & password
+3. Click Sign In
+4. PI lands on 'My Projects' page successfully
+5. Click on hamburger menu and select 'Studies'
+6. Click on '+Create Study' button and 'Create Key Study' page appears
+7. Input the Study Name "AutomationDemoStudy" + random number
+8. Input the Description 'This-is-script'+random number
+9. Select the Study Type as 'Internal Study'
+10. Select the Access Level as 'Read Only'
+11. Click on button 'Next'
+12. Enter the Bucket Name from test data file 
+13. Click on button 'Next'
+14. Select the Project Account from test data file 
+15. Under Projects click the checkbox from the test data file 
+16. Click on the button 'Register Study'
+17. Top right corner confirmation message is displayed

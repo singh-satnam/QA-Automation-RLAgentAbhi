@@ -147,5 +147,21 @@
     "heading": "h3:has-text('Delete Key pair')",
     "delete_btn": "dialog button:has-text('Delete')",
     "cancel_btn": "dialog button:has-text('Cancel')"
+  },
+  "studies_page": {
+    "page_heading": "h1:has-text('Studies')",
+    "create_study_btn": "button:has-text('+ Create Study')"
+  },
+  "create_study_form": {
+    "page_heading": "h1:has-text('Create New Study')",
+    "study_name_input": "input#studyName",
+    "description_input": "input#studyDescriptionId",
+    "study_type_select": "select[name='selectedStudyType']",
+    "access_level_select": "select[name='selectedAccessLevel']",
+    "next_btn": "button:has-text('Next')",
+    "bucket_name_input": "input#bucketNameId",
+    "project_account_select": "select[name='selectedAccount']",
+    "project_checkbox_label": "div.selection.selection-list label.selection-label",
+    "register_study_btn": "button:has-text('Register Study')"
   }
 }
