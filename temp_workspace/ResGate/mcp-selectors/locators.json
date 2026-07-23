@@ -163,5 +163,18 @@
     "project_account_select": "select[name='selectedAccount']",
     "project_checkbox_label": "div.selection.selection-list label.selection-label",
     "register_study_btn": "button:has-text('Register Study')"
+  },
+  "study_details_page": {
+    "search_input": "input#searchKeyForStudies",
+    "study_card": "div[aria-label*='Open study: ']",
+    "tab": "[role='tab']",
+    "tabpanel_active": "[role='tabpanel'].active",
+    "field_label": "label.product-key-txt",
+    "field_value": "label.product-value-txt",
+    "delete_action_btn": "div.web-actions div.action-link:has(img[alt='Delete Study'])",
+    "delete_dialog": "mat-dialog-container",
+    "delete_dialog_checkbox": "mat-dialog-container input[type='checkbox']",
+    "delete_dialog_btn": "mat-dialog-container button:has-text('Delete')",
+    "delete_dialog_cancel": "mat-dialog-container button:has-text('Cancel')"
   }
 }
