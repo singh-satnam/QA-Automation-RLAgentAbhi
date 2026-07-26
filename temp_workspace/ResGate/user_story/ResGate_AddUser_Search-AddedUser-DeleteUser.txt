@@ -1,0 +1,17 @@
+1. Open RG login page 
+2. Enter valid "admin" email & password
+3. Click Sign In
+4. User is taken to the My Organizations page
+5. Click on the left top left hamberger menu to display menu items 
+6. Click on Users and you are taken to the Users page
+7. Click on the '+ Add New' button and click Add New User
+8. Add User pop up is displayed 
+9. Email field enter 'auto_pw@yopmail.com'
+10. Select Role as 'Researcher'
+11.First Name type - Auto
+12.Last Name type - skills
+13.Button 'Add User' Click
+14. Click inside the 'Search' bar and type 'auto_pw@yopmail.com' and press enter
+15. The card is displayed with the user, click on the 3 dots Actions menu
+16. select Delete User and pop up Delete User is displayed
+17. Delete user button is clicked and this will delete the user.

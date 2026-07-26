@@ -118,7 +118,9 @@
     "user_name_text": "span.user-name-text",
     "user_role": "span.user-role",
     "user_org": "span.user-org",
-    "user_active_txt": "span.user-active-txt"
+    "user_active_txt": "span.user-active-txt",
+    "user_card_actions_btn": "button.user-card-menu-trigger",
+    "user_card_delete_option": "span.user-card-menu-option:has-text('Delete User')"
   },
   "catalog": {
     "page_heading": "h3.box-title",
@@ -163,6 +165,11 @@
     "project_account_select": "select[name='selectedAccount']",
     "project_checkbox_label": "div.selection.selection-list label.selection-label",
     "register_study_btn": "button:has-text('Register Study')"
+  },
+  "delete_user_dialog": {
+    "heading": "mat-dialog-container h2:has-text('Delete User')",
+    "delete_btn": "mat-dialog-container button:has-text('Delete User')",
+    "cancel_btn": "mat-dialog-container img[alt='Cancel']"
   },
   "study_details_page": {
     "search_input": "input#searchKeyForStudies",

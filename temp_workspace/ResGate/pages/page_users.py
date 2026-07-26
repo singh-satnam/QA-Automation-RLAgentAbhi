@@ -90,3 +90,52 @@ class UsersPage(BasePage):
     def click_active_users_toggle(self):
         self.page.locator(self.loc["users_page"]["active_users_toggle"]).click()
         self.page.wait_for_timeout(2000)
+
+    def click_add_new_user_option(self):
+        self.page.locator(self.loc["users_page"]["add_new_trigger"]).click()
+        self.page.wait_for_timeout(400)
+        self.page.get_by_text("Add New User", exact=True).click()
+        self.page.wait_for_timeout(500)
+
+    def is_user_card_visible(self, email):
+        return self.page.locator(f".user-card:has-text('{email}')").is_visible()
+
+    def wait_for_user_card(self, email, timeout=15000):
+        self.page.locator(f".user-card:has-text('{email}')").wait_for(
+            state="visible", timeout=timeout
+        )
+
+    def search_and_submit(self, text):
+        inp = self.page.locator(self.loc["users_page"]["search_input"])
+        inp.click()
+        inp.fill("")
+        inp.press_sequentially(text, delay=50)
+        inp.press("Enter")
+        self.page.wait_for_timeout(1200)
+
+    def click_user_card_actions(self, email):
+        self.page.locator(
+            f".user-card:has-text('{email}') button.user-card-menu-trigger"
+        ).click()
+        self.page.wait_for_timeout(400)
+
+    def click_delete_user_option(self, email):
+        self.page.locator(
+            f".user-card:has-text('{email}') span.user-card-menu-option:has-text('Delete User')"
+        ).click()
+        self.page.wait_for_timeout(400)
+
+    def is_delete_user_dialog_visible(self):
+        return self.is_visible(self.loc["delete_user_dialog"]["heading"])
+
+    def click_delete_user_confirm(self):
+        self.page.locator(self.loc["delete_user_dialog"]["delete_btn"]).click()
+        self.page.wait_for_timeout(2000)
+
+    def wait_for_user_card_gone(self, email, timeout=15000):
+        try:
+            self.page.locator(f".user-card:has-text('{email}')").wait_for(
+                state="hidden", timeout=timeout
+            )
+        except Exception:
+            pass
