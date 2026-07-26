@@ -100,8 +100,12 @@ class ProjectDetailsPage(BasePage):
             expect(alert_loc).to_be_hidden(timeout=5000)
 
     def click_manage_assigned_users(self):
-        panel = self.page.locator(".mat-mdc-tab-body-active")
-        panel.locator(self.loc["assigned_users_section"]["manage_btn"]).first.click()
+        btn = self.page.locator(self.loc["assigned_users_section"]["manage_btn"]).first
+        btn.wait_for(state="visible", timeout=10000)
+        btn.click()
+        self.page.locator(self.loc["assigned_users_section"]["select_users_text"]).first.wait_for(
+            state="visible", timeout=10000
+        )
 
     def get_assigned_users_list(self):
         panel = self.page.locator(".mat-mdc-tab-body-active")

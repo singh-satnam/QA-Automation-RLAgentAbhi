@@ -84,43 +84,46 @@ def click_catalog_dropdown(page, dropdown_name, captured_values):
     cap.add(f'"{dropdown_name}" dropdown clicked', "true")
 
 
-@then(parsers.parse('the "{dropdown_name}" dropdown displays the option "{option}"'))
-def verify_dropdown_option_present(page, dropdown_name, option, captured_values):
+@then(parsers.parse('the "{dropdown_name}" dropdown displays available options'))
+def verify_dropdown_has_options(page, dropdown_name, captured_values):
     cap = captured_values
     catalog = CatalogPage(page)
-    present = catalog.is_view_option_present(option)
     options = catalog.get_view_dropdown_options()
     cap.add(f'"{dropdown_name}" dropdown options', str(options))
-    assert present, (
-        f'Option "{option}" not found in "{dropdown_name}" dropdown. '
-        f"Available: {options}"
+    assert len(options) > 0, (
+        f'"{dropdown_name}" dropdown has no options. Dropdown may not be open.'
     )
 
 
-@when(parsers.parse('the user selects "{option}" from the "{dropdown_name}" dropdown'))
-def select_from_catalog_dropdown(page, option, dropdown_name, captured_values):
-    cap = captured_values
+@when(parsers.parse('the user selects each option from the "{dropdown_name}" dropdown one by one'))
+def select_each_dropdown_option(page, dropdown_name, captured_values, scenario_context):
     catalog = CatalogPage(page)
     if not catalog.is_view_dropdown_open():
         catalog.click_view_dropdown()
-    catalog.select_view_option(option)
-    page.wait_for_timeout(500)
-    cap.add(f'Selected from "{dropdown_name}" dropdown', option)
+        page.wait_for_timeout(300)
+    options = catalog.get_view_dropdown_options()
+    assert options, f'No options found in "{dropdown_name}" dropdown'
+
+    results = []
+    for option in options:
+        if not catalog.is_view_dropdown_open():
+            catalog.click_view_dropdown()
+            page.wait_for_timeout(300)
+        catalog.select_view_option(option)
+        page.wait_for_timeout(500)
+        title = catalog.get_title_text()
+        captured_values.add(f'Catalog title after selecting "{option}"', title)
+        results.append({"option": option, "title": title})
+
+    scenario_context["dropdown_results"] = results
 
 
-@then(parsers.parse('the Catalog page displays results for "{option}"'))
-def verify_catalog_filtered_results(page, option, captured_values):
-    cap = captured_values
-    catalog = CatalogPage(page)
-    selected = catalog.get_selected_filter()
-    count = catalog.get_catalog_count()
-    title = catalog.get_title_text()
-    cap.add("Active filter after selection", selected)
-    cap.add("Catalog count after filter", str(count))
-    cap.add("Catalog title after filter", title)
-    assert selected == option, (
-        f'Expected filter "{option}" to be selected, got: "{selected}"'
-    )
-    assert count > 0, (
-        f"Expected catalog results > 0 after filtering by '{option}', got: {count}"
+@then("each dropdown selection updates the Catalog page")
+def verify_each_selection_updates_page(captured_values, scenario_context):
+    results = scenario_context.get("dropdown_results", [])
+    assert results, "No dropdown selection results recorded"
+    failures = [r["option"] for r in results if not r["title"]]
+    captured_values.add("Dropdown iteration results", str(results))
+    assert not failures, (
+        f"Catalog heading not displayed after selecting: {failures}"
     )

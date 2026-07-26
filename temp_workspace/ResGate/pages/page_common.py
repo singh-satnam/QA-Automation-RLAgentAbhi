@@ -121,3 +121,8 @@ class LogoutPage(BasePage):
 
     def is_login_button_visible(self):
         return self.page.locator(self.loc["logout"]["click_here_login_btn"]).is_visible()
+
+    def click_login_btn(self, timeout=15000):
+        btn = self.page.locator(self.loc["logout"]["click_here_login_btn"])
+        btn.wait_for(state="visible", timeout=timeout)
+        btn.click()

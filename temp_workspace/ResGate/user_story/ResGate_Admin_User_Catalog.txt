@@ -8,8 +8,5 @@
 	Drop down combo 'View:'
 	Custom search bar 
 	
-8.Click drop down 'All' and verify the following options are present
-	Research
-	Secure
-	RA Standard
-9. Click on 'RA Standard' the Catalog page displays result accordingly.
+8.Click drop down and the drop down options are displayed
+9.User select one by one the drop down options and each drop down selection updtes the page

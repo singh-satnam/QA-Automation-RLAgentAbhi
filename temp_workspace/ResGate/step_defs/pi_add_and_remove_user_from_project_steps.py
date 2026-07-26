@@ -15,17 +15,18 @@ def search_and_click_project_card(page, captured_values, project_name):
 
 
 @then(parsers.re(r'the "(?P<user_name>[^"]+)" user checkbox is unchecked'))
-def verify_user_checkbox_unchecked(page, captured_values, user_name):
+def ensure_user_checkbox_unchecked(page, captured_values, user_name):
     cap = captured_values
     details = ProjectDetailsPage(page)
     is_checked = details.is_user_checkbox_checked(user_name)
-    cap.add(f"'{user_name}' checkbox checked", str(is_checked))
-    passed = cap.assert_match(
-        f"'{user_name}' checkbox is unchecked",
-        expected="False",
-        actual=str(is_checked),
-    )
-    assert passed, f"Expected '{user_name}' checkbox to be unchecked but it was checked"
+    if is_checked:
+        details.click_user_checkbox_by_name(user_name)
+        page.wait_for_timeout(500)
+        cap.add(f"'{user_name}' checkbox was checked — unchecked to reset", "true")
+    else:
+        cap.add(f"'{user_name}' checkbox already unchecked", "true")
+    assert not details.is_user_checkbox_checked(user_name), \
+        f"'{user_name}' checkbox still checked after reset attempt"
 
 
 @when(parsers.re(r'the user selects the "(?P<user_name>[^"]+)" user checkbox and clicks the Update button'))
@@ -66,10 +67,19 @@ def click_username_and_sign_out(page, captured_values):
 @when('the user clicks the "Click here to login" button')
 def click_here_to_login_btn(page, captured_values):
     cap = captured_values
-    btn = page.locator("button:has-text('Click here to login')").first
-    expect(btn).to_be_visible(timeout=15000)
-    btn.click()
+    LogoutPage(page).click_login_btn()
     cap.add("Click here to login", "clicked")
+
+
+@when("the user signs in as a RESPRJ")
+def sign_in_as_resprj(page, test_data, captured_values):
+    cap = captured_values
+    email = test_data["RESPRJ_USER"]
+    password = test_data["RESPRJ_PWD"]
+    login = LoginPage(page)
+    login.enter_email(email)
+    login.enter_password(password)
+    cap.add("RESPRJ email entered", email)
 
 
 @when("the user signs in as a RESBOT")

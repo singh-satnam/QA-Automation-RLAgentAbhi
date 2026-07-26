@@ -122,9 +122,9 @@
   },
   "catalog": {
     "page_heading": "h3.box-title",
-    "view_dropdown_trigger": "div.custom-select__trigger",
-    "view_dropdown_options_container": "div.custom-options",
-    "current_filter_label": "span.filterData",
+    "view_dropdown_trigger": "button.header-menu-ft",
+    "view_dropdown_options_container": ".mat-mdc-menu-panel.filter-dd",
+    "current_filter_label": "button.header-menu-ft",
     "search_input": "input[aria-label='searchCatalogItems']"
   },
   "key_pairs": {

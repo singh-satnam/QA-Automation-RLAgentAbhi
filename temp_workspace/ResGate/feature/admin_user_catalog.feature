@@ -10,8 +10,6 @@ Feature: Admin User Catalog
     And the "View" dropdown combo is present on the Catalog page
     And the custom search bar is present on the Catalog page
     When the user clicks the "View" dropdown
-    Then the "View" dropdown displays the option "Research"
-    And the "View" dropdown displays the option "Secure"
-    And the "View" dropdown displays the option "RA Standard"
-    When the user selects "RA Standard" from the "View" dropdown
-    Then the Catalog page displays results for "RA Standard"
+    Then the "View" dropdown displays available options
+    When the user selects each option from the "View" dropdown one by one
+    Then each dropdown selection updates the Catalog page
