@@ -1,5 +1,0 @@
-1. Open RG login page 
-2.  Enter valid "RESBOT1" email & password
-34. Click Sign In
-35. PI lands on 'My Projects' page successfully
-36. Verify the project card display 'AutomationProjDonotTouch'

@@ -1,4 +1,0 @@
-1. Open RG login page 
-2. Enter valid "admin" credentials
-3. Click Sign In"
-4.Admin lands on 'My Organizations' page
