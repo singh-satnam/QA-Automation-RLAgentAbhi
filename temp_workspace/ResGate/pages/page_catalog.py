@@ -48,3 +48,87 @@ class CatalogPage(BasePage):
         if "View :" in text:
             return text.split("View :")[1].strip().split("\n")[0].strip()
         return text
+
+    def is_category_filter_visible(self):
+        try:
+            self.page.locator(self.loc["pi_catalog"]["category_filter_btn"]).first.wait_for(state="visible", timeout=8000)
+            return True
+        except Exception:
+            return False
+
+    def click_category_filter(self, category):
+        self.page.locator(self.loc["pi_catalog"]["category_filter_trigger"]).click()
+        self.page.locator(self.loc["pi_catalog"]["category_filter_option"]).first.wait_for(state="visible")
+        self.page.locator(f"{self.loc['pi_catalog']['category_filter_option']}[title='{category}']").click()
+        self.page.wait_for_timeout(600)
+
+    def search_catalog(self, query):
+        search = self.page.locator(self.loc["catalog"]["search_input"])
+        search.click(click_count=3)
+        search.press("Control+a")
+        search.press("Delete")
+        search.press_sequentially(query, delay=50)
+        self.page.wait_for_timeout(1500)
+
+    def clear_search(self):
+        search = self.page.locator(self.loc["catalog"]["search_input"])
+        search.click(click_count=3)
+        search.press("Control+a")
+        search.press("Delete")
+        self.page.wait_for_timeout(500)
+
+    def get_empty_search_message(self):
+        try:
+            el = self.page.locator(self.loc["pi_catalog"]["empty_search_message"])
+            el.first.wait_for(state="visible", timeout=5000)
+            return el.first.inner_text().strip()
+        except Exception:
+            return ""
+
+    def get_product_card_count(self):
+        primary = self.page.locator(self.loc["pi_catalog"]["product_card"])
+        if primary.count() > 0:
+            return primary.count()
+        return self.page.locator(self.loc["pi_catalog"]["product_card_alt"]).count()
+
+    def select_product_by_name(self, name):
+        card = self.page.locator(
+            f"div.available-product-card:has(label[title='{name}'])"
+        ).first
+        card.wait_for(state="visible")
+        card.locator("input[type='checkbox']").dispatch_event("click")
+        self.page.wait_for_timeout(500)
+
+    def click_assign_selected(self):
+        self.page.locator(self.loc["pi_catalog"]["assign_selected_btn"]).click()
+        self.page.wait_for_timeout(600)
+
+    def is_assign_modal_visible(self):
+        heading = self.page.locator(self.loc["pi_catalog"]["assign_modal_heading"])
+        try:
+            heading.first.wait_for(state="visible", timeout=8000)
+            text = heading.first.inner_text().strip()
+            return "Assign" in text
+        except Exception:
+            return False
+
+    def select_project_in_modal(self, project_name):
+        select = self.page.locator(self.loc["pi_catalog"]["assign_modal_project_select"])
+        select.wait_for(state="visible")
+        select.select_option(label=project_name)
+        self.page.wait_for_timeout(300)
+
+    def click_assign_in_modal(self):
+        self.page.locator(self.loc["pi_catalog"]["assign_modal_assign_btn"]).click()
+        self.page.wait_for_timeout(500)
+
+    def get_confirmation_toast(self):
+        el = self.page.locator(self.loc["success_toast"]["alert"]).first
+        try:
+            el.wait_for(state="visible", timeout=15000)
+            text = el.inner_text(timeout=3000).strip()
+            if not text:
+                text = (el.get_attribute("aria-label") or "").strip()
+            return text
+        except Exception:
+            return ""

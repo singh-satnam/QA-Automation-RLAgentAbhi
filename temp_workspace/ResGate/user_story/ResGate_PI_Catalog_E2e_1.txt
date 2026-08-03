@@ -1,0 +1,16 @@
+1. Open RG login page 
+2. Enter valid "PI" email & password
+3. Click Sign In
+4. PI lands on 'My Projects' page successfully
+5.Click on the hamburger menu and select Catalog
+6.Validate drop down with 'View : O.U. Catalog'
+7.Verify that Search with Category Filter is displayed 
+8.And click each of the filter options one by one All, Research, and IT Applications
+9.Search for "zzz-no-match" and verify the appropriate "We could not find any products that matched your search." message is displayed.
+10.Search for "EC2" and verify matching products are displayed.
+11.Select Amazon EC2-Linux and Jupyter Lab. Click on the checkbox to select each of them
+12.Click 'Assign Selected to Project'.
+13.'Assign to a Project' modal is displayed
+14.From the drop down 'Choose a project from the list' select the project 'AutomationProjDonotTouch'
+Click Assign.
+15.Confirmation message is displayed on top right "The selected products are being updated to your project. This can take some time to complete. You can monitor the progress in the events tab of the project."

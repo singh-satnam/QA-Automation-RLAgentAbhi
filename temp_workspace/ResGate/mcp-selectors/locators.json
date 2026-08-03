@@ -44,7 +44,7 @@
     "submit_btn": "mat-dialog-container button:has-text('Submit')"
   },
   "success_toast": {
-    "alert": "[role='alert']"
+    "alert": "div.toast-title"
   },
   "assigned_users_section": {
     "manage_btn": "h2:has-text('Assigned Users') .add-researcher-manage",
@@ -183,5 +183,19 @@
     "delete_dialog_checkbox": "mat-dialog-container input[type='checkbox']",
     "delete_dialog_btn": "mat-dialog-container button:has-text('Delete')",
     "delete_dialog_cancel": "mat-dialog-container button:has-text('Cancel')"
+  },
+  "pi_catalog": {
+    "category_filter_btn": ".custom-select-wrapper",
+    "category_filter_trigger": ".custom-select__trigger",
+    "category_filter_option": "span.custom-option",
+    "empty_search_message": "h3.no-data-found",
+    "product_card": "div.available-product-card",
+    "product_card_alt": "div.my-product-container > div",
+    "product_checkbox": "input[type='checkbox']",
+    "assign_selected_btn": "span.assignOU",
+    "assign_modal_heading": "mat-dialog-container h2, mat-dialog-container h3",
+    "assign_modal_project_select": "mat-dialog-container select.dropdown",
+    "assign_modal_project_option": "mat-dialog-container select.dropdown option",
+    "assign_modal_assign_btn": "mat-dialog-container button:has-text('Assign')"
   }
 }
