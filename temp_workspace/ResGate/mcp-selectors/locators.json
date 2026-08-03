@@ -37,7 +37,9 @@
     "project_status_text": ".status-info .status-text",
     "tab_list": "[role='tablist']",
     "actions_heading": "text=ACTIONS",
-    "action_link_btn": "button.action-link"
+    "action_link_btn": "button.action-link",
+    "events_table": "table.events-table",
+    "events_header_labels": ".table-header .my-product-header span.table-title-text"
   },
   "add_budget_dialog": {
     "amount_input": "input[name='addBudgetValue']",

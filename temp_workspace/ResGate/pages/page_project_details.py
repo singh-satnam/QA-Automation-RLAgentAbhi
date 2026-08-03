@@ -175,3 +175,31 @@ class ProjectDetailsPage(BasePage):
         self.page.locator(
             f"{self.loc['my_products_tab']['product_card']}:has-text('{prefix}')"
         ).first.click()
+
+    def get_events_column_values(self, column_name, timeout=15000):
+        table = self.page.locator(self.loc["project_details_page"]["events_table"])
+        table.wait_for(state="visible", timeout=timeout)
+        # Headers live in sibling divs outside the table — no <thead> exists
+        header_spans = self.page.locator(
+            self.loc["project_details_page"]["events_header_labels"]
+        ).all()
+        col_idx = None
+        for i, h in enumerate(header_spans):
+            try:
+                if column_name.strip().lower() in h.inner_text(timeout=2000).strip().lower():
+                    col_idx = i + 1
+                    break
+            except Exception:
+                pass
+        if col_idx is None:
+            return []
+        cells = table.locator(f"tbody td:nth-child({col_idx})").all()
+        values = []
+        for c in cells:
+            try:
+                text = c.inner_text(timeout=2000).strip()
+                if text:
+                    values.append(text)
+            except Exception:
+                pass
+        return values

@@ -2,6 +2,7 @@ from pytest_bdd import when, then, parsers
 
 from pages.page_common import LoginPage, MyProjectsPage, HeaderNav
 from pages.page_catalog import CatalogPage
+from pages.page_project_details import ProjectDetailsPage
 
 
 @when("the user enters valid PI credentials")
@@ -156,3 +157,47 @@ def verify_confirmation_message(page, expected_message, captured_values):
     assert key in msg, (
         f"Expected confirmation containing '{key}', got: {msg!r}"
     )
+
+
+@when("the user clicks the hamburger menu and selects My Projects")
+def click_hamburger_and_select_my_projects(page, captured_values):
+    cap = captured_values
+    page.wait_for_selector(
+        "button[aria-label='Open navigation menu']", state="visible", timeout=15000
+    )
+    nav = HeaderNav(page)
+    nav.click_hamburger_menu()
+    page.wait_for_timeout(400)
+    nav.click_nav_item("My Projects")
+    page.wait_for_timeout(800)
+    cap.add("Hamburger nav selected", "My Projects")
+
+
+@when(parsers.parse("click on the project with name '{project_name}'"))
+def click_project_by_name(page, project_name, captured_values):
+    cap = captured_values
+    my_projects = MyProjectsPage(page)
+    my_projects.wait_for_pi_page()
+    my_projects.click_project(project_name)
+    page.wait_for_timeout(600)
+    cap.add("Project clicked", project_name)
+
+
+@when("click on Events link")
+def click_events_tab(page, captured_values):
+    cap = captured_values
+    proj = ProjectDetailsPage(page)
+    proj.wait_for_page()
+    proj.click_tab("Events")
+    page.wait_for_timeout(1000)
+    cap.add("Events tab clicked", "true")
+
+
+@then(parsers.parse("verify on the Events page '{field1}' '{field2}' fields are not blank"))
+def verify_events_fields_not_blank(page, field1, field2, captured_values):
+    cap = captured_values
+    proj = ProjectDetailsPage(page)
+    for field in [field1, field2]:
+        values = proj.get_events_column_values(field)
+        cap.add(f"Events {field} values", str(values))
+        assert values, f"Expected '{field}' column to have non-blank values, found none"

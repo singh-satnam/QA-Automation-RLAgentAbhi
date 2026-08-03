@@ -37,3 +37,8 @@ Feature: PI Catalog End-to-End Product Assignment
     When the user selects "AutomationProjDonotTouch" from the Choose a project from the list dropdown
     And the user clicks Assign
     Then the confirmation message "The selected products are being updated to your project. This can take some time to complete. You can monitor the progress in the events tab of the project." is displayed
+    When the user clicks the hamburger menu and selects My Projects
+    And click on the project with name 'AutomationProjDonotTouch'
+    And click on Events link
+    Then verify on the Events page 'Status' 'Status Reason' fields are not blank
+
