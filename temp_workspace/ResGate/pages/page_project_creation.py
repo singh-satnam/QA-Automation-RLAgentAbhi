@@ -34,6 +34,13 @@ class CreateProjectPage(BasePage):
         stable = re.split(r'\s*-\s*\d+\s', catalog_partial)[0].strip()
         self.page.locator("label.selection-label").filter(has_text=stable).first.click()
 
+    def ensure_storage_unchecked(self):
+        checkbox = self.page.get_by_role("checkbox", name="Use Project Storage")
+        checkbox.wait_for(state="attached", timeout=10000)
+        if checkbox.is_checked():
+            self.page.locator("label:has-text('Use Project Storage')").first.click()
+            self.page.wait_for_timeout(300)
+
     def click_create_project(self, timeout=15000):
         btn = self.page.locator(self.loc["create_project"]["create_project_btn"])
         # Angular's change detection needs a cycle after the last label/checkbox interaction

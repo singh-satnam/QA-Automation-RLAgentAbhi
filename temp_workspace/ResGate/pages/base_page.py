@@ -26,7 +26,7 @@ class BasePage:
         self.base_url = base_url
         self.loc = load_locators()
 
-    def goto(self, url, timeout=60000):
+    def goto(self, url, timeout=30000):
         # Never networkidle — domcontentloaded + finite timeout, then wait on elements.
         self.page.goto(url, wait_until="domcontentloaded", timeout=timeout)
 

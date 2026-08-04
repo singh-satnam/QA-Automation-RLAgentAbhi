@@ -6,7 +6,9 @@
   },
   "my_projects": {
     "page_heading": "h3:has-text('My Projects')",
-    "breadcrumb_item": "nav[aria-label='breadcrumb'] li"
+    "breadcrumb_item": "nav[aria-label='breadcrumb'] li",
+    "table_view_btn": "div.card-toggle:has(img[alt='Switch To Table View'])",
+    "table_search_input": "input[placeholder='Search']"
   },
   "my_organizations": {
     "page_heading": "h1:has-text('My Organizations')",
@@ -23,7 +25,8 @@
     "project_name_input": "input[placeholder*='Please enter your project name']",
     "project_description_input": "textarea[placeholder='Please enter your project description - (required)']",
     "budget_input": "input[placeholder*='direct cost budget']",
-    "create_project_btn": "button:has-text('Create Project')"
+    "create_project_btn": "button:has-text('Create Project')",
+    "use_storage_checkbox_label": "mat-checkbox:has-text('Use Project Storage')"
   },
   "logout": {
     "username_menu_btn": "button[aria-label='User menu']",
@@ -46,7 +49,13 @@
     "submit_btn": "mat-dialog-container button:has-text('Submit')"
   },
   "success_toast": {
-    "alert": "div.toast-title"
+    "alert": "div.toast-title",
+    "message": "div.toast-message"
+  },
+  "archive_project_dialog": {
+    "heading": "mat-dialog-container h2, mat-dialog-container h3",
+    "checkbox": "mat-dialog-container input[type='checkbox']",
+    "archive_btn": "mat-dialog-container button:has-text('Archive')"
   },
   "assigned_users_section": {
     "manage_btn": "h2:has-text('Assigned Users') .add-researcher-manage",

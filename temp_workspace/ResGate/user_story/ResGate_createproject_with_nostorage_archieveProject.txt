@@ -1,0 +1,40 @@
+1. Open RG login page 
+2. Enter valid "PI" email & password
+3. Click Sign In
+4. PI lands on 'My Projects' page successfully
+5. Click on button 'Add New'
+6. 'Create Project' page is displayed
+7. Fill the below details from Json file 
+	Project Name
+	Project Description
+	Budget Available
+8. Pick the values from Json file for the following
+	Select an account from the list 
+	Select user from the list
+	
+9.'Use Project Storage' checkbox should be unchecked
+	if the checkbox is checked update the checkbox to uncheck it 
+	if it is not checked move to next step
+9. Click on 'Create Project' button
+10.You will be taken to My Projects page 
+11.New project with name equals to Project Name should be displayed
+13.Click the button 'Switch To Table View'
+14.On the page search for the Project Name read from the test data
+15.Click on the matching project link to open the Project page 
+16.Click on tab Project Details and validate below options are present
+	Project Name 
+	Project Description 
+	Project Owner
+	Created On
+	Project Type
+	Account Details
+	Budget
+	Project Tags 
+	Assigned Users 
+	Linked Studies
+	Add Products
+12. Click on 'Archive' option 
+13. Archive project pop up is displayed
+14. Click on the available check box 
+15. Click Archive button
+16. Confirmation pop up on top right with message containing 'Archiving project started'

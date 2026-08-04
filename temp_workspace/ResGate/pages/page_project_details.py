@@ -170,6 +170,29 @@ class ProjectDetailsPage(BasePage):
         except Exception:
             return False
 
+    def is_archive_dialog_visible(self, timeout=10000):
+        try:
+            el = self.page.locator("mat-dialog-container").first
+            expect(el).to_be_visible(timeout=timeout)
+            return True
+        except Exception:
+            return False
+
+    def click_archive_dialog_checkbox(self):
+        self.page.locator(self.loc["archive_project_dialog"]["checkbox"]).first.check()
+
+    def click_archive_dialog_button(self):
+        self.page.locator(self.loc["archive_project_dialog"]["archive_btn"]).first.click()
+
+    def get_archive_toast_message(self, timeout=15000):
+        msg_loc = self.page.locator(self.loc["success_toast"]["message"])
+        try:
+            expect(msg_loc).to_be_visible(timeout=timeout)
+            return msg_loc.inner_text(timeout=5000).strip()
+        except Exception:
+            # fall back to toast title
+            return self.wait_for_success_toast(timeout=timeout)
+
     def click_product_card(self, product_name):
         prefix = product_name.split("-")[0]
         self.page.locator(

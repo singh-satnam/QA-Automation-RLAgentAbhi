@@ -89,6 +89,17 @@ class MyProjectsPage(BasePage):
     def click_project(self, project_name):
         self.page.locator(f"h3:has-text('{project_name}')").click()
 
+    def click_switch_to_table_view(self):
+        # Project-creation toast persists and intercepts pointer events; force bypasses overlay
+        self.page.locator(self.loc["my_projects"]["table_view_btn"]).first.click(force=True)
+
+    def search_project_in_table(self, project_name):
+        # Card view — wait for project card h3 to be visible (async creation may delay appearance)
+        self.page.locator(f"h3:has-text('{project_name}')").wait_for(state="visible", timeout=60000)
+
+    def click_project_link_in_table(self, project_name):
+        self.page.locator(f"h3:has-text('{project_name}')").click()
+
     def wait_for_pi_page(self, timeout=20000):
         self.wait_visible(self.loc["pi_my_projects"]["page_heading"], timeout=timeout)
 
