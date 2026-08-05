@@ -1,0 +1,9 @@
+{
+  "smtp_host": "smtp.gmail.com",
+  "smtp_port": 587,
+  "smtp_user": "sender@example.com",
+  "smtp_password": "your-app-password-here",
+  "from": "QE Agent <sender@example.com>",
+  "to": ["team@example.com", "manager@example.com"],
+  "subject_prefix": "[QE Agent]"
+}

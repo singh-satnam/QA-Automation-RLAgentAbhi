@@ -24,6 +24,9 @@ agent_ui.log
 generation_log.txt
 *_log.txt
 *.png
+# Email report credentials — never commit
+email_config.json
+**/email_config.json
 
 
 # ---------------------------------------------------------------------------
