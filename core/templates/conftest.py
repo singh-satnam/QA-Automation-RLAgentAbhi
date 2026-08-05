@@ -517,7 +517,7 @@ def pytest_bdd_step_error(request, feature, scenario, step, step_func,
             })
 
 
-def _send_run_report(session, exitstatus) -> None:
+def _send_run_report(exitstatus) -> None:
     """Email run report using _STEP_TRACE for counts. Never raises."""
     config_path = PROJECT_ROOT / "email_config.json"
     if not config_path.exists():
@@ -608,12 +608,15 @@ def _send_run_report(session, exitstatus) -> None:
 
     html_body = f"<pre>{body_text}</pre>"
 
-    msg = MIMEMultipart()
+    msg = MIMEMultipart("mixed")
     msg["From"] = from_addr
     msg["To"] = ", ".join(to_addrs)
     msg["Subject"] = subject
-    msg.attach(MIMEText(body_text, "plain"))
-    msg.attach(MIMEText(html_body, "html"))
+
+    alt = MIMEMultipart("alternative")
+    alt.attach(MIMEText(body_text, "plain"))
+    alt.attach(MIMEText(html_body, "html"))
+    msg.attach(alt)
 
     for part in attachment_parts:
         msg.attach(part)
@@ -647,4 +650,4 @@ def pytest_sessionfinish(session, exitstatus):
     except OSError:
         pass
     if session.config.getoption("--email", default=False):
-        _send_run_report(session, exitstatus)
+        _send_run_report(exitstatus)
