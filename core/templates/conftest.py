@@ -576,32 +576,60 @@ def _send_run_report(exitstatus, session=None) -> None:
         f"{passed} passed {failed} failed — {timestamp}"
     )
 
-    # Find newest run dir and build attachment list
-    report_dirs = sorted(REPORT_DIR.glob("*/"), reverse=True)
-    run_dir = report_dirs[0] if report_dirs else None
-
-    attached = []
-    missing = []
+    # Build attachments
     attachment_parts = []
-    for filename in ("story_coverage.html", "report.html"):
-        filepath = (run_dir / filename) if run_dir else None
-        if filepath and filepath.exists():
-            try:
-                part = MIMEBase("application", "octet-stream")
-                part.set_payload(filepath.read_bytes())
-                encoders.encode_base64(part)
-                part.add_header("Content-Disposition", f"attachment; filename={filename}")
-                attachment_parts.append(part)
-                attached.append(filename)
-            except Exception as exc:
-                print(f"\n[email-report] Could not attach {filename}: {exc}")
-                missing.append(filename)
-        else:
-            missing.append(filename)
+    attached = []
+
+    # Attachment 1: report.html from pytest-html (only if --html flag was passed)
+    try:
+        html_path = Path(_session.config.option.htmlpath)
+        if html_path.exists():
+            part = MIMEBase("application", "octet-stream")
+            part.set_payload(html_path.read_bytes())
+            encoders.encode_base64(part)
+            part.add_header("Content-Disposition", "attachment; filename=report.html")
+            attachment_parts.append(part)
+            attached.append("report.html")
+    except Exception:
+        pass  # --html not passed or file missing
+
+    # Attachment 2: inline step summary HTML generated from _STEP_TRACE (always available)
+    try:
+        verdict_color = "#28a745" if verdict == "PASS" else "#dc3545"
+        rows_html = ""
+        for s in _STEP_TRACE:
+            st = s.get("status", "unknown")
+            icon = "✅" if st == "passed" else ("❌" if st == "failed" else "⏭️")
+            err = s.get("error", "").replace("<", "&lt;").replace(">", "&gt;")
+            rows_html += (
+                f"<tr><td>{s.get('feature','')}</td>"
+                f"<td>{s.get('test','')}</td>"
+                f"<td>{s.get('keyword','')} {s.get('name','')}</td>"
+                f"<td>{icon} {st}</td>"
+                f"<td><small>{err}</small></td></tr>\n"
+            )
+        summary_html = (
+            f"<!DOCTYPE html><html><head><meta charset='utf-8'>"
+            f"<style>body{{font-family:monospace;padding:20px}}"
+            f"h2{{color:{verdict_color}}}"
+            f"table{{border-collapse:collapse;width:100%}}"
+            f"th,td{{border:1px solid #ddd;padding:6px;text-align:left}}"
+            f"th{{background:#f5f5f5}}</style></head><body>"
+            f"<h2>QE Agent — {project_name} — {verdict}</h2>"
+            f"<p>Ran: {timestamp} | {passed} passed · {failed} failed · {skipped} skipped</p>"
+            f"<table><tr><th>Feature</th><th>Scenario</th><th>Step</th><th>Status</th><th>Error</th></tr>"
+            f"\n{rows_html}</table></body></html>"
+        )
+        part = MIMEBase("application", "octet-stream")
+        part.set_payload(summary_html.encode("utf-8"))
+        encoders.encode_base64(part)
+        part.add_header("Content-Disposition", "attachment; filename=step_summary.html")
+        attachment_parts.append(part)
+        attached.append("step_summary.html")
+    except Exception as exc:
+        print(f"\n[email-report] Could not generate step_summary.html: {exc}")
 
     attachments_line = "Attachments: " + (", ".join(attached) if attached else "none")
-    if missing:
-        attachments_line += f"\nNot attached (not yet generated): {', '.join(missing)}"
 
     body_text = (
         f"Project:    {project_name}\n"
@@ -612,7 +640,7 @@ def _send_run_report(exitstatus, session=None) -> None:
         f"Assertions: {assertions} steps tracked\n"
         f"\n"
         f"{attachments_line}\n"
-        f"\n-- QE Agent\n"
+        f"-- QE Agent\n"
     )
 
     html_body = f"<pre>{body_text}</pre>"
