@@ -63,6 +63,7 @@ class KeyPairsPage(BasePage):
         self.page.get_by_role("button", name="Delete").click()
 
     def get_toast_text(self):
-        toast = self.page.locator(self.loc["success_toast"]["alert"])
-        toast.wait_for(state="visible", timeout=15000)
-        return toast.inner_text().strip()
+        # Try [role='alert'] first (Angular snackbar), fall back to ngx-toastr div.toast-title
+        toast = self.page.locator("[role='alert'], div.toast-title")
+        toast.first.wait_for(state="visible", timeout=15000)
+        return toast.first.inner_text().strip()

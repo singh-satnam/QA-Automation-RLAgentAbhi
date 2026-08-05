@@ -11,6 +11,7 @@ Feature: PI Project Creation Without Catalog in ResGate
     And the user fills in the Project Description from the test data
     And the user fills in the Budget Available from the test data
     And the user selects an account from the test data
+    And the user ensures the Use Project Storage checkbox is unchecked
     And the user clicks the Create Project button
     Then the user is taken to the My Projects page
     And the new project with the project name from the test data is displayed

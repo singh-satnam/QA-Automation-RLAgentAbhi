@@ -14,6 +14,7 @@ Feature: PI Project Creation in ResGate
     And the user selects a user from the test data
     And the user selects the Create standard catalog type from the test data
     And the user selects the Bring your own catalog type from the test data
+    And the user ensures the Use Project Storage checkbox is unchecked
     And the user clicks the Create Project button
     Then the user is taken to the My Projects page
     And the new project with the project name from the test data is displayed

@@ -84,7 +84,7 @@ class CreateStudyPage(BasePage):
         btn.click()
 
     def get_success_toast_text(self, timeout=15000):
-        alert = self.page.locator(self.loc["success_toast"]["alert"])
+        alert = self.page.locator("[role='alert'], div.toast-title").first
         alert.wait_for(state="visible", timeout=timeout)
         return alert.inner_text(timeout=5000).strip()
 
@@ -126,6 +126,6 @@ class StudyDetailsPage(BasePage):
         btn.click()
 
     def get_confirmation_toast_text(self, timeout=15000):
-        alert = self.page.locator(self.loc["success_toast"]["alert"])
+        alert = self.page.locator("[role='alert'], div.toast-title").first
         alert.wait_for(state="visible", timeout=timeout)
         return alert.inner_text(timeout=5000).strip()

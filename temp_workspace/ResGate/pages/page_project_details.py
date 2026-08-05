@@ -84,13 +84,14 @@ class ProjectDetailsPage(BasePage):
     def click_dialog_submit(self):
         self.page.locator(self.loc["add_budget_dialog"]["submit_btn"]).click()
 
-    def wait_for_success_toast(self, timeout=10000):
-        alert_loc = self.page.locator(self.loc["success_toast"]["alert"])
+    def wait_for_success_toast(self, timeout=20000):
+        # Project details actions use [role='alert'] (Angular snackbar), not ngx-toastr div.toast-title
+        alert_loc = self.page.locator("[role='alert']").first
         expect(alert_loc).to_be_visible(timeout=timeout)
         return alert_loc.inner_text(timeout=5000).strip()
 
     def wait_for_toast_gone(self, timeout=30000):
-        alert_loc = self.page.locator(self.loc["success_toast"]["alert"])
+        alert_loc = self.page.locator("[role='alert']").first
         try:
             expect(alert_loc).to_be_hidden(timeout=timeout)
         except Exception:
@@ -194,9 +195,8 @@ class ProjectDetailsPage(BasePage):
             return self.wait_for_success_toast(timeout=timeout)
 
     def click_product_card(self, product_name):
-        prefix = product_name.split("-")[0]
         self.page.locator(
-            f"{self.loc['my_products_tab']['product_card']}:has-text('{prefix}')"
+            f"{self.loc['my_products_tab']['product_card']}:has(label[title*='{product_name}'])"
         ).first.click()
 
     def get_events_column_values(self, column_name, timeout=15000):

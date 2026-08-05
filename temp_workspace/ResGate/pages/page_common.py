@@ -134,6 +134,9 @@ class LogoutPage(BasePage):
         return self.page.locator(self.loc["logout"]["click_here_login_btn"]).is_visible()
 
     def click_login_btn(self, timeout=15000):
+        # App may redirect directly to login page after sign-out instead of showing "Click here to login"
+        if self.page.locator(self.loc["login"]["email_input"]).is_visible():
+            return
         btn = self.page.locator(self.loc["logout"]["click_here_login_btn"])
         btn.wait_for(state="visible", timeout=timeout)
         btn.click()

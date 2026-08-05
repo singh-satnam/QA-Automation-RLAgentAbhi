@@ -83,6 +83,13 @@ def select_byoc_catalog(page, test_data, captured_values):
     cap.add("BYOC catalog selected", catalog)
 
 
+@when("the user ensures the Use Project Storage checkbox is unchecked")
+def ensure_storage_unchecked(page, captured_values):
+    cap = captured_values
+    CreateProjectPage(page).ensure_storage_unchecked()
+    cap.add("Use Project Storage checkbox", "unchecked")
+
+
 @when("the user clicks the Create Project button")
 def click_create_project(page, captured_values):
     cap = captured_values

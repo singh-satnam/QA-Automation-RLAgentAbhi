@@ -143,7 +143,8 @@ def confirm_and_click_delete(page, checkbox_text, captured_values):
 def verify_delete_success_toast(page, message, captured_values):
     cap = captured_values
     org_pg = OrgManagementPage(page)
-    toast_text = org_pg.get_success_toast_text()
+    # wait_for_fresh_toast clears the stale create-org toast before reading the delete toast
+    toast_text = org_pg.wait_for_fresh_toast()
     cap.add("Delete confirmation toast text", toast_text)
     actual_for_assert = message if message.lower() in toast_text.lower() else toast_text
     passed = cap.assert_match(

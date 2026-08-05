@@ -74,3 +74,13 @@ class OrgManagementPage(BasePage):
     def get_success_toast_text(self, timeout=10000):
         el = self.wait_visible(self.loc["success_toast"]["alert"], timeout=timeout)
         return el.inner_text(timeout=5000).strip()
+
+    def wait_for_fresh_toast(self, timeout=20000):
+        """Wait for any existing toast to clear, then wait for the next one."""
+        toast_loc = self.page.locator("[role='alert'], div.toast-title").first
+        try:
+            toast_loc.wait_for(state="hidden", timeout=8000)
+        except Exception:
+            pass
+        toast_loc.wait_for(state="visible", timeout=timeout)
+        return toast_loc.inner_text(timeout=5000).strip()
