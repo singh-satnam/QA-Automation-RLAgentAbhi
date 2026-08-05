@@ -21,11 +21,27 @@ from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
+import smtplib
+import ssl
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
+
 import pytest
 from playwright.sync_api import sync_playwright
 
 # --- per-feature step modules (filled by the harness, not by hand) -----------
 pytest_plugins = ()
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--email",
+        action="store_true",
+        default=False,
+        help="Email story_coverage.html + report.html after the test session",
+    )
 
 # --- project paths -----------------------------------------------------------
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -500,6 +516,101 @@ def pytest_bdd_step_error(request, feature, scenario, step, step_func,
             })
 
 
+def _send_run_report(session) -> None:
+    """Read email_config.json and send both run reports. Never raises."""
+    config_path = PROJECT_ROOT / "email_config.json"
+    if not config_path.exists():
+        print(f"\n[email-report] email_config.json not found at {config_path} — skipping email.")
+        return
+
+    try:
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        print(f"\n[email-report] Could not read email_config.json: {exc} — skipping email.")
+        return
+
+    smtp_host = config.get("smtp_host", "")
+    smtp_port = int(config.get("smtp_port", 587))
+    smtp_user = config.get("smtp_user", "")
+    smtp_password = config.get("smtp_password", "")
+    from_addr = config.get("from", smtp_user)
+    to_addrs = config.get("to", [])
+    subject_prefix = config.get("subject_prefix", "[QE Agent]")
+
+    if not smtp_host or not to_addrs:
+        print("\n[email-report] smtp_host or to addresses missing in email_config.json — skipping email.")
+        return
+
+    # Read verdict from latest story_coverage.json
+    verdict = "UNKNOWN"
+    summary_line = ""
+    coverage_json_candidates = sorted(REPORT_DIR.glob("*/story_coverage.json"), reverse=True)
+    if coverage_json_candidates:
+        try:
+            data = json.loads(coverage_json_candidates[0].read_text(encoding="utf-8"))
+            verdict = data.get("verdict", "UNKNOWN")
+            counts = data.get("counts") or {}
+            passed = counts.get("passed", "?")
+            failed = counts.get("failed", "?")
+            assertions = counts.get("assertions", "?")
+            summary_line = f"{passed} passed · {failed} failed · {assertions} assertions"
+        except Exception:
+            pass
+
+    project_name = PROJECT_ROOT.name
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    subject = f"{subject_prefix} {project_name} — {verdict} | {summary_line} — {timestamp}"
+
+    body_text = (
+        f"Project:    {project_name}\n"
+        f"Verdict:    {verdict}\n"
+        f"Ran:        {timestamp}\n"
+        f"\n"
+        f"Results:    {summary_line}\n"
+        f"\nAttachments: story_coverage.html, report.html (if present)\n"
+        f"\n-- QE Agent\n"
+    )
+
+    msg = MIMEMultipart()
+    msg["From"] = from_addr
+    msg["To"] = ", ".join(to_addrs)
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body_text, "plain"))
+
+    # Attach story_coverage.html and report.html from newest run dir
+    report_dirs = sorted(REPORT_DIR.glob("*/"), reverse=True)
+    run_dir = report_dirs[0] if report_dirs else None
+
+    for filename in ("story_coverage.html", "report.html"):
+        filepath = (run_dir / filename) if run_dir else None
+        if filepath and filepath.exists():
+            try:
+                part = MIMEBase("application", "octet-stream")
+                part.set_payload(filepath.read_bytes())
+                encoders.encode_base64(part)
+                part.add_header("Content-Disposition", f"attachment; filename={filename}")
+                msg.attach(part)
+            except Exception as exc:
+                print(f"\n[email-report] Could not attach {filename}: {exc}")
+        else:
+            print(f"\n[email-report] {filename} not found — not attached.")
+
+    try:
+        if smtp_port == 465:
+            context = ssl.create_default_context()
+            with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
+                server.login(smtp_user, smtp_password)
+                server.sendmail(from_addr, to_addrs, msg.as_string())
+        else:
+            with smtplib.SMTP(smtp_host, smtp_port) as server:
+                server.starttls()
+                server.login(smtp_user, smtp_password)
+                server.sendmail(from_addr, to_addrs, msg.as_string())
+        print(f"\n[email-report] Report emailed to {', '.join(to_addrs)} — verdict: {verdict}")
+    except Exception as exc:
+        print(f"\n[email-report] Failed to send email: {exc}")
+
+
 def pytest_sessionfinish(session, exitstatus):
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     try:
@@ -512,3 +623,5 @@ def pytest_sessionfinish(session, exitstatus):
             json.dumps(_STEP_TRACE, indent=2, default=str), encoding="utf-8")
     except OSError:
         pass
+    if session.config.getoption("--email", default=False):
+        _send_run_report(session)
