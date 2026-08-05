@@ -3070,6 +3070,10 @@ def main() -> None:
                 pytest_target = None
 
     if pytest_target:
+        # Refresh harness-owned scaffolding (conftest.py, base_page.py) so the
+        # email hook and any other template fixes are always current regardless
+        # of whether the project was promoted from staging or lives in workspace.
+        ws.copy_scaffolding(project, staging=staging)
         # Fresh timestamped report dir for this run.
         run_dir = ws.new_report_run_dir(project, staging=staging)
         # Deterministically register the project's step-def modules. Never rely on
