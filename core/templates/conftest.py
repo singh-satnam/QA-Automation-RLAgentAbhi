@@ -17,6 +17,7 @@ import json
 import os
 import re
 import traceback
+from collections import Counter
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -516,8 +517,8 @@ def pytest_bdd_step_error(request, feature, scenario, step, step_func,
             })
 
 
-def _send_run_report(session) -> None:
-    """Read email_config.json and send both run reports. Never raises."""
+def _send_run_report(session, exitstatus) -> None:
+    """Email run report using _STEP_TRACE for counts. Never raises."""
     config_path = PROJECT_ROOT / "email_config.json"
     if not config_path.exists():
         print(f"\n[email-report] email_config.json not found at {config_path} — skipping email.")
@@ -544,46 +545,35 @@ def _send_run_report(session) -> None:
         print("\n[email-report] smtp_host or to addresses missing in email_config.json — skipping email.")
         return
 
-    # Read verdict from latest story_coverage.json
-    verdict = "UNKNOWN"
-    summary_line = ""
-    coverage_json_candidates = sorted(REPORT_DIR.glob("*/story_coverage.json"), reverse=True)
-    if coverage_json_candidates:
-        try:
-            data = json.loads(coverage_json_candidates[0].read_text(encoding="utf-8"))
-            verdict = data.get("verdict", "UNKNOWN")
-            counts = data.get("counts") or {}
-            passed = counts.get("passed", "?")
-            failed = counts.get("failed", "?")
-            assertions = counts.get("assertions", "?")
-            summary_line = f"{passed} passed · {failed} failed · {assertions} assertions"
-        except Exception:
-            pass
+    # Compute verdict from exitstatus (never reads story_coverage.json)
+    if exitstatus == 0:
+        verdict = "PASS"
+    elif exitstatus == 1:
+        verdict = "FAIL"
+    else:
+        verdict = "ERROR"
+
+    # Compute counts from _STEP_TRACE (in-memory, current run)
+    step_statuses = Counter(s.get("status", "unknown") for s in _STEP_TRACE)
+    passed = step_statuses.get("passed", 0)
+    failed = step_statuses.get("failed", 0)
+    skipped = step_statuses.get("skipped", 0)
+    assertions = len([s for s in _STEP_TRACE if s.get("status") in ("passed", "failed")])
 
     project_name = PROJECT_ROOT.name
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-    subject = f"{subject_prefix} {project_name} — {verdict} | {summary_line} — {timestamp}"
-
-    body_text = (
-        f"Project:    {project_name}\n"
-        f"Verdict:    {verdict}\n"
-        f"Ran:        {timestamp}\n"
-        f"\n"
-        f"Results:    {summary_line}\n"
-        f"\nAttachments: story_coverage.html, report.html (if present)\n"
-        f"\n-- QE Agent\n"
+    subject = (
+        f"{subject_prefix} {project_name} — {verdict} | "
+        f"{passed} passed {failed} failed — {timestamp}"
     )
 
-    msg = MIMEMultipart()
-    msg["From"] = from_addr
-    msg["To"] = ", ".join(to_addrs)
-    msg["Subject"] = subject
-    msg.attach(MIMEText(body_text, "plain"))
-
-    # Attach story_coverage.html and report.html from newest run dir
+    # Find newest run dir and build attachment list
     report_dirs = sorted(REPORT_DIR.glob("*/"), reverse=True)
     run_dir = report_dirs[0] if report_dirs else None
 
+    attached = []
+    missing = []
+    attachment_parts = []
     for filename in ("story_coverage.html", "report.html"):
         filepath = (run_dir / filename) if run_dir else None
         if filepath and filepath.exists():
@@ -592,11 +582,41 @@ def _send_run_report(session) -> None:
                 part.set_payload(filepath.read_bytes())
                 encoders.encode_base64(part)
                 part.add_header("Content-Disposition", f"attachment; filename={filename}")
-                msg.attach(part)
+                attachment_parts.append(part)
+                attached.append(filename)
             except Exception as exc:
                 print(f"\n[email-report] Could not attach {filename}: {exc}")
+                missing.append(filename)
         else:
-            print(f"\n[email-report] {filename} not found — not attached.")
+            missing.append(filename)
+
+    attachments_line = "Attachments: " + (", ".join(attached) if attached else "none")
+    if missing:
+        attachments_line += f"\nNot attached (not yet generated): {', '.join(missing)}"
+
+    body_text = (
+        f"Project:    {project_name}\n"
+        f"Verdict:    {verdict}\n"
+        f"Ran:        {timestamp}\n"
+        f"\n"
+        f"Results:    {passed} passed · {failed} failed · {skipped} skipped\n"
+        f"Assertions: {assertions} steps tracked\n"
+        f"\n"
+        f"{attachments_line}\n"
+        f"\n-- QE Agent\n"
+    )
+
+    html_body = f"<pre>{body_text}</pre>"
+
+    msg = MIMEMultipart()
+    msg["From"] = from_addr
+    msg["To"] = ", ".join(to_addrs)
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body_text, "plain"))
+    msg.attach(MIMEText(html_body, "html"))
+
+    for part in attachment_parts:
+        msg.attach(part)
 
     try:
         if smtp_port == 465:
@@ -627,4 +647,4 @@ def pytest_sessionfinish(session, exitstatus):
     except OSError:
         pass
     if session.config.getoption("--email", default=False):
-        _send_run_report(session)
+        _send_run_report(session, exitstatus)
