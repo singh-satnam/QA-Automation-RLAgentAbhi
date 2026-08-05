@@ -68,7 +68,7 @@ FRAMEWORK_PROMPT = _load_prompt("framework_prompt")
 FRAMEWORK_DELTA_PROMPT = _load_prompt("framework_delta_prompt")
 
 
-def pytest_headed_cmd(project: str, run_dir: Path, target: str | None = None) -> list[str]:
+def pytest_headed_cmd(project: str, run_dir: Path, target: str | None = None, email: bool = False) -> list[str]:
     """Build the pytest --headed command writing HTML+Allure into run_dir.
     target is relative to the project dir (e.g. 'test/test_login.py')."""
     cmd = [
@@ -77,6 +77,8 @@ def pytest_headed_cmd(project: str, run_dir: Path, target: str | None = None) ->
         "--self-contained-html",
         f"--alluredir={run_dir / 'allure-results'}",
     ]
+    if email:
+        cmd.append("--email")
     if target:
         cmd.append(target)
     else:
@@ -2028,6 +2030,14 @@ def render_test_runner(story_id: str, framework_ready: bool) -> str | None:
                 clicked = row["rel"]
         st.markdown('</div>', unsafe_allow_html=True)
 
+    # Email report checkbox — persisted in session state across runs
+    email_after_run = st.checkbox(
+        "📧 Email report after run",
+        value=st.session_state.get("email_report", False),
+        key="email_report",
+        help="Sends story_coverage.html + report.html via SMTP. Requires email_config.json in project root.",
+    )
+
     st.markdown('<div class="runner-actions">', unsafe_allow_html=True)
     cols = st.columns([1, 5])
     with cols[0]:
@@ -3073,7 +3083,8 @@ def main() -> None:
         if staging:
             st.info("Running tests from staging workspace")
         with st.status(f"Running pytest in headed mode — {label} ...", expanded=True) as status:
-            cmd = pytest_headed_cmd(project, run_dir, target)
+            email_flag = st.session_state.get("email_report", False)
+            cmd = pytest_headed_cmd(project, run_dir, target, email=email_flag)
             log_event(f"Invoking pytest --headed (target={target or 'all'})")
             rc = stream_command(
                 cmd, log_placeholder, st.session_state.log,
