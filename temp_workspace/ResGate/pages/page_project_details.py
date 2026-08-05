@@ -93,12 +93,16 @@ class ProjectDetailsPage(BasePage):
     def wait_for_toast_gone(self, timeout=30000):
         alert_loc = self.page.locator("[role='alert']").first
         try:
-            expect(alert_loc).to_be_hidden(timeout=timeout)
+            alert_loc.wait_for(state="visible", timeout=15000)
         except Exception:
-            close_btn = self.page.locator("button.toast-close-button, button[aria-label='Close'], .toast-close-button").first
-            if close_btn.is_visible():
-                close_btn.click()
-            expect(alert_loc).to_be_hidden(timeout=5000)
+            return  # no toast appeared, nothing to dismiss
+        close_btn = self.page.locator("button.toast-close-button").first
+        try:
+            close_btn.wait_for(state="visible", timeout=15000)
+            close_btn.click()
+        except Exception:
+            pass
+        expect(alert_loc).to_be_hidden(timeout=timeout)
 
     def click_manage_assigned_users(self):
         btn = self.page.locator(self.loc["assigned_users_section"]["manage_btn"]).first

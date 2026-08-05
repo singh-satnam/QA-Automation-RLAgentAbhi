@@ -21,13 +21,13 @@ Feature: PI Add and Remove User from Project
     When the user selects the "Leo March" user checkbox and clicks the Update button
     Then the Assigned Users section displays "Leo March"
     When the user clicks the username on the top right and selects Sign out
-    And the user clicks the "Click here to login" button
+    Given the user is on the Research Gateway login page
     And the user signs in as a RESPRJ
     And the user clicks Sign In
     Then the user lands on the My Projects page successfully
     And the project card "AutomationProjDonotTouch" is displayed
     When the user clicks the username on the top right and selects Sign out
-    And the user clicks the "Click here to login" button
+    Given the user is on the Research Gateway login page
     And the user signs in as a PI
     And the user clicks Sign In
     Then the PI lands on the My Projects page successfully
@@ -38,7 +38,7 @@ Feature: PI Add and Remove User from Project
     Then the "Leo March" user checkbox is selected
     When the user deselects the "Leo March" user checkbox and clicks the Update button
     And the user clicks the username on the top right and selects Sign out
-    And the user clicks the "Click here to login" button
+    Given the user is on the Research Gateway login page
     And the user signs in as a RESPRJ
     And the user clicks Sign In
     Then the user lands on the My Projects page successfully

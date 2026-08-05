@@ -23,6 +23,7 @@ def sign_in_as_researcher(page, test_data, captured_values):
     cap.add("RES email entered", email)
 
 
+@given("the user clicks Sign In")
 @when("the user clicks Sign In")
 def click_sign_in(page, captured_values):
     cap = captured_values

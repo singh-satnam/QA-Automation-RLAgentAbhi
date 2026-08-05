@@ -1,8 +1,9 @@
-from pytest_bdd import when, then
+from pytest_bdd import given, when, then
 
 from pages.page_common import LoginPage, MyProjectsPage
 
 
+@given("the user signs in as a PI")
 @when("the user signs in as a PI")
 def sign_in_as_pi(page, test_data, captured_values):
     cap = captured_values

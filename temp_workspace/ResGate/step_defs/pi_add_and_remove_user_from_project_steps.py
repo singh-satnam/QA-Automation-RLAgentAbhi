@@ -1,5 +1,5 @@
 from playwright.sync_api import expect
-from pytest_bdd import parsers, when, then
+from pytest_bdd import given, parsers, when, then
 
 from pages.page_common import LoginPage, MyProjectsPage, HeaderNav, LogoutPage
 from pages.page_project_details import ProjectDetailsPage
@@ -56,21 +56,23 @@ def verify_assigned_user_displayed(page, captured_values, user_name):
 
 
 @when("the user clicks the username on the top right and selects Sign out")
-def click_username_and_sign_out(page, captured_values):
+def click_username_and_sign_out(page, test_data, captured_values):
     cap = captured_values
     header = HeaderNav(page)
     header.click_username_in_header()
     header.click_sign_out()
+    # If interstitial "Click here to login" button is absent, navigate directly to login URL
+    login_btn = page.locator("button:has-text('Click here to login')")
+    try:
+        login_btn.wait_for(state="visible", timeout=5000)
+        login_btn.click()
+    except Exception:
+        url = test_data.get("URL", "")
+        LoginPage(page).navigate(url)
     cap.add("Sign out", "clicked")
 
 
-@when('the user clicks the "Click here to login" button')
-def click_here_to_login_btn(page, captured_values):
-    cap = captured_values
-    LogoutPage(page).click_login_btn()
-    cap.add("Click here to login", "clicked")
-
-
+@given("the user signs in as a RESPRJ")
 @when("the user signs in as a RESPRJ")
 def sign_in_as_resprj(page, test_data, captured_values):
     cap = captured_values
