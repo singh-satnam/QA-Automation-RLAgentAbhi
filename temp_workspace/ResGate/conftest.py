@@ -22,6 +22,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
+import pytest
 import smtplib
 import ssl
 from email.mime.multipart import MIMEMultipart
@@ -53,6 +54,7 @@ DOWNLOADS_DIR = Path.home() / "Downloads"
 # --- in-memory accumulators flushed in pytest_sessionfinish ------------------
 _CAPTURES: list[dict] = []
 _STEP_TRACE: list[dict] = []
+_session = None  # set in pytest_sessionfinish for terminal reporter access
 
 
 def _now() -> str:
@@ -517,8 +519,11 @@ def pytest_bdd_step_error(request, feature, scenario, step, step_func,
             })
 
 
-def _send_run_report(exitstatus) -> None:
-    """Email run report using _STEP_TRACE for counts. Never raises."""
+def _send_run_report(exitstatus, session=None) -> None:
+    """Email run report. Never raises."""
+    global _session
+    if session is not None:
+        _session = session
     config_path = PROJECT_ROOT / "email_config.json"
     if not config_path.exists():
         print(f"\n[email-report] email_config.json not found at {config_path} — skipping email.")
@@ -553,11 +558,16 @@ def _send_run_report(exitstatus) -> None:
     else:
         verdict = "ERROR"
 
-    # Compute counts from _STEP_TRACE (in-memory, current run)
-    step_statuses = Counter(s.get("status", "unknown") for s in _STEP_TRACE)
-    passed = step_statuses.get("passed", 0)
-    failed = step_statuses.get("failed", 0)
-    skipped = step_statuses.get("skipped", 0)
+    # Test-level counts from terminal reporter (not step counts)
+    passed = failed = skipped = 0
+    try:
+        tr = _session.config.pluginmanager.get_plugin("terminalreporter")
+        if tr:
+            passed = len(tr.stats.get("passed", []))
+            failed = len(tr.stats.get("failed", []))
+            skipped = len(tr.stats.get("skipped", []))
+    except Exception:
+        pass
     assertions = len([s for s in _STEP_TRACE if s.get("status") in ("passed", "failed")])
 
     project_name = PROJECT_ROOT.name
@@ -637,6 +647,7 @@ def _send_run_report(exitstatus) -> None:
         print(f"\n[email-report] Failed to send email: {exc}")
 
 
+@pytest.hookimpl(trylast=True)
 def pytest_sessionfinish(session, exitstatus):
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     try:
@@ -650,4 +661,4 @@ def pytest_sessionfinish(session, exitstatus):
     except OSError:
         pass
     if session.config.getoption("--email", default=False):
-        _send_run_report(exitstatus)
+        _send_run_report(exitstatus, session=session)
