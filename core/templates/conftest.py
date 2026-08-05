@@ -530,7 +530,10 @@ def _send_run_report(session) -> None:
         return
 
     smtp_host = config.get("smtp_host", "")
-    smtp_port = int(config.get("smtp_port", 587))
+    try:
+        smtp_port = int(config.get("smtp_port", 587))
+    except (ValueError, TypeError):
+        smtp_port = 587
     smtp_user = config.get("smtp_user", "")
     smtp_password = config.get("smtp_password", "")
     from_addr = config.get("from", smtp_user)
