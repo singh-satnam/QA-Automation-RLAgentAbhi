@@ -1,9 +1,9 @@
 {
   "smtp_host": "smtp.gmail.com",
   "smtp_port": 587,
-  "smtp_user": "qacool2016@gmail.com",
-  "smtp_password": "avio gphf xkpg rklh",
-  "from": "QE Agent <satsingh@gmail.com>",
-  "to": ["satnam.singh@relevancelab.com","satsingh@gmail.com"],
+  "smtp_user": "qaXXXXXXXXX@gmail.com",
+  "smtp_password": "xxxxxxxxxxxxx",
+  "from": "QE Agent <xxxxxxxx@gmail.com>",
+  "to": ["ss@company.com","DDDDDDDh@gmail.com"],
   "subject_prefix": "[QE Agent]"
 }
